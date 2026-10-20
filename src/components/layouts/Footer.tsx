@@ -4,7 +4,7 @@ import Image from 'next/image';
 export default function Footer() {
   return (
     <footer className="border-t border-line bg-white">
-      <div className="mx-auto flex max-w-7xl flex-col items-center gap-3 px-6 py-8 text-center sm:flex-row sm:justify-between sm:text-left">
+      <div className="mx-auto flex max-w-7xl flex-col items-center gap-3 px-6 py-10 text-center sm:flex-row sm:justify-between sm:text-left">
         <div className="flex items-center gap-2">
           <Image src="/images/logo.png" alt="Roomix" width={1500} height={520} className="h-5 w-auto" />
           <p className="text-sm text-muted">Roomix — Nền tảng cho thuê phòng trọ thông minh</p>

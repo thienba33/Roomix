@@ -18,7 +18,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       {children}
       <div className="pointer-events-none fixed bottom-5 right-5 z-[100] flex w-[320px] flex-col gap-2">
         {toasts.map((t) => (
-          <div key={t.id} className="pointer-events-auto rounded-2xl border border-line bg-white p-4 shadow-xl">
+          <div key={t.id} className="pointer-events-auto rounded-[20px] border border-line bg-white p-4 shadow-xl">
             <p className="flex items-center gap-2 text-sm font-semibold text-ink">
               <span className="flex h-5 w-5 items-center justify-center rounded-full bg-green-100 text-green-700">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><path d="M20 6 9 17l-5-5" /></svg>

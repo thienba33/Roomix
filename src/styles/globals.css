@@ -10,8 +10,9 @@
   --color-sky-light: #E0F2FE;
   --color-sky-pale: #F0F9FF;
   --color-ink: #222222;
+  --color-secondary: #484848;
   --color-muted: #6A6A6A;
-  --color-line: #DDDDDD;
+  --color-line: #E7E7E7;
   --color-page: #F7F7F7;
   --font-sans: var(--font-jakarta), ui-sans-system, system-ui, sans-serif;
 }
