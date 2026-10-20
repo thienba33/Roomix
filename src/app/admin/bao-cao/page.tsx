@@ -60,7 +60,7 @@ export default function ReportsPage() {
         <p className="mt-1 text-sm text-muted">{pendingCount} báo cáo đang chờ xử lý</p>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-[1fr_400px]">
+      <div className="grid gap-6 lg:grid-cols-[1fr_400px]">
         {/* LEFT — List */}
         <div className="space-y-3">
           {list.map((report) => {
@@ -73,7 +73,7 @@ export default function ReportsPage() {
                 onClick={() => setSelectedId(report.id)}
                 className="block w-full text-left"
               >
-                <Card className={cn('p-4 transition hover:border-primary/40', active && 'border-primary ring-2 ring-primary/15')}>
+                <Card className={cn('p-5 transition hover:border-primary/40', active && 'border-primary ring-1 ring-primary/20')}>
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <p className="truncate text-[15px] font-bold text-ink">{report.reason}</p>

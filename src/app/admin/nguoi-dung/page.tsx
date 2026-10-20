@@ -71,7 +71,7 @@ export default function UsersPage() {
         <div className="overflow-x-auto">
           <table className="w-full min-w-[720px] text-left text-sm">
             <thead>
-              <tr className="border-b border-line bg-page text-xs uppercase tracking-wider text-muted">
+              <tr className="border-b border-line text-[11px] uppercase tracking-wider text-muted">
                 <th className="px-5 py-3.5 font-semibold">Người dùng</th>
                 <th className="px-5 py-3.5 font-semibold">SĐT</th>
                 <th className="px-5 py-3.5 font-semibold">Ngày tham gia</th>
@@ -83,7 +83,7 @@ export default function UsersPage() {
               {rows.map((u) => {
                 const locked = u.status === 'LOCKED';
                 return (
-                  <tr key={u.id} className="border-b border-line last:border-0 hover:bg-page/60">
+                  <tr key={u.id} className="border-b border-line last:border-0">
                     <td className="px-5 py-4">
                       <span className="flex items-center gap-3">
                         <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-soft text-[13px] font-bold text-primary-dark">

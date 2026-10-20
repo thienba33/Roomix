@@ -7,10 +7,17 @@ import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import { moderationQueue } from '@/lib/data';
-import { formatVND, postStatusLabel } from '@/lib/utils';
+import { cn, formatVND, postStatusLabel } from '@/lib/utils';
 import type { Post, PostStatus } from '@/types';
 
 type QueueItem = Post & { localStatus: PostStatus };
+
+const QUICK_CHECKS = [
+  'Ảnh thật, rõ nét',
+  'Giá khớp mặt bằng khu vực',
+  'Địa chỉ hợp lệ',
+  'Không dấu hiệu lừa đảo',
+];
 
 function landlordFor(post: Post): string {
   // Map roomId → landlord display name (sample data aligned with Figma)
@@ -25,12 +32,21 @@ function landlordFor(post: Post): string {
   return map[post.roomId] ?? 'Chủ trọ Roomix';
 }
 
+function StatusBadge({ status }: { status: PostStatus }) {
+  if (status === 'PENDING') return <Badge tone="amber" dot>Chờ duyệt</Badge>;
+  if (status === 'APPROVED') return <Badge tone="green" dot>Đã duyệt</Badge>;
+  if (status === 'REJECTED') return <Badge tone="red" dot>Từ chối</Badge>;
+  return <Badge tone="gray" dot>{postStatusLabel[status]}</Badge>;
+}
+
 export default function ModerationPage() {
   const [items, setItems] = useState<QueueItem[]>(
     () => moderationQueue.map((p) => ({ ...p, localStatus: p.status })),
   );
+  const [selectedId, setSelectedId] = useState<number>(moderationQueue[0]?.id ?? 0);
 
   const pendingCount = items.filter((i) => i.localStatus === 'PENDING').length;
+  const selected = items.find((i) => i.id === selectedId) ?? items[0];
 
   const setStatus = (id: number, status: PostStatus) => {
     setItems((prev) => prev.map((i) => (i.id === id ? { ...i, localStatus: status } : i)));
@@ -43,71 +59,97 @@ export default function ModerationPage() {
         <p className="mt-1 text-sm text-muted">{pendingCount} bài đang chờ</p>
       </div>
 
-      <div className="space-y-3">
-        {items.map((post) => {
-          const isPending = post.localStatus === 'PENDING';
-          return (
-            <Link key={post.id} href={`/admin/kiem-duyet/${post.id}`} className="block">
-              <Card className="p-4 transition hover:border-primary/40 hover:shadow-md">
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-                  <div className="relative h-28 w-full shrink-0 overflow-hidden rounded-xl sm:w-40">
-                    <Image src={post.image} alt={post.title} fill className="object-cover" sizes="160px" />
-                  </div>
+      <div className="grid items-start gap-6 lg:grid-cols-[1fr_400px]">
+        {/* LEFT — Queue list, one card with divider rows */}
+        <Card className="overflow-hidden">
+          {items.map((post, idx) => {
+            const active = selected?.id === post.id;
+            return (
+              <button
+                key={post.id}
+                type="button"
+                onClick={() => setSelectedId(post.id)}
+                className={cn(
+                  'flex w-full items-center gap-4 px-5 py-4 text-left transition',
+                  idx > 0 && 'border-t border-line',
+                  active ? 'bg-primary-soft/50' : 'hover:bg-page/70',
+                )}
+              >
+                <span className="relative h-[84px] w-[120px] shrink-0 overflow-hidden rounded-lg">
+                  <Image src={post.image} alt={post.title} fill className="object-cover" sizes="120px" />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-[15px] font-bold text-ink">{post.title}</span>
+                  <span className="mt-1 block text-sm text-muted">
+                    {landlordFor(post)} · Phòng {post.roomCode}
+                  </span>
+                  <span className="mt-0.5 block text-[13px] text-muted">Đăng {post.createdAt}</span>
+                </span>
+                <span className="shrink-0 self-start">
+                  <StatusBadge status={post.localStatus} />
+                </span>
+              </button>
+            );
+          })}
 
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-[15px] font-bold text-ink">{post.title}</p>
-                    <p className="mt-1 text-sm text-muted">
-                      {landlordFor(post)} · Phòng {post.roomCode}
-                    </p>
-                    <p className="mt-0.5 text-[13px] text-muted">
-                      Đăng {post.createdAt} · {formatVND(post.price)}/tháng
-                    </p>
-                    <div className="mt-2.5">
-                      {post.localStatus === 'PENDING' && <Badge tone="amber" dot>Chờ duyệt</Badge>}
-                      {post.localStatus === 'APPROVED' && <Badge tone="green" dot>Đã duyệt</Badge>}
-                      {post.localStatus === 'REJECTED' && <Badge tone="red" dot>Từ chối</Badge>}
-                      {!['PENDING', 'APPROVED', 'REJECTED'].includes(post.localStatus) && (
-                        <Badge tone="gray" dot>{postStatusLabel[post.localStatus]}</Badge>
-                      )}
-                    </div>
-                  </div>
+          {items.length === 0 && (
+            <div className="p-10 text-center">
+              <p className="font-semibold text-ink">Không còn bài chờ duyệt</p>
+              <p className="mt-1 text-sm text-muted">Hàng chờ kiểm duyệt đã trống.</p>
+            </div>
+          )}
+        </Card>
 
-                  {isPending && (
-                    <div className="flex shrink-0 gap-2">
-                      <Button
-                        size="sm"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          setStatus(post.id, 'APPROVED');
-                        }}
-                      >
-                        Duyệt bài
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          setStatus(post.id, 'REJECTED');
-                        }}
-                        className="border-red-200 text-red-600 hover:border-red-400 hover:text-red-700"
-                      >
-                        Từ chối
-                      </Button>
-                    </div>
-                  )}
+        {/* RIGHT — Preview + quick check + actions */}
+        {selected && (
+          <Card className="overflow-hidden">
+            <div className="p-5 pb-0">
+              <div className="relative aspect-[16/10] w-full overflow-hidden rounded-xl">
+                <Image src={selected.image} alt={selected.title} fill className="object-cover" sizes="400px" />
+              </div>
+              <h2 className="mt-4 text-[17px] font-bold leading-snug text-ink">{selected.title}</h2>
+              <p className="mt-1 text-sm text-muted">
+                Phòng {selected.roomCode} · {formatVND(selected.price)} / tháng · {selected.area}
+              </p>
+              <Link
+                href={`/admin/kiem-duyet/${selected.id}`}
+                className="mt-2 inline-block text-[13px] font-semibold text-primary hover:text-primary-dark"
+              >
+                Xem chi tiết kiểm duyệt
+              </Link>
+            </div>
+
+            <div className="p-5">
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted">Kiểm tra nhanh</p>
+              <ul className="mt-3 space-y-2.5">
+                {QUICK_CHECKS.map((c) => (
+                  <li key={c} className="flex items-center gap-2.5 text-sm text-ink">
+                    <span className="h-2 w-2 shrink-0 rounded-full bg-green-600" />
+                    {c}
+                  </li>
+                ))}
+              </ul>
+
+              {selected.localStatus === 'PENDING' ? (
+                <div className="mt-5 space-y-2.5">
+                  <Button className="w-full" size="lg" onClick={() => setStatus(selected.id, 'APPROVED')}>
+                    Duyệt bài
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    size="lg"
+                    onClick={() => setStatus(selected.id, 'REJECTED')}
+                  >
+                    Từ chối · Kèm lý do
+                  </Button>
                 </div>
-              </Card>
-            </Link>
-          );
-        })}
-
-        {items.length === 0 && (
-          <Card className="p-10 text-center">
-            <p className="font-semibold text-ink">Không còn bài chờ duyệt</p>
-            <p className="mt-1 text-sm text-muted">Hàng chờ kiểm duyệt đã trống.</p>
+              ) : (
+                <div className="mt-5">
+                  <StatusBadge status={selected.localStatus} />
+                </div>
+              )}
+            </div>
           </Card>
         )}
       </div>

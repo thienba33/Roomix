@@ -21,10 +21,10 @@ export default function AdminLoginPage() {
         <Image src="/images/logo.png" alt="Roomix" width={1500} height={520} className="h-10 w-auto" priority />
       </div>
 
-      <Card className="w-full max-w-4xl overflow-hidden rounded-3xl p-0 shadow-[0_8px_40px_rgba(0,0,0,0.08)]">
+      <Card className="w-full max-w-[1060px] overflow-hidden rounded-3xl p-0 shadow-[0_8px_40px_rgba(0,0,0,0.08)]">
         <div className="grid md:grid-cols-2">
           {/* LEFT — Form */}
-          <div className="flex flex-col justify-center p-8">
+          <div className="flex flex-col justify-center p-8 md:p-12">
             <span className="inline-flex w-fit items-center rounded-full bg-primary-soft px-3 py-1 text-[11px] font-bold tracking-wider text-primary-dark">
               ADMIN CONSOLE
             </span>
@@ -75,13 +75,13 @@ export default function AdminLoginPage() {
             >
               Tiếp tục · Xác thực khuôn mặt
             </Button>
-            <p className="mt-3 text-center text-[13px] leading-relaxed text-muted">
+            <p className="mt-3 text-[13px] leading-relaxed text-muted">
               Đăng nhập bất thường sẽ bị AI chặn và yêu cầu xác thực bổ sung.
             </p>
           </div>
 
           {/* RIGHT — Face panel */}
-          <div className="flex flex-col items-center bg-page p-8">
+          <div className="m-4 flex flex-col items-center rounded-2xl bg-page p-8 md:m-5 md:ml-0">
             <h2 className="text-base font-bold text-ink">Xác thực khuôn mặt AI</h2>
 
             {/* Camera viewport */}

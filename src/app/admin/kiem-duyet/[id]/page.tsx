@@ -13,6 +13,18 @@ const CHECKLIST = ['Ảnh hợp lệ', 'Giá khớp khu vực', 'Không chứa t
 const DESCRIPTION_SAMPLE =
   'Phòng khép kín, đầy đủ nội thất cơ bản: giường, tủ, bàn học, điều hòa, nóng lạnh. Khu vực an ninh, giờ giấc tự do, có chỗ để xe rộng rãi. Gần trường đại học và các tuyến xe buýt chính.';
 
+function landlordFor(post: { roomId: number }): string {
+  const map: Record<number, string> = {
+    302: 'Nguyễn Văn An',
+    405: 'Trần Thu Hằng',
+    510: 'Lê Minh Đức',
+    102: 'Nguyễn Văn An',
+    303: 'Nguyễn Văn An',
+    201: 'Trần Thị Mai',
+  };
+  return map[post.roomId] ?? 'Chủ trọ Roomix';
+}
+
 export default async function ModerationDetailPage({
   params,
 }: {
@@ -34,11 +46,11 @@ export default async function ModerationDetailPage({
   return (
     <div>
       <Link href="/admin/kiem-duyet" className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:text-primary-dark">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
-        Hàng chờ kiểm duyệt
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5" /><path d="m12 19-7-7 7-7" /></svg>
+        Quay lại
       </Link>
 
-      <div className="mt-5 grid gap-6 lg:grid-cols-[1fr_360px]">
+      <div className="mt-5 grid gap-6 lg:grid-cols-[1fr_380px] lg:gap-10">
         {/* LEFT — Photos + listing info */}
         <div className="min-w-0">
           <div className="relative aspect-[16/10] w-full overflow-hidden rounded-2xl border border-line bg-page">
@@ -52,23 +64,22 @@ export default async function ModerationDetailPage({
                   <Image src={src} alt={post.title} fill className="object-cover" sizes="144px" />
                 </div>
               ))}
-              <div className="relative h-24 w-36 overflow-hidden rounded-xl border border-line bg-page">
-                <Image src={post.image} alt={post.title} fill className="object-cover" sizes="144px" />
-              </div>
             </div>
           )}
 
-          <Card className="mt-5 p-6">
-            <h1 className="text-[22px] font-extrabold tracking-tight text-ink">{post.title}</h1>
-            <p className="mt-2 text-[15px] font-semibold text-primary">{formatVND(post.price)}/tháng</p>
-            <p className="mt-1.5 text-sm text-muted">
-              {post.area}
+          <div className="mt-6">
+            <h1 className="text-[24px] font-extrabold tracking-tight text-ink">{post.title}</h1>
+            <p className="mt-2 text-[15px] text-secondary">
+              {formatVND(post.price)}/tháng
               {size ? ` · ${size}m²` : ''}
               {floor ? ` · Tầng ${floor}` : ''}
-              {` · Phòng ${post.roomCode} · Đăng ${post.createdAt}`}
+              {` · ${post.area}`}
+            </p>
+            <p className="mt-1.5 text-sm text-muted">
+              Chủ trọ: {landlordFor(post)} · Đăng {post.createdAt}
             </p>
 
-            <p className="mt-4 text-sm leading-relaxed text-ink/80">{DESCRIPTION_SAMPLE}</p>
+            <p className="mt-4 max-w-[560px] text-sm leading-relaxed text-ink/80">{DESCRIPTION_SAMPLE}</p>
 
             <div className="mt-5">
               <p className="mb-2 text-sm font-bold text-ink">Tiện ích</p>
@@ -80,13 +91,13 @@ export default async function ModerationDetailPage({
                 ))}
               </div>
             </div>
-          </Card>
+          </div>
         </div>
 
         {/* RIGHT — Moderation panel */}
         <div>
           <Card className="sticky top-24 p-6">
-            <h2 className="text-lg font-bold text-ink">Kiểm duyệt</h2>
+            <h2 className="text-[17px] font-bold text-ink">Kiểm duyệt</h2>
 
             <ul className="mt-4 space-y-3">
               {CHECKLIST.map((item) => (
@@ -100,7 +111,7 @@ export default async function ModerationDetailPage({
             </ul>
 
             <div className="mt-5">
-              <Badge tone="green" dot>Rủi ro thấp</Badge>
+              <Badge tone="green" className="px-4 py-1.5">Rủi ro thấp</Badge>
             </div>
 
             <div className="mt-5">

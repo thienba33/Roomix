@@ -57,7 +57,7 @@ export default function NotificationsPage() {
         <p className="mt-1 text-sm text-muted">Gửi thông báo tới người dùng và theo dõi hoạt động quản trị</p>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid gap-6 lg:grid-cols-2">
         {/* LEFT — Notifications */}
         <Card className="p-6">
           <h2 className="text-base font-bold text-ink">Thông báo hệ thống</h2>

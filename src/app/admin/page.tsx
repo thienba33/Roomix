@@ -1,21 +1,69 @@
 import Card from '@/components/ui/Card';
-import Badge from '@/components/ui/Badge';
-import { LineChart, DonutChart } from '@/components/ui/Charts';
-import { adminStats, userGrowth, postDonut, adminLandlords } from '@/lib/data';
-import { formatVND } from '@/lib/utils';
+import { LineChart } from '@/components/ui/Charts';
+import { adminStats, userGrowth, postDonut, adminLandlords, reports } from '@/lib/data';
+
+/* Derived from mock data (adminLandlords) so the vacancy table stays data-driven */
+const totalRooms = adminLandlords.reduce((s, l) => s + l.rooms, 0);
+const vacantOf = (rooms: number, occupancy: number) => Math.round((rooms * (100 - occupancy)) / 100);
+const totalVacant = adminLandlords.reduce((s, l) => s + vacantOf(l.rooms, l.occupancy), 0);
+const vacantPct = totalRooms > 0 ? Math.round((totalVacant / totalRooms) * 100) : 0;
+const pendingReports = reports.filter((r) => r.status === 'PENDING').length;
+
+/* Line chart in the reference is labelled T1–T6; same growth series, relabelled */
+const growthLine = userGrowth.map((d, i) => ({ ...d, label: `T${i + 1}` }));
 
 const KPIS = [
-  { label: 'Tổng người dùng', value: String(adminStats.totalUsers), sub: '+18 tháng này', subTone: 'text-green-600' },
-  { label: 'Chủ trọ', value: String(adminStats.totalLandlords), sub: 'Đang hoạt động', subTone: 'text-muted' },
-  { label: 'Bài đăng', value: String(adminStats.totalPosts), sub: 'Toàn hệ thống', subTone: 'text-muted' },
-  { label: 'Chờ duyệt', value: String(adminStats.pendingPosts), sub: 'Cần kiểm duyệt', subTone: 'text-amber-600', amber: true },
+  { label: 'Người dùng', value: adminStats.totalUsers.toLocaleString('vi-VN'), sub: '+18 tháng này' },
+  { label: 'Chủ trọ', value: adminStats.totalLandlords.toLocaleString('vi-VN'), sub: 'Đang hoạt động' },
+  { label: 'Phòng trọ', value: totalRooms.toLocaleString('vi-VN'), sub: `${adminLandlords.length} chủ trọ` },
+  { label: 'Phòng trống', value: totalVacant.toLocaleString('vi-VN'), sub: `${vacantPct}% tổng số phòng` },
 ];
 
+function PostDonut() {
+  const total = postDonut.reduce((s, d) => s + d.value, 0) || 1;
+  const r = 52;
+  const c = 2 * Math.PI * r;
+  let acc = 0;
+  const arcs = postDonut.map((d) => {
+    const frac = d.value / total;
+    const arc = { dash: frac * c, offset: -acc * c, color: d.color };
+    acc += frac;
+    return arc;
+  });
+  const approved = postDonut[0];
+  return (
+    <div className="relative h-[128px] w-[128px] shrink-0">
+      <svg viewBox="0 0 128 128" className="h-full w-full -rotate-90">
+        <circle cx="64" cy="64" r={r} fill="none" stroke="#F1F1F1" strokeWidth="17" />
+        {arcs.map((a, i) => (
+          <circle
+            key={i}
+            cx="64"
+            cy="64"
+            r={r}
+            fill="none"
+            stroke={a.color}
+            strokeWidth="17"
+            strokeDasharray={`${Math.max(a.dash - 2, 0)} ${c}`}
+            strokeDashoffset={a.offset}
+          />
+        ))}
+      </svg>
+      <div className="absolute inset-0 flex flex-col items-center justify-center">
+        <span className="text-[22px] font-extrabold leading-none text-ink">{approved.value}%</span>
+        <span className="mt-1 text-[11px] text-muted">đã duyệt</span>
+      </div>
+    </div>
+  );
+}
+
 export default function AdminDashboardPage() {
+  const maxBar = Math.max(...userGrowth.map((d) => d.value), 1);
+
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-[26px] font-extrabold tracking-tight text-ink">Tổng quan hệ thống</h1>
+        <h1 className="text-[26px] font-extrabold tracking-tight text-ink">Dashboard hệ thống</h1>
         <p className="mt-1 text-sm text-muted">Toàn bộ Roomix · cập nhật hôm nay</p>
       </div>
 
@@ -23,84 +71,95 @@ export default function AdminDashboardPage() {
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {KPIS.map((k) => (
           <Card key={k.label} className="p-5">
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted">{k.label}</p>
-            <p className="mt-2 text-[32px] font-extrabold leading-none text-ink">
-              {k.value}
-              {k.amber && (
-                <span className="ml-2 inline-block h-2.5 w-2.5 rounded-full bg-amber-500 align-middle" aria-hidden />
-              )}
-            </p>
-            <p className={`mt-2 text-[13px] font-medium ${k.subTone}`}>{k.sub}</p>
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-muted">{k.label}</p>
+            <p className="mt-2 text-[30px] font-extrabold leading-none text-ink">{k.value}</p>
+            <p className="mt-2 text-[13px] font-medium text-green-600">{k.sub}</p>
           </Card>
         ))}
       </div>
 
-      {/* Charts row */}
-      <div className="mt-4 flex flex-col gap-4 lg:flex-row">
-        <Card className="flex-[2] p-5">
-          <div className="mb-2 flex items-center justify-between">
-            <div>
-              <h2 className="text-base font-bold text-ink">Người dùng mới</h2>
-              <p className="text-xs text-muted">người / tháng</p>
-            </div>
-            <Badge tone="indigo">6 tháng gần nhất</Badge>
+      {/* Charts row — bar / line / donut */}
+      <div className="mt-6 grid gap-4 lg:grid-cols-3">
+        <Card className="p-5">
+          <h2 className="text-[16px] font-bold text-ink">Người dùng mới 6 tháng</h2>
+          <div className="mt-5 flex items-end gap-3" role="img" aria-label="Biểu đồ cột người dùng mới 6 tháng">
+            {userGrowth.map((d) => (
+              <div key={d.label} className="flex flex-1 flex-col items-center gap-2">
+                <div className="flex h-[108px] w-full items-end justify-center">
+                  <div
+                    className="w-full max-w-[34px] rounded-t-[6px] bg-primary"
+                    style={{ height: `${(d.value / maxBar) * 100}%` }}
+                  />
+                </div>
+                <span className="text-[11px] text-muted">{d.label}</span>
+              </div>
+            ))}
           </div>
-          <LineChart data={userGrowth} height={200} />
         </Card>
 
-        <Card className="flex-1 p-5">
-          <h2 className="text-base font-bold text-ink">Bài đăng</h2>
-          <p className="mb-3 text-xs text-muted">Theo trạng thái duyệt</p>
-          <DonutChart data={postDonut} centerLabel="186" centerSub="bài đăng" size={168} />
-          <div className="mt-2 space-y-1.5 border-t border-line pt-3">
-            <p className="flex items-center justify-between text-[13px]"><span className="flex items-center gap-2 text-muted"><span className="h-2 w-2 rounded-full bg-green-600" />Đã duyệt</span><span className="font-semibold text-ink">68%</span></p>
-            <p className="flex items-center justify-between text-[13px]"><span className="flex items-center gap-2 text-muted"><span className="h-2 w-2 rounded-full bg-amber-500" />Chờ duyệt</span><span className="font-semibold text-ink">22%</span></p>
-            <p className="flex items-center justify-between text-[13px]"><span className="flex items-center gap-2 text-muted"><span className="h-2 w-2 rounded-full bg-red-600" />Từ chối</span><span className="font-semibold text-ink">10%</span></p>
+        <Card className="p-5">
+          <h2 className="text-[16px] font-bold text-ink">Người dùng mới</h2>
+          <p className="text-xs text-muted">người / tháng</p>
+          <div className="mt-2">
+            <LineChart data={growthLine} height={168} area={false} />
           </div>
+        </Card>
+
+        <Card className="p-5">
+          <h2 className="text-[16px] font-bold text-ink">Bài đăng</h2>
+          <div className="mt-4 flex items-center gap-5">
+            <PostDonut />
+            <ul className="space-y-2.5">
+              {postDonut.map((d) => (
+                <li key={d.label} className="flex items-center gap-2 text-[13px] text-ink">
+                  <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: d.color }} />
+                  {d.label} · {d.value}%
+                </li>
+              ))}
+            </ul>
+          </div>
+          <p className="mt-4 text-xs text-muted">Theo trạng thái duyệt</p>
         </Card>
       </div>
 
-      {/* Top landlords */}
-      <Card className="mt-4 overflow-hidden">
-        <div className="flex items-center justify-between px-5 pt-5">
-          <h2 className="text-base font-bold text-ink">Chủ trọ nổi bật</h2>
-          <span className="text-xs text-muted">Theo doanh thu tháng này</span>
+      {/* Attention strip */}
+      <Card className="mt-6 p-5">
+        <h2 className="text-[16px] font-bold text-ink">Cần chú ý</h2>
+        <div className="mt-3 grid gap-2.5 sm:grid-cols-3">
+          <p className="flex items-center gap-2.5 text-sm text-ink">
+            <span className="h-2 w-2 shrink-0 rounded-full bg-amber-600" />
+            {adminStats.pendingPosts} bài chờ kiểm duyệt
+          </p>
+          <p className="flex items-center gap-2.5 text-sm text-ink">
+            <span className="h-2 w-2 shrink-0 rounded-full bg-red-600" />
+            {pendingReports} báo cáo chưa xử lý
+          </p>
+          <p className="flex items-center gap-2.5 text-sm text-ink">
+            <span className="h-2 w-2 shrink-0 rounded-full bg-primary" />
+            3 chủ trọ chờ xác minh
+          </p>
         </div>
-        <div className="mt-3 overflow-x-auto">
+      </Card>
+
+      {/* Vacant rooms by landlord — divider-only rows */}
+      <Card className="mt-6 overflow-hidden">
+        <h2 className="px-5 pt-5 text-[16px] font-bold text-ink">Phòng trống theo chủ trọ</h2>
+        <div className="mt-2 overflow-x-auto px-5 pb-3">
           <table className="w-full min-w-[640px] text-left text-sm">
-            <thead>
-              <tr className="border-y border-line bg-page text-xs uppercase tracking-wider text-muted">
-                <th className="px-5 py-3 font-semibold">Chủ trọ</th>
-                <th className="px-5 py-3 font-semibold">Nhà</th>
-                <th className="px-5 py-3 font-semibold">Phòng</th>
-                <th className="px-5 py-3 font-semibold">Lấp đầy</th>
-                <th className="px-5 py-3 text-right font-semibold">Doanh thu</th>
-              </tr>
-            </thead>
             <tbody>
-              {adminLandlords.map((l) => (
-                <tr key={l.id} className="border-b border-line last:border-0 hover:bg-page/60">
-                  <td className="px-5 py-3.5">
-                    <span className="flex items-center gap-3">
-                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary-soft text-xs font-bold text-primary-dark">
-                        {l.name.split(' ').map((w) => w[0]).slice(-2).join('')}
-                      </span>
-                      <span className="font-semibold text-ink">{l.name}</span>
-                    </span>
-                  </td>
-                  <td className="px-5 py-3.5 text-muted">{l.house}</td>
-                  <td className="px-5 py-3.5 text-ink">{l.rooms} phòng</td>
-                  <td className="px-5 py-3.5">
-                    <span className="flex items-center gap-2">
-                      <span className="h-1.5 w-16 overflow-hidden rounded-full bg-primary-soft">
-                        <span className="block h-full rounded-full bg-primary" style={{ width: `${l.occupancy}%` }} />
-                      </span>
-                      <span className="font-medium text-ink">{l.occupancy}%</span>
-                    </span>
-                  </td>
-                  <td className="px-5 py-3.5 text-right font-semibold text-ink">{formatVND(l.revenue)}</td>
-                </tr>
-              ))}
+              {adminLandlords.map((l) => {
+                const vacant = vacantOf(l.rooms, l.occupancy);
+                return (
+                  <tr key={l.id} className="border-b border-line last:border-0">
+                    <td className="py-4 pr-4 font-medium text-ink">{l.name}</td>
+                    <td className="py-4 pr-4 text-muted">{l.house}</td>
+                    <td className="py-4 pr-4 text-muted">{l.rooms} phòng</td>
+                    <td className={`py-4 text-right font-medium ${vacant > 0 ? 'text-green-600' : 'text-muted'}`}>
+                      {vacant} trống
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
