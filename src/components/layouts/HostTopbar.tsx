@@ -1,9 +1,11 @@
 'use client';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { landlord } from '@/lib/data';
+import { pendingRequestCountFromStorage, unreadCountFromStorage } from '@/lib/landlord-store';
 
 const TABS = [
   { label: 'Hôm nay', href: '/landlord' },
@@ -18,6 +20,9 @@ const TABS = [
 
 export default function HostTopbar() {
   const pathname = usePathname();
+  const [pendingCount, setPendingCount] = useState(0);
+  const [unreadCount, setUnreadCount] = useState(0);
+  useEffect(() => { const refresh = () => { try { setPendingCount(pendingRequestCountFromStorage()); setUnreadCount(unreadCountFromStorage()); } catch {} }; refresh(); const id = setInterval(refresh, 1500); window.addEventListener('storage', refresh); window.addEventListener('focus', refresh); return () => { clearInterval(id); window.removeEventListener('storage', refresh); window.removeEventListener('focus', refresh); }; }, [pathname]);
   return (
     <header className="sticky top-0 z-50 border-b border-line bg-white/95 backdrop-blur">
       <div className="flex h-16 w-full items-center gap-4 px-6 lg:px-12">
@@ -29,7 +34,7 @@ export default function HostTopbar() {
             const active = t.href === '/landlord' ? pathname === '/landlord' : pathname.startsWith(t.href);
             return (
               <Link key={t.href} href={t.href} className={cn('whitespace-nowrap rounded-full px-4 py-2 text-sm transition', active ? 'bg-white font-semibold text-ink shadow-sm' : 'font-medium text-[#484848] hover:text-ink')}>
-                {t.label}
+                {t.label}{t.href === '/landlord/requests' && pendingCount > 0 && (<span className="ml-1.5 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1 text-[11px] font-bold text-white">{pendingCount}</span>)}
               </Link>
             );
           })}
@@ -37,7 +42,7 @@ export default function HostTopbar() {
         <div className="ml-auto flex shrink-0 items-center gap-3 lg:ml-0">
           <Link href="/landlord/notifications" aria-label="Thông báo" className="relative flex h-10 w-10 items-center justify-center rounded-full text-ink transition hover:bg-page">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" /><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" /></svg>
-            <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-primary ring-2 ring-white" />
+            {unreadCount > 0 ? (<span className="absolute -right-0.5 -top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1 text-[11px] font-bold text-white ring-2 ring-white">{unreadCount}</span>) : (<span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-primary ring-2 ring-white" />)}
           </Link>
           <Link href="/landlord/profile" className="flex items-center gap-2.5 rounded-full border border-line py-1.5 pl-1.5 pr-4 transition hover:shadow">
             <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-soft text-[13px] font-bold text-primary">{landlord.initials}</span>

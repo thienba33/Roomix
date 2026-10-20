@@ -1,4 +1,7 @@
-import { activities, revenueBar, revenueLine, stats } from '@/lib/data';
+'use client';
+import Link from 'next/link';
+import { activities, revenueBar, revenueLine, stats, posts as seedPosts } from '@/lib/data';
+import { useRequestsState, useInvoicesState, usePostsState, isOverdue } from '@/lib/landlord-store';
 import Card from '@/components/ui/Card';
 import { BarChart, LineChart } from '@/components/ui/Charts';
 
@@ -11,14 +14,9 @@ function OccupancyDonut() {
       <div className="relative h-[170px] w-[170px]">
         <svg viewBox="0 0 180 180" className="h-full w-full -rotate-90">
           <circle cx="90" cy="90" r={r} fill="none" stroke="#E5E7EB" strokeWidth="22" />
-          <circle
-            cx="90" cy="90" r={r} fill="none" stroke="#4F46E5" strokeWidth="22"
-            strokeDasharray={`${(pct / 100) * c} ${c}`}
-          />
+          <circle cx="90" cy="90" r={r} fill="none" stroke="#4F46E5" strokeWidth="22" strokeDasharray={`${(pct / 100) * c} ${c}`} />
         </svg>
-        <div className="absolute inset-0 flex items-center justify-center">
-          <span className="text-[32px] font-extrabold text-ink">{pct}%</span>
-        </div>
+        <div className="absolute inset-0 flex items-center justify-center"><span className="text-[32px] font-extrabold text-ink">{pct}%</span></div>
       </div>
       <p className="mt-3 text-[13px] text-muted">{stats.rented} / {stats.totalRooms} phòng đang thuê</p>
     </div>
@@ -32,76 +30,43 @@ const KPIS = [
   { label: 'DOANH THU THÁNG', value: '84,5 tr', sub: '+12% tháng trước' },
 ];
 
-const TODO_ITEMS = [
-  { dot: 'bg-amber-600', text: '3 yêu cầu quan tâm mới' },
-  { dot: 'bg-red-600', text: '2 hóa đơn quá hạn' },
-  { dot: 'bg-primary', text: '1 bài đăng chờ gửi duyệt' },
-  { dot: 'bg-green-600', text: 'Ghi chỉ số điện tháng 10' },
-];
-
-const toneText: Record<string, string> = {
-  green: 'text-green-700',
-  red: 'text-red-600',
-  amber: 'text-amber-700',
-  indigo: 'text-primary',
-};
+const toneText: Record<string, string> = { green: 'text-green-700', red: 'text-red-600', amber: 'text-amber-700', indigo: 'text-primary' };
 
 export default function ChuTroHomePage() {
+  const [reqs] = useRequestsState();
+  const [invs] = useInvoicesState();
+  const [posts] = usePostsState();
+  const pendingReq = reqs.filter((r) => r.status === 'PENDING').length;
+  const overdueInv = invs.filter((i) => isOverdue(i)).length;
+  const draftPosts = posts.filter((p) => p.status === 'DRAFT').length;
+  const seedDraft = seedPosts.filter((p) => p.status === 'DRAFT').length;
+  const TODO_ITEMS = [
+    { dot: 'bg-amber-600', text: `${pendingReq} yêu cầu quan tâm mới`, href: '/landlord/requests' },
+    { dot: 'bg-red-600', text: `${overdueInv} hóa đơn quá hạn`, href: '/landlord/invoices' },
+    { dot: 'bg-primary', text: `${draftPosts || seedDraft} bài đăng chờ gửi duyệt`, href: '/landlord/listings' },
+    { dot: 'bg-green-600', text: 'Ghi chỉ số điện tháng 10', href: '/landlord/invoices' },
+  ];
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-[28px] font-extrabold text-ink">Xin chào, Nguyễn Văn An</h1>
-        <p className="mt-1 text-sm text-muted">Tổng quan · Roomix Lê Văn Lương</p>
-      </div>
-
+      <div><h1 className="text-[28px] font-extrabold text-ink">Xin chào, Nguyễn Văn An</h1><p className="mt-1 text-sm text-muted">Tổng quan · Roomix Lê Văn Lương</p></div>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {KPIS.map((k) => (
-          <Card key={k.label} className="p-5">
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted">{k.label}</p>
-            <p className="mt-2 text-[32px] font-extrabold leading-none text-ink">{k.value}</p>
-            <p className="mt-2 text-[13px] font-medium text-green-600">{k.sub}</p>
-          </Card>
-        ))}
+        {KPIS.map((k) => (<Card key={k.label} className="p-5"><p className="text-xs font-semibold uppercase tracking-wide text-muted">{k.label}</p><p className="mt-2 text-[32px] font-extrabold leading-none text-ink">{k.value}</p><p className="mt-2 text-[13px] font-medium text-green-600">{k.sub}</p></Card>))}
       </div>
-
       <div className="grid gap-4 lg:grid-cols-3">
-        <Card className="p-5">
-          <h3 className="font-bold text-ink">Doanh thu 6 tháng</h3>
-          <p className="mt-0.5 text-[13px] text-muted">triệu đồng</p>
-          <div className="mt-3">
-            <BarChart data={revenueBar} />
-          </div>
-        </Card>
-        <Card className="p-5">
-          <h3 className="font-bold text-ink">Xu hướng doanh thu</h3>
-          <p className="mt-0.5 text-[13px] text-muted">triệu đồng</p>
-          <div className="mt-3">
-            <LineChart data={revenueLine} />
-          </div>
-        </Card>
-        <Card className="p-5">
-          <h3 className="font-bold text-ink">Tỷ lệ lấp đầy</h3>
-          <div className="mt-4">
-            <OccupancyDonut />
-          </div>
-        </Card>
+        <Card className="p-5"><h3 className="font-bold text-ink">Doanh thu 6 tháng</h3><p className="mt-0.5 text-[13px] text-muted">triệu đồng</p><div className="mt-3"><BarChart data={revenueBar} /></div></Card>
+        <Card className="p-5"><h3 className="font-bold text-ink">Xu hướng doanh thu</h3><p className="mt-0.5 text-[13px] text-muted">triệu đồng</p><div className="mt-3"><LineChart data={revenueLine} /></div></Card>
+        <Card className="p-5"><h3 className="font-bold text-ink">Tỷ lệ lấp đầy</h3><div className="mt-4"><OccupancyDonut /></div></Card>
       </div>
-
       <Card className="px-5 py-5">
         <h3 className="font-bold text-ink">Cần xử lý</h3>
         <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {TODO_ITEMS.map((item, i) => (
-            <div
-              key={item.text}
-              className={`flex items-center gap-2.5 text-sm font-medium text-ink ${i > 0 ? 'lg:border-l lg:border-line/70 lg:pl-5' : ''}`}
-            >
-              <span className={`h-2 w-2 shrink-0 rounded-full ${item.dot}`} />
-              {item.text}
-            </div>
+            <Link key={item.text} href={item.href} className={`flex items-center gap-2.5 text-sm font-medium text-ink hover:text-primary hover:underline ${i > 0 ? 'lg:border-l lg:border-line/70 lg:pl-5' : ''}`}>
+              <span className={`h-2 w-2 shrink-0 rounded-full ${item.dot}`} />{item.text}<span aria-hidden>→</span>
+            </Link>
           ))}
         </div>
       </Card>
-
       <Card className="p-5">
         <h3 className="font-bold text-ink">Hoạt động gần đây</h3>
         <div className="mt-2 divide-y divide-line/70">
