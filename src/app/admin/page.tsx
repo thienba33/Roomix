@@ -1,13 +1,22 @@
+'use client';
+
+import Link from 'next/link';
 import Card from '@/components/ui/Card';
 import { LineChart } from '@/components/ui/Charts';
-import { adminStats, userGrowth, postDonut, adminLandlords, reports } from '@/lib/data';
+import { adminStats, userGrowth, postDonut, adminLandlords } from '@/lib/data';
+import {
+  pendingModerationCount,
+  useAdminReports,
+  useAdminUsers,
+  useModerationDecisions,
+} from '@/lib/admin-store';
+import { cn } from '@/lib/utils';
 
 /* Derived from mock data (adminLandlords) so the vacancy table stays data-driven */
 const totalRooms = adminLandlords.reduce((s, l) => s + l.rooms, 0);
 const vacantOf = (rooms: number, occupancy: number) => Math.round((rooms * (100 - occupancy)) / 100);
 const totalVacant = adminLandlords.reduce((s, l) => s + vacantOf(l.rooms, l.occupancy), 0);
 const vacantPct = totalRooms > 0 ? Math.round((totalVacant / totalRooms) * 100) : 0;
-const pendingReports = reports.filter((r) => r.status === 'PENDING').length;
 
 /* Line chart in the reference is labelled T1–T6; same growth series, relabelled */
 const growthLine = userGrowth.map((d, i) => ({ ...d, label: `T${i + 1}` }));
@@ -57,8 +66,46 @@ function PostDonut() {
   );
 }
 
+// C2 · UC07.8 / UC07.5 — "Cần chú ý" counts are computed from the SAME admin
+// store the queues use (moderation decisions, reports, users), so this strip
+// can never disagree with C3/C5/C4; every item links to its queue, and the
+// most urgent items (reports, then moderation) are visually prioritised.
 export default function AdminDashboardPage() {
   const maxBar = Math.max(...userGrowth.map((d) => d.value), 1);
+  const [decisions] = useModerationDecisions();
+  const [reports] = useAdminReports();
+  const [users] = useAdminUsers();
+
+  const pendingPosts = pendingModerationCount(decisions);
+  const pendingReports = reports.filter((r) => r.status === 'PENDING').length;
+  const pendingVerifications = users.filter((u) => u.status === 'PENDING_VERIFICATION').length;
+
+  const attention = [
+    {
+      href: '/admin/reports',
+      count: pendingReports,
+      label: 'báo cáo chưa xử lý',
+      dot: 'bg-red-600',
+      ring: 'border-red-200 bg-red-50 hover:border-red-300',
+      priority: pendingReports > 0,
+    },
+    {
+      href: '/admin/moderation',
+      count: pendingPosts,
+      label: 'bài chờ kiểm duyệt',
+      dot: 'bg-amber-600',
+      ring: 'border-amber-200 bg-amber-50 hover:border-amber-300',
+      priority: pendingPosts > 0,
+    },
+    {
+      href: '/admin/users?status=PENDING_VERIFICATION',
+      count: pendingVerifications,
+      label: 'chủ trọ chờ xác minh',
+      dot: 'bg-primary',
+      ring: 'border-line bg-white hover:border-primary/40',
+      priority: false,
+    },
+  ];
 
   return (
     <div>
@@ -67,7 +114,6 @@ export default function AdminDashboardPage() {
         <p className="mt-1 text-sm text-muted">Toàn bộ Roomix · cập nhật hôm nay</p>
       </div>
 
-      {/* KPI row */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {KPIS.map((k) => (
           <Card key={k.label} className="p-5">
@@ -78,7 +124,6 @@ export default function AdminDashboardPage() {
         ))}
       </div>
 
-      {/* Charts row — bar / line / donut */}
       <div className="mt-6 grid gap-4 lg:grid-cols-3">
         <Card className="p-5">
           <h2 className="text-[16px] font-bold text-ink">Người dùng mới 6 tháng</h2>
@@ -122,26 +167,30 @@ export default function AdminDashboardPage() {
         </Card>
       </div>
 
-      {/* Attention strip */}
+      {/* Attention strip — live counts from the shared admin store, each item navigates to its queue */}
       <Card className="mt-6 p-5">
         <h2 className="text-[16px] font-bold text-ink">Cần chú ý</h2>
         <div className="mt-3 grid gap-2.5 sm:grid-cols-3">
-          <p className="flex items-center gap-2.5 text-sm text-ink">
-            <span className="h-2 w-2 shrink-0 rounded-full bg-amber-600" />
-            {adminStats.pendingPosts} bài chờ kiểm duyệt
-          </p>
-          <p className="flex items-center gap-2.5 text-sm text-ink">
-            <span className="h-2 w-2 shrink-0 rounded-full bg-red-600" />
-            {pendingReports} báo cáo chưa xử lý
-          </p>
-          <p className="flex items-center gap-2.5 text-sm text-ink">
-            <span className="h-2 w-2 shrink-0 rounded-full bg-primary" />
-            3 chủ trọ chờ xác minh
-          </p>
+          {attention.map((a) => (
+            <Link
+              key={a.href + a.label}
+              href={a.href}
+              className={cn(
+                'flex items-center gap-2.5 rounded-xl border px-3.5 py-3 text-sm font-medium text-ink transition',
+                a.ring,
+                a.priority && 'font-semibold',
+              )}
+            >
+              <span className={cn('h-2 w-2 shrink-0 rounded-full', a.dot)} />
+              <span>
+                <span className="font-extrabold">{a.count}</span> {a.label}
+              </span>
+              <span className="ml-auto text-muted" aria-hidden>→</span>
+            </Link>
+          ))}
         </div>
       </Card>
 
-      {/* Vacant rooms by landlord — divider-only rows */}
       <Card className="mt-6 overflow-hidden">
         <h2 className="px-5 pt-5 text-[16px] font-bold text-ink">Phòng trống theo chủ trọ</h2>
         <div className="mt-2 overflow-x-auto px-5 pb-3">

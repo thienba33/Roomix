@@ -3,6 +3,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
+import { pendingModerationCount, useModerationDecisions } from '@/lib/admin-store';
 
 const TABS = [
   { label: 'Tổng quan', href: '/admin' },
@@ -14,6 +15,8 @@ const TABS = [
 
 export default function AdminTopbar() {
   const pathname = usePathname();
+  const [decisions] = useModerationDecisions();
+  const pendingCount = pendingModerationCount(decisions);
   return (
     <header className="sticky top-0 z-50 border-b border-line bg-white/95 backdrop-blur">
       <div className="flex h-16 w-full items-center gap-4 px-6 lg:px-12">
@@ -24,9 +27,17 @@ export default function AdminTopbar() {
         <nav className="mx-auto hidden items-center gap-1 rounded-full bg-[#F7F7F7] p-1 lg:flex">
           {TABS.map((t) => {
             const active = t.href === '/admin' ? pathname === '/admin' : pathname.startsWith(t.href);
+            const showBadge = t.href === '/admin/moderation' && pendingCount > 0;
             return (
               <Link key={t.href} href={t.href} className={cn('whitespace-nowrap rounded-full px-4 py-2 text-sm transition', active ? 'bg-white font-semibold text-ink shadow-sm' : 'font-medium text-[#484848] hover:text-ink')}>
-                {t.label}
+                <span className="inline-flex items-center gap-1.5">
+                  {t.label}
+                  {showBadge && (
+                    <span aria-label={`${pendingCount} bài chờ kiểm duyệt`} className="flex h-5 min-w-5 items-center justify-center rounded-full bg-amber-500 px-1 text-[11px] font-bold text-white">
+                      {pendingCount}
+                    </span>
+                  )}
+                </span>
               </Link>
             );
           })}
