@@ -11,8 +11,8 @@ export default function Footer() {
         </div>
         <nav className="flex gap-5 text-[13px] text-muted">
           <Link href="/" className="hover:text-ink">Tìm phòng</Link>
-          <Link href="/yeu-thich" className="hover:text-ink">Phòng yêu thích</Link>
-          <Link href="/chu-tro" className="hover:text-ink">Dành cho chủ trọ</Link>
+          <Link href="/favorites" className="hover:text-ink">Phòng yêu thích</Link>
+          <Link href="/landlord" className="hover:text-ink">Dành cho chủ trọ</Link>
         </nav>
       </div>
     </footer>

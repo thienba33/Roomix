@@ -46,7 +46,7 @@ export default function BaiDangPage() {
           <p className="mt-1 text-sm text-muted">{posts.length} bài · {liveCount} đang hiển thị</p>
         </div>
         <Link
-          href="/chu-tro/bai-dang/tao"
+          href="/landlord/listings/create"
           className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-dark"
         >
           + Tạo bài đăng

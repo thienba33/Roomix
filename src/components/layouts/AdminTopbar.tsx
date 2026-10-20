@@ -6,10 +6,10 @@ import { cn } from '@/lib/utils';
 
 const TABS = [
   { label: 'Tổng quan', href: '/admin' },
-  { label: 'Kiểm duyệt', href: '/admin/kiem-duyet' },
-  { label: 'Người dùng', href: '/admin/nguoi-dung' },
-  { label: 'Báo cáo', href: '/admin/bao-cao' },
-  { label: 'Thông báo & Log', href: '/admin/thong-bao' },
+  { label: 'Kiểm duyệt', href: '/admin/moderation' },
+  { label: 'Người dùng', href: '/admin/users' },
+  { label: 'Báo cáo', href: '/admin/reports' },
+  { label: 'Thông báo & Log', href: '/admin/notifications' },
 ];
 
 export default function AdminTopbar() {

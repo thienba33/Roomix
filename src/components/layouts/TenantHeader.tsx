@@ -10,8 +10,8 @@ import AiPanel from './AiPanel';
 
 const NAV = [
   { label: 'Tìm phòng', href: '/' },
-  { label: 'Phòng yêu thích', href: '/yeu-thich' },
-  { label: 'Yêu cầu của tôi', href: '/yeu-cau' },
+  { label: 'Phòng yêu thích', href: '/favorites' },
+  { label: 'Yêu cầu của tôi', href: '/requests' },
 ];
 
 export default function TenantHeader({ defaultAiOpen = false }: { defaultAiOpen?: boolean }) {
@@ -71,11 +71,11 @@ export default function TenantHeader({ defaultAiOpen = false }: { defaultAiOpen?
                     <p><span className="mr-1.5 font-bold text-primary">✓</span>{tenantUser.phone} đã xác minh</p>
                   </div>
                   <div className="border-t border-line" />
-                  <Link href="/yeu-cau" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-ink hover:bg-page">
+                  <Link href="/requests" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-ink hover:bg-page">
                     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M4 6h16M4 12h16M4 18h10" /></svg>
                     Yêu cầu của tôi
                   </Link>
-                  <Link href="/yeu-thich" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-ink hover:bg-page">
+                  <Link href="/favorites" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-ink hover:bg-page">
                     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" /></svg>
                     Phòng yêu thích
                   </Link>

@@ -44,7 +44,7 @@ export default function TaoBaiDangPage() {
         <h2 className="mt-5 text-xl font-extrabold text-ink">Bài đăng đã gửi duyệt</h2>
         <p className="mt-2 text-sm text-muted">Admin sẽ kiểm duyệt bài đăng của bạn. Bạn sẽ nhận được thông báo khi bài đăng được duyệt.</p>
         <Link
-          href="/chu-tro/bai-dang"
+          href="/landlord/listings"
           className="mt-6 inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-dark"
         >
           Về danh sách bài đăng

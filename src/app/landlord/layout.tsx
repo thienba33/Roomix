@@ -6,7 +6,7 @@ import { ToastProvider } from '@/components/ui/Toast';
 
 export default function ChuTroLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
-  if (pathname === '/chu-tro/dang-nhap') {
+  if (pathname === '/landlord/login') {
     return <>{children}</>;
   }
   return (

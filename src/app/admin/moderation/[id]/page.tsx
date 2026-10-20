@@ -45,7 +45,7 @@ export default async function ModerationDetailPage({
 
   return (
     <div>
-      <Link href="/admin/kiem-duyet" className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:text-primary-dark">
+      <Link href="/admin/moderation" className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:text-primary-dark">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5" /><path d="m12 19-7-7 7-7" /></svg>
         Quay lại
       </Link>
@@ -119,10 +119,10 @@ export default async function ModerationDetailPage({
             </div>
 
             <div className="mt-5 flex gap-3">
-              <Link href="/admin/kiem-duyet" className="flex-1">
+              <Link href="/admin/moderation" className="flex-1">
                 <Button className="w-full">Duyệt bài</Button>
               </Link>
-              <Link href="/admin/kiem-duyet" className="flex-1">
+              <Link href="/admin/moderation" className="flex-1">
                 <Button variant="outline" className="w-full border-red-300 text-red-600 hover:border-red-500 hover:text-red-700">
                   Từ chối
                 </Button>

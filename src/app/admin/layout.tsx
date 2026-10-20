@@ -7,7 +7,7 @@ import type { ReactNode } from 'react';
 export default function AdminLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
 
-  if (pathname === '/admin/dang-nhap') {
+  if (pathname === '/admin/login') {
     return <>{children}</>;
   }
 

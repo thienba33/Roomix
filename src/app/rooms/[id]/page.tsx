@@ -122,7 +122,7 @@ export default async function RoomDetailPage({ params }: { params: Promise<{ id:
                 <p className="text-[15px] font-bold text-ink">Phòng khác của chủ trọ</p>
                 <div className="mt-3 space-y-2.5">
                   {otherRooms.map((r) => (
-                    <Link key={r.id} href={`/phong/${r.id}`} className="block text-sm text-muted transition hover:text-ink">
+                    <Link key={r.id} href={`/rooms/${r.id}`} className="block text-sm text-muted transition hover:text-ink">
                       Phòng {r.code} · {formatPriceShort(r.price)} · {roomStatusLabel[r.status]}
                     </Link>
                   ))}

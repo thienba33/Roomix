@@ -48,7 +48,7 @@ export default function DangNhapChuTroPage() {
             className="mt-7 space-y-4"
             onSubmit={(e) => {
               e.preventDefault();
-              router.push('/chu-tro');
+              router.push('/landlord');
             }}
           >
             <Input name="email" type="text" placeholder="Email hoặc số điện thoại" icon={mailIcon} autoComplete="username" />
@@ -86,7 +86,7 @@ export default function DangNhapChuTroPage() {
             <span className="h-px flex-1 bg-line" />
           </div>
 
-          <Button variant="outline" size="lg" className="w-full" onClick={() => router.push('/chu-tro')}>
+          <Button variant="outline" size="lg" className="w-full" onClick={() => router.push('/landlord')}>
             <span className="flex h-6 w-6 items-center justify-center rounded-full border border-line text-sm font-bold text-primary">G</span>
             Tiếp tục với Google
           </Button>

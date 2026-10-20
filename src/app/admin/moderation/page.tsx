@@ -112,7 +112,7 @@ export default function ModerationPage() {
                 Phòng {selected.roomCode} · {formatVND(selected.price)} / tháng · {selected.area}
               </p>
               <Link
-                href={`/admin/kiem-duyet/${selected.id}`}
+                href={`/admin/moderation/${selected.id}`}
                 className="mt-2 inline-block text-[13px] font-semibold text-primary hover:text-primary-dark"
               >
                 Xem chi tiết kiểm duyệt

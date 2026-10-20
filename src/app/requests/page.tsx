@@ -51,7 +51,7 @@ export default function MyRequestsPage() {
               <Card key={req.id} className="overflow-hidden">
                 <div className="flex flex-col sm:flex-row">
                   {room && (
-                    <Link href={`/phong/${room.id}`} className="relative block h-44 shrink-0 sm:h-auto sm:w-[200px]">
+                    <Link href={`/rooms/${room.id}`} className="relative block h-44 shrink-0 sm:h-auto sm:w-[200px]">
                       <Image src={room.image} alt={room.name} fill sizes="200px" className="object-cover" />
                     </Link>
                   )}

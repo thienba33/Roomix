@@ -52,44 +52,44 @@ src/
 | Mã | Màn hình | Route / Component |
 |----|----------|-------------------|
 | A1 | Tìm phòng (trang chủ) | `/` |
-| A2 | Chi tiết phòng | `/phong/[id]` |
+| A2 | Chi tiết phòng | `/rooms/[id]` |
 | A3 | Panel AI (trạng thái component) | Component `AiPanel` + route `/ai` |
-| A4 | Yêu cầu của tôi | `/yeu-cau` |
+| A4 | Yêu cầu của tôi | `/requests` |
 | A5 | Đăng nhập | `/login` |
 | — | Đăng ký | `/register` |
 | A6 | Bộ lọc (trạng thái component) | Component `FilterModal` |
-| A7 | Trạng thái / thông báo | `/trang-thai` |
-| A8 | Hồ sơ & Phòng yêu thích | `/yeu-thich` |
+| A7 | Trạng thái / thông báo | `/states` |
+| A8 | Hồ sơ & Phòng yêu thích | `/favorites` |
 | A9 | Menu người dùng (trạng thái component) | Dropdown trong `TenantHeader` |
 
 ### Chủ trọ (Landlord)
 
 | Mã | Màn hình | Route / Component |
 |----|----------|-------------------|
-| B1 | Hôm nay (tổng quan) | `/chu-tro` |
-| B2 | Nhà & Phòng | `/chu-tro/phong` |
-| B3 | Bài đăng | `/chu-tro/bai-dang` |
-| B4 | Tạo bài đăng | `/chu-tro/bai-dang/tao` |
-| B5 | Yêu cầu quan tâm | `/chu-tro/yeu-cau` |
+| B1 | Hôm nay (tổng quan) | `/landlord` |
+| B2 | Nhà & Phòng | `/landlord/rooms` |
+| B3 | Bài đăng | `/landlord/listings` |
+| B4 | Tạo bài đăng | `/landlord/listings/create` |
+| B5 | Yêu cầu quan tâm | `/landlord/requests` |
 | B12 | Từ chối yêu cầu (trạng thái component) | Component `RejectModal` |
-| B6 | Khách thuê | `/chu-tro/khach-thue` |
-| B7 | Hóa đơn | `/chu-tro/hoa-don` |
+| B6 | Khách thuê | `/landlord/tenants` |
+| B7 | Hóa đơn | `/landlord/invoices` |
 | B13 | Chi tiết hóa đơn (trạng thái component) | Component `InvoiceDrawer` |
-| B8 | Thống kê | `/chu-tro/thong-ke` |
-| B9 | Thông báo | `/chu-tro/thong-bao` |
-| B10 | Hồ sơ chủ trọ | `/chu-tro/ho-so` |
-| B11 | Đăng nhập chủ trọ | `/chu-tro/dang-nhap` |
+| B8 | Thống kê | `/landlord/statistics` |
+| B9 | Thông báo | `/landlord/notifications` |
+| B10 | Hồ sơ chủ trọ | `/landlord/profile` |
+| B11 | Đăng nhập chủ trọ | `/landlord/login` |
 
 ### Admin
 
 | Mã | Màn hình | Route / Component |
 |----|----------|-------------------|
-| C1 | Đăng nhập Admin (kèm xác thực khuôn mặt) | `/admin/dang-nhap` |
+| C1 | Đăng nhập Admin (kèm xác thực khuôn mặt) | `/admin/login` |
 | C2 | Tổng quan | `/admin` |
-| C3 | Kiểm duyệt bài đăng | `/admin/kiem-duyet` |
-| C7 | Chi tiết kiểm duyệt | `/admin/kiem-duyet/[id]` |
-| C4 | Quản lý người dùng | `/admin/nguoi-dung` |
-| C5 | Báo cáo vi phạm | `/admin/bao-cao` |
-| C6 | Thông báo & Audit log | `/admin/thong-bao` |
+| C3 | Kiểm duyệt bài đăng | `/admin/moderation` |
+| C7 | Chi tiết kiểm duyệt | `/admin/moderation/[id]` |
+| C4 | Quản lý người dùng | `/admin/users` |
+| C5 | Báo cáo vi phạm | `/admin/reports` |
+| C6 | Thông báo & Audit log | `/admin/notifications` |
 
 > A3, A6, A9, B12, B13 là các trạng thái/component dùng lại (panel, modal, drawer, dropdown) chứ không phải route riêng — A3 có thêm route `/ai` để mở trực tiếp.

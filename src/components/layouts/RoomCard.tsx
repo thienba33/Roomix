@@ -11,7 +11,7 @@ export default function RoomCard({ room, favorite = false }: { room: Room; favor
   return (
     <div className="group">
       <div className="relative">
-        <Link href={`/phong/${room.id}`}>
+        <Link href={`/rooms/${room.id}`}>
           <Image src={room.image} alt={room.name} width={640} height={427} className="aspect-[3/2] w-full rounded-[14px] object-cover" />
         </Link>
         <button
@@ -24,7 +24,7 @@ export default function RoomCard({ room, favorite = false }: { room: Room; favor
           </svg>
         </button>
       </div>
-      <Link href={`/phong/${room.id}`} className="block pt-3">
+      <Link href={`/rooms/${room.id}`} className="block pt-3">
         <div className="flex items-start justify-between gap-2">
           <h3 className="text-[15px] font-bold text-ink">{room.name}</h3>
           <span className="flex shrink-0 items-center gap-1 text-[13px] font-medium text-ink">
