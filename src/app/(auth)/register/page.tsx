@@ -32,8 +32,7 @@ export default function RegisterPage() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-page px-4 py-10">
       <Link href="/" className="mb-8 flex items-center gap-2">
-        <Image src="/images/logo.png" alt="Roomix" width={36} height={36} className="h-9 w-9 object-contain" />
-        <span className="text-[22px] font-extrabold tracking-tight text-ink">Room<span className="text-primary">ix</span></span>
+        <Image src="/images/logo.png" alt="Roomix" width={1500} height={520} className="h-10 w-auto" priority />
       </Link>
 
       <Card className="grid w-full max-w-5xl overflow-hidden rounded-3xl shadow-[0_12px_40px_rgba(0,0,0,0.10)] md:grid-cols-2">

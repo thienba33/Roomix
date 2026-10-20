@@ -20,16 +20,15 @@ export default function HostTopbar() {
   const pathname = usePathname();
   return (
     <header className="sticky top-0 z-50 border-b border-line bg-white/95 backdrop-blur">
-      <div className="mx-auto flex h-16 max-w-7xl items-center gap-4 px-6">
-        <Link href="/chu-tro" className="flex shrink-0 items-center gap-2">
-          <Image src="/images/logo.png" alt="Roomix" width={28} height={28} className="h-7 w-7 object-contain" />
-          <span className="text-base font-extrabold tracking-tight text-ink">Room<span className="text-primary">ix</span></span>
+      <div className="flex h-16 w-full items-center gap-4 px-6 lg:px-12">
+        <Link href="/chu-tro" className="flex shrink-0 items-center" aria-label="Roomix">
+          <Image src="/images/logo.png" alt="Roomix" width={1500} height={520} className="h-[22px] w-auto" priority />
         </Link>
-        <nav className="mx-auto hidden items-center gap-1 lg:flex">
+        <nav className="mx-auto hidden items-center gap-1 rounded-full bg-[#F7F7F7] p-1 lg:flex">
           {TABS.map((t) => {
             const active = t.href === '/chu-tro' ? pathname === '/chu-tro' : pathname.startsWith(t.href);
             return (
-              <Link key={t.href} href={t.href} className={cn('whitespace-nowrap rounded-full px-3.5 py-2 text-sm transition', active ? 'bg-primary-soft font-bold text-primary' : 'font-medium text-muted hover:bg-page hover:text-ink')}>
+              <Link key={t.href} href={t.href} className={cn('whitespace-nowrap rounded-full px-4 py-2 text-sm transition', active ? 'bg-white font-semibold text-ink shadow-sm' : 'font-medium text-[#484848] hover:text-ink')}>
                 {t.label}
               </Link>
             );
@@ -42,7 +41,7 @@ export default function HostTopbar() {
           </Link>
           <Link href="/chu-tro/ho-so" className="flex items-center gap-2.5 rounded-full border border-line py-1.5 pl-1.5 pr-4 transition hover:shadow">
             <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-soft text-[13px] font-bold text-primary">{landlord.initials}</span>
-            <span className="hidden text-sm font-semibold text-ink sm:block">{landlord.name}</span>
+            <span className="hidden text-sm font-medium text-[#484848] sm:block">{landlord.name}</span>
           </Link>
         </div>
       </div>

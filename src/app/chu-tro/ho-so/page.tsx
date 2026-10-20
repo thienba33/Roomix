@@ -65,7 +65,7 @@ export default function HoSoPage() {
             <p className="mt-1 text-[13px] text-muted">Khách thuê nhận được thẻ này khi yêu cầu quan tâm được chấp nhận.</p>
             <div className="mt-4 rounded-2xl bg-white p-5 shadow-sm">
               <div className="flex items-center gap-3">
-                <Image src="/images/logo.png" alt="Roomix" width={36} height={36} className="h-9 w-9 object-contain" />
+                <Image src="/images/logo-mark.png" alt="Roomix" width={36} height={36} className="h-9 w-9 object-contain" />
                 <div>
                   <p className="font-extrabold text-ink">{landlord.name}</p>
                   <p className="text-[13px] text-muted">{landlord.house}</p>

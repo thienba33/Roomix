@@ -18,10 +18,7 @@ export default function AdminLoginPage() {
     <div className="flex min-h-screen flex-col items-center justify-center bg-page px-4 py-10">
       {/* Logo above */}
       <div className="mb-8 flex items-center gap-2.5">
-        <Image src="/images/logo.png" alt="Roomix" width={36} height={36} className="h-9 w-9 object-contain" />
-        <span className="text-2xl font-extrabold tracking-tight text-ink">
-          Room<span className="text-primary">ix</span>
-        </span>
+        <Image src="/images/logo.png" alt="Roomix" width={1500} height={520} className="h-10 w-auto" priority />
       </div>
 
       <Card className="w-full max-w-4xl overflow-hidden rounded-3xl p-0 shadow-[0_8px_40px_rgba(0,0,0,0.08)]">

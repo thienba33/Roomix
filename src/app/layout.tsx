@@ -11,7 +11,7 @@ const jakarta = Plus_Jakarta_Sans({
 export const metadata: Metadata = {
   title: 'Roomix — Cho thuê phòng trọ thông minh',
   description: 'Roomix — Nền tảng cho thuê phòng trọ thông minh: tìm phòng, quản lý nhà trọ, hóa đơn và chatbot AI.',
-  icons: { icon: '/images/logo.png' },
+  icons: { icon: '/images/logo-mark.png' },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
