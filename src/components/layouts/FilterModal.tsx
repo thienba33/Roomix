@@ -4,74 +4,126 @@ import Modal from '@/components/ui/Modal';
 import Button from '@/components/ui/Button';
 import { cn } from '@/lib/utils';
 
-const AREAS = ['Cầu Giấy', 'Thanh Xuân', 'Đống Đa', 'Hà Đông'];
 const SIZES = ['Dưới 20m²', '20–30m²', 'Trên 30m²'];
-const AMENITIES = ['Điều hòa', 'Wifi', 'Máy giặt', 'Ban công', 'Bếp', 'WC riêng'];
-const TYPES = ['Tất cả', 'Phòng đơn', 'Phòng đôi', 'Nguyên căn'];
+const AMENITIES = ['Điều hòa', 'Máy giặt', 'Ban công', 'Gác lửng', 'WC riêng', 'Bếp', 'Gửi xe', 'Thang máy'];
+const TYPES = ['Tất cả', 'Phòng trọ', 'Chung cư mini', 'KTX'];
+
+const PRICE_MIN = 1;
+const PRICE_MAX = 5;
+
+const thumbClass =
+  'pointer-events-none absolute inset-x-0 top-1/2 h-6 w-full -translate-y-1/2 appearance-none bg-transparent [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-primary [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:shadow [&::-moz-range-thumb]:pointer-events-auto [&::-moz-range-thumb]:h-5 [&::-moz-range-thumb]:w-5 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-primary [&::-moz-range-thumb]:bg-white';
+
+function fmtPrice(n: number) {
+  return `${String(n).replace('.', ',')}tr`;
+}
 
 export default function FilterModal({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const [areas, setAreas] = useState<string[]>(['Thanh Xuân']);
   const [size, setSize] = useState('20–30m²');
-  const [amen, setAmen] = useState<string[]>(['Điều hòa', 'Wifi']);
-  const [type, setType] = useState('Tất cả');
-  const [maxPrice, setMaxPrice] = useState(4);
+  const [amen, setAmen] = useState<string[]>(['Điều hòa', 'Ban công', 'WC riêng']);
+  const [type, setType] = useState('Phòng trọ');
+  const [priceLo, setPriceLo] = useState(2);
+  const [priceHi, setPriceHi] = useState(4);
 
-  const toggle = (list: string[], v: string, set: (x: string[]) => void) =>
-    set(list.includes(v) ? list.filter((x) => x !== v) : [...list, v]);
+  const toggleAmen = (v: string) =>
+    setAmen((prev) => (prev.includes(v) ? prev.filter((x) => x !== v) : [...prev, v]));
+
+  const reset = () => {
+    setAmen([]);
+    setSize('');
+    setType('Tất cả');
+    setPriceLo(PRICE_MIN);
+    setPriceHi(PRICE_MAX);
+  };
+
+  const loPct = ((priceLo - PRICE_MIN) / (PRICE_MAX - PRICE_MIN)) * 100;
+  const hiPct = ((priceHi - PRICE_MIN) / (PRICE_MAX - PRICE_MIN)) * 100;
 
   return (
-    <Modal open={open} onClose={onClose} title="Bộ lọc" widthClass="max-w-xl">
-      <div className="space-y-6">
+    <Modal open={open} onClose={onClose} title="Bộ lọc nâng cao" widthClass="max-w-[720px]">
+      <div className="space-y-7 px-1 pb-1 pt-1">
         <section>
-          <h4 className="mb-2.5 text-sm font-bold text-ink">Khu vực</h4>
-          <div className="flex flex-wrap gap-2">
-            {AREAS.map((a) => (
-              <button key={a} onClick={() => toggle(areas, a, setAreas)} className={cn('rounded-full border px-4 py-2 text-sm font-medium transition', areas.includes(a) ? 'border-primary bg-primary-soft text-primary' : 'border-line text-ink hover:border-primary')}>
-                {a}
+          <h4 className="text-[15px] font-bold text-ink">Khoảng giá / tháng</h4>
+          <div className="relative mt-5 h-6">
+            <div className="absolute inset-x-0 top-1/2 h-[5px] -translate-y-1/2 rounded-full bg-line" />
+            <div
+              className="absolute top-1/2 h-[5px] -translate-y-1/2 rounded-full bg-primary"
+              style={{ left: `${loPct}%`, width: `${hiPct - loPct}%` }}
+            />
+            <input
+              type="range"
+              min={PRICE_MIN}
+              max={PRICE_MAX}
+              step={0.5}
+              value={priceLo}
+              onChange={(e) => setPriceLo(Math.min(Number(e.target.value), priceHi - 0.5))}
+              className={thumbClass}
+              aria-label="Giá tối thiểu"
+            />
+            <input
+              type="range"
+              min={PRICE_MIN}
+              max={PRICE_MAX}
+              step={0.5}
+              value={priceHi}
+              onChange={(e) => setPriceHi(Math.max(Number(e.target.value), priceLo + 0.5))}
+              className={thumbClass}
+              aria-label="Giá tối đa"
+            />
+          </div>
+          <p className="mt-1.5 text-[13px] text-muted">{fmtPrice(priceLo)} — {fmtPrice(priceHi)}</p>
+        </section>
+
+        <section>
+          <h4 className="text-[15px] font-bold text-ink">Diện tích</h4>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {SIZES.map((s) => (
+              <button
+                key={s}
+                onClick={() => setSize(s)}
+                className={cn('rounded-full px-5 py-2.5 text-sm font-medium transition', size === s ? 'bg-primary font-semibold text-white' : 'bg-page text-ink hover:bg-line/60')}
+              >
+                {s}
               </button>
             ))}
           </div>
         </section>
 
         <section>
-          <h4 className="mb-2.5 text-sm font-bold text-ink">Giá thuê</h4>
-          <input type="range" min={1} max={5} step={0.5} value={maxPrice} onChange={(e) => setMaxPrice(Number(e.target.value))} className="w-full accent-[#4F46E5]" />
-          <div className="mt-1 flex justify-between text-[13px] text-muted"><span>1tr</span><span className="font-semibold text-ink">Tối đa {String(maxPrice).replace('.', ',')}tr</span><span>5tr+</span></div>
-        </section>
-
-        <section>
-          <h4 className="mb-2.5 text-sm font-bold text-ink">Diện tích</h4>
-          <div className="flex flex-wrap gap-2">
-            {SIZES.map((s) => (
-              <button key={s} onClick={() => setSize(s)} className={cn('rounded-full border px-4 py-2 text-sm font-medium transition', size === s ? 'border-primary bg-primary-soft text-primary' : 'border-line text-ink hover:border-primary')}>{s}</button>
-            ))}
+          <h4 className="text-[15px] font-bold text-ink">Tiện ích</h4>
+          <div className="mt-3 grid grid-cols-2 gap-x-6 gap-y-3.5">
+            {AMENITIES.map((a) => {
+              const checked = amen.includes(a);
+              return (
+                <button key={a} onClick={() => toggleAmen(a)} className="flex items-center gap-2.5 text-left text-sm text-ink">
+                  <span className={cn('flex h-5 w-5 shrink-0 items-center justify-center rounded-[5px] border transition', checked ? 'border-primary bg-primary text-white' : 'border-line bg-white text-transparent')}>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
+                  </span>
+                  {a}
+                </button>
+              );
+            })}
           </div>
         </section>
 
         <section>
-          <h4 className="mb-2.5 text-sm font-bold text-ink">Tiện ích</h4>
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-            {AMENITIES.map((a) => (
-              <label key={a} className="flex cursor-pointer items-center gap-2 rounded-xl border border-line px-3 py-2.5 text-sm text-ink has-[:checked]:border-primary has-[:checked]:bg-primary-soft">
-                <input type="checkbox" checked={amen.includes(a)} onChange={() => toggle(amen, a, setAmen)} className="h-4 w-4 accent-[#4F46E5]" />
-                {a}
-              </label>
-            ))}
-          </div>
-        </section>
-
-        <section>
-          <h4 className="mb-2.5 text-sm font-bold text-ink">Loại phòng</h4>
-          <div className="flex rounded-xl bg-page p-1">
+          <h4 className="text-[15px] font-bold text-ink">Loại phòng</h4>
+          <div className="mt-3 flex rounded-xl bg-page p-1">
             {TYPES.map((t) => (
-              <button key={t} onClick={() => setType(t)} className={cn('flex-1 rounded-lg px-2 py-2 text-[13px] font-medium transition', type === t ? 'bg-white font-bold text-ink shadow-sm' : 'text-muted')}>{t}</button>
+              <button
+                key={t}
+                onClick={() => setType(t)}
+                className={cn('flex-1 rounded-lg px-2 py-2.5 text-sm transition', type === t ? 'bg-white font-bold text-ink shadow-sm' : 'font-medium text-muted hover:text-ink')}
+              >
+                {t}
+              </button>
             ))}
           </div>
         </section>
 
-        <div className="flex items-center justify-between border-t border-line pt-4">
-          <Button variant="ghost" onClick={() => { setAreas([]); setAmen([]); setSize(''); setType('Tất cả'); }}>Xóa lọc</Button>
-          <Button onClick={onClose}>Áp dụng · 24 phòng</Button>
+        <div className="flex items-center justify-between pt-1">
+          <button onClick={reset} className="text-sm font-semibold text-primary hover:underline">Xóa lọc</button>
+          <Button onClick={onClose} className="rounded-xl px-6 py-3">Áp dụng · 24 phòng</Button>
         </div>
       </div>
     </Modal>

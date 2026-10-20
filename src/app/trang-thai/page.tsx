@@ -7,7 +7,7 @@ import { SkeletonCard } from '@/components/ui/Skeleton';
 export default function StatesPage() {
   return (
     <TenantShell>
-      <div className="mx-auto max-w-7xl px-6 py-6">
+      <div className="w-full px-6 py-6 lg:px-12">
         <h1 className="text-[28px] font-extrabold text-ink">Trạng thái giao diện</h1>
         <p className="mt-1 text-sm text-muted">Các trạng thái trống và đang tải dùng trong Roomix</p>
 

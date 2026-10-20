@@ -26,8 +26,8 @@ export default function AiPanel({ onClose }: { onClose: () => void }) {
 
       <div className="flex-1 overflow-y-auto px-5 py-5">
         <div className="flex items-center gap-3">
-          <span className="bg-sea-gradient flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full">
-            <Image src="/images/ai-icon.png" alt="" width={24} height={24} className="brightness-0 invert" />
+          <span className="bg-sea-gradient flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-white">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden><path d="M12 2l1.9 5.7L20 9.6l-6.1 1.9L12 17.2l-1.9-5.7L4 9.6l6.1-1.9z" /><path d="M19 15.5l.8 2.4 2.4.8-2.4.8-.8 2.4-.8-2.4-2.4-.8 2.4-.8z" /></svg>
           </span>
           <div>
             <p className="font-bold text-ink">Xin chào, Minh Anh</p>
@@ -46,7 +46,7 @@ export default function AiPanel({ onClose }: { onClose: () => void }) {
         </div>
 
         <div className="mt-6 flex justify-end">
-          <p className="max-w-[85%] rounded-2xl rounded-tr-md bg-sky-light px-4 py-3 text-sm text-ink">Tìm phòng dưới 3 triệu, 2 người, có điều hòa</p>
+          <p className="max-w-[85%] rounded-2xl bg-sky-light px-4 py-3 text-sm text-ink">Tìm phòng dưới 3 triệu, 2 người, có điều hòa</p>
         </div>
 
         <div className="mt-4 rounded-2xl border border-sky-light bg-sky-pale p-4">
@@ -76,7 +76,7 @@ export default function AiPanel({ onClose }: { onClose: () => void }) {
         {extraMsg && (
           <>
             <div className="mt-5 flex justify-end">
-              <p className="max-w-[85%] rounded-2xl rounded-tr-md bg-sky-light px-4 py-3 text-sm text-ink">{extraMsg}</p>
+              <p className="max-w-[85%] rounded-2xl bg-sky-light px-4 py-3 text-sm text-ink">{extraMsg}</p>
             </div>
             <p className="mt-3 text-sm text-muted">Mình đã ghi nhận — xem các phòng gợi ý ở danh sách bên trái nhé.</p>
           </>

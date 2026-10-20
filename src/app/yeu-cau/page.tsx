@@ -39,7 +39,7 @@ export default function MyRequestsPage() {
 
   return (
     <TenantShell>
-      <div className="mx-auto max-w-7xl px-6 py-6">
+      <div className="w-full px-6 py-6 lg:px-12">
         <h1 className="text-[28px] font-extrabold text-ink">Yêu cầu của tôi</h1>
         <p className="mt-1 text-sm text-muted">{items.length} yêu cầu quan tâm đã gửi cho chủ trọ</p>
 

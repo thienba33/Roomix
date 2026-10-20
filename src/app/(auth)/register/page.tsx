@@ -35,8 +35,8 @@ export default function RegisterPage() {
         <Image src="/images/logo.png" alt="Roomix" width={1500} height={520} className="h-10 w-auto" priority />
       </Link>
 
-      <Card className="grid w-full max-w-5xl overflow-hidden rounded-3xl shadow-[0_12px_40px_rgba(0,0,0,0.10)] md:grid-cols-2">
-        <div className="relative hidden min-h-[560px] md:block">
+      <Card className="grid w-full max-w-[1080px] overflow-hidden rounded-3xl shadow-[0_12px_40px_rgba(0,0,0,0.10)] md:h-[640px] md:grid-cols-2">
+        <div className="relative hidden md:block">
           <Image src="/images/rooms/room-405.webp" alt="Phòng trọ Roomix" fill sizes="50vw" className="object-cover" priority />
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
           <div className="absolute inset-x-0 bottom-0 p-8">
@@ -45,14 +45,14 @@ export default function RegisterPage() {
           </div>
         </div>
 
-        <div className="p-8 sm:p-10">
+        <div className="flex flex-col justify-center p-8 sm:p-12">
           <h1 className="text-2xl font-extrabold text-ink">Tạo tài khoản</h1>
           <p className="mt-1.5 text-sm text-muted">Điền thông tin để bắt đầu với Roomix</p>
 
           <form onSubmit={onSubmit} className="mt-7 space-y-4">
-            <Input name="fullname" type="text" placeholder="Họ tên" autoComplete="name" icon={UserIcon} />
-            <Input name="account" type="text" placeholder="Email hoặc số điện thoại" autoComplete="username" icon={MailIcon} />
-            <Input name="password" type="password" placeholder="Mật khẩu" autoComplete="new-password" icon={LockIcon} />
+            <Input name="fullname" type="text" placeholder="Họ tên" autoComplete="name" icon={UserIcon} className="h-[52px] rounded-xl text-[15px]" />
+            <Input name="account" type="text" placeholder="Email hoặc số điện thoại" autoComplete="username" icon={MailIcon} className="h-[52px] rounded-xl text-[15px]" />
+            <Input name="password" type="password" placeholder="Mật khẩu" autoComplete="new-password" icon={LockIcon} className="h-[52px] rounded-xl text-[15px]" />
 
             <div>
               <p className="mb-1.5 text-sm font-medium text-ink">Bạn là</p>
@@ -70,8 +70,19 @@ export default function RegisterPage() {
               </div>
             </div>
 
-            <Button type="submit" size="lg" className="w-full">Đăng ký</Button>
+            <Button type="submit" size="lg" className="h-[52px] w-full">Đăng ký</Button>
           </form>
+
+          <div className="my-6 flex items-center gap-3 text-[13px] text-muted">
+            <span className="h-px flex-1 bg-line" />
+            hoặc
+            <span className="h-px flex-1 bg-line" />
+          </div>
+
+          <Button type="button" variant="outline" size="lg" className="h-[52px] w-full">
+            <span className="flex h-5 w-5 items-center justify-center rounded-full border border-line text-[13px] font-extrabold text-ink">G</span>
+            Tiếp tục với Google
+          </Button>
 
           <p className="mt-7 text-center text-sm text-muted">
             Đã có tài khoản?{' '}

@@ -29,8 +29,8 @@ export default function LoginPage() {
         <Image src="/images/logo.png" alt="Roomix" width={1500} height={520} className="h-10 w-auto" priority />
       </Link>
 
-      <Card className="grid w-full max-w-5xl overflow-hidden rounded-3xl shadow-[0_12px_40px_rgba(0,0,0,0.10)] md:grid-cols-2">
-        <div className="relative hidden min-h-[560px] md:block">
+      <Card className="grid w-full max-w-[1080px] overflow-hidden rounded-3xl shadow-[0_12px_40px_rgba(0,0,0,0.10)] md:h-[640px] md:grid-cols-2">
+        <div className="relative hidden md:block">
           <Image src="/images/rooms/room-302-a.jpg" alt="Phòng trọ Roomix" fill sizes="50vw" className="object-cover" priority />
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
           <div className="absolute inset-x-0 bottom-0 p-8">
@@ -39,12 +39,12 @@ export default function LoginPage() {
           </div>
         </div>
 
-        <div className="p-8 sm:p-10">
+        <div className="flex flex-col justify-center p-8 sm:p-12">
           <h1 className="text-2xl font-extrabold text-ink">Chào mừng đến Roomix</h1>
           <p className="mt-1.5 text-sm text-muted">Đăng nhập để tiếp tục tìm phòng</p>
 
           <form onSubmit={onSubmit} className="mt-7 space-y-4">
-            <Input name="account" type="text" placeholder="Email hoặc số điện thoại" autoComplete="username" icon={MailIcon} />
+            <Input name="account" type="text" placeholder="Email hoặc số điện thoại" autoComplete="username" icon={MailIcon} className="h-[52px] rounded-xl text-[15px]" />
             <div className="relative">
               <Input
                 name="password"
@@ -52,7 +52,7 @@ export default function LoginPage() {
                 placeholder="Mật khẩu"
                 autoComplete="current-password"
                 icon={LockIcon}
-                className="pr-11"
+                className="h-[52px] rounded-xl pr-11 text-[15px]"
               />
               <button
                 type="button"
@@ -72,7 +72,7 @@ export default function LoginPage() {
               <a href="#" className="font-semibold text-primary hover:underline">Quên mật khẩu?</a>
             </div>
 
-            <Button type="submit" size="lg" className="w-full">Đăng nhập</Button>
+            <Button type="submit" size="lg" className="h-[52px] w-full">Đăng nhập</Button>
           </form>
 
           <div className="my-6 flex items-center gap-3 text-[13px] text-muted">
@@ -81,7 +81,7 @@ export default function LoginPage() {
             <span className="h-px flex-1 bg-line" />
           </div>
 
-          <Button type="button" variant="outline" size="lg" className="w-full">
+          <Button type="button" variant="outline" size="lg" className="h-[52px] w-full">
             <span className="flex h-5 w-5 items-center justify-center rounded-full border border-line text-[13px] font-extrabold text-ink">G</span>
             Tiếp tục với Google
           </Button>
