@@ -9,7 +9,7 @@
  * single place to swap for `src/services/api.ts` calls.
  */
 import { rooms as allRooms, favoriteRooms, requests as seedRequests, tenantUser } from '@/lib/data';
-import type { Room, RentalRequestItem } from '@/types';
+import type { Room, RentalRequestItem, NotificationItem } from '@/types';
 
 /* ------------------------------------------------------------------ types */
 
@@ -146,10 +146,15 @@ const KEY_USER_REQUESTS = 'roomix:tenant:requests';
 const KEY_CANCELLED_SEEDS = 'roomix:tenant:cancelled-seeds';
 const KEY_SEARCH = 'roomix:tenant:search';
 const KEY_NOTIFICATIONS = 'roomix:tenant:notifications';
+const KEY_NOTIFICATION_LIST = 'roomix:tenant:notification-list';
+const KEY_PROFILE = 'roomix:tenant:profile';
+const KEY_NOTIF_PREFS = 'roomix:tenant:notification-prefs';
 export const KEY_AI_CONTEXT = 'roomix:tenant:ai-context';
 
 export const FAVORITES_EVENT = 'roomix:tenant:favorites-changed';
 export const OPEN_AI_EVENT = 'roomix:tenant:open-ai';
+export const NOTIFICATIONS_EVENT = 'roomix:tenant:notifications-changed';
+export const PROFILE_EVENT = 'roomix:tenant:profile-changed';
 
 function readJSON<T>(key: string): T | null {
   try {
@@ -294,6 +299,86 @@ export function getNotificationsEnabled(): boolean {
 
 export function setNotificationsEnabled(on: boolean) {
   writeJSON(KEY_NOTIFICATIONS, on);
+  window.dispatchEvent(new CustomEvent(NOTIFICATIONS_EVENT));
+}
+
+/* ------------------------------------------------- notification list (UC07.7) */
+
+/** Seed notifications for the tenant — the receiver side of the backend
+ * Notification module (GET /api/notifications). The stories mirror the mock
+ * dataset: Phòng 302 request accepted, Phòng 405 pending, October invoice. */
+export const TENANT_NOTIFICATIONS_SEED: NotificationItem[] = [
+  { id: 1, type: 'INTEREST_REQUEST', title: 'Yêu cầu được chấp nhận', body: 'Chủ trọ Nguyễn Văn An đã chấp nhận yêu cầu Phòng 302 — Contact Card đã được mở khóa', time: '30 phút trước', read: false },
+  { id: 2, type: 'INVOICE', title: 'Hóa đơn tháng 10 đã phát hành', body: 'Phòng 302: 3.350.000đ, hạn thanh toán 05/11', time: 'Hôm nay', read: false },
+  { id: 3, type: 'INTEREST_REQUEST', title: 'Đã gửi yêu cầu quan tâm', body: 'Yêu cầu Phòng 405 đang chờ chủ trọ phản hồi', time: 'Hôm qua', read: true },
+  { id: 4, type: 'POST_APPROVAL', title: 'Bài đăng phòng yêu thích được duyệt', body: 'Bài đăng Phòng 405 trong danh sách yêu thích của bạn vừa được Admin duyệt hiển thị', time: 'Hôm qua', read: true },
+  { id: 5, type: 'SYSTEM', title: 'Thông báo hệ thống', body: 'Roomix bảo trì định kỳ 23:00–23:30 ngày 25/10, dữ liệu của bạn không bị ảnh hưởng', time: '2 ngày trước', read: true },
+  { id: 6, type: 'GENERAL', title: 'Hoàn thiện hồ sơ của bạn', body: 'Hồ sơ đã xác minh giúp chủ trọ tin tưởng và phản hồi nhanh hơn', time: '3 ngày trước', read: true },
+];
+
+export function getTenantNotifications(): NotificationItem[] {
+  const saved = readJSON<NotificationItem[]>(KEY_NOTIFICATION_LIST);
+  if (Array.isArray(saved)) return saved;
+  return [...TENANT_NOTIFICATIONS_SEED];
+}
+
+export function setTenantNotifications(list: NotificationItem[]) {
+  writeJSON(KEY_NOTIFICATION_LIST, list);
+  window.dispatchEvent(new CustomEvent(NOTIFICATIONS_EVENT));
+}
+
+export function getUnreadNotificationCount(): number {
+  return getTenantNotifications().filter((n) => !n.read).length;
+}
+
+/* ------------------------------------------------------- profile (UC01.4) */
+
+export interface TenantProfile {
+  name: string;
+  phone: string;
+  /** Optional contact address — not part of the seed user record. */
+  address: string;
+}
+
+export function getTenantProfile(): TenantProfile {
+  const saved = readJSON<Partial<TenantProfile>>(KEY_PROFILE);
+  return {
+    name: saved?.name?.trim() ? saved.name : tenantUser.name,
+    phone: saved?.phone?.trim() ? saved.phone : tenantUser.phone,
+    address: saved?.address ?? '',
+  };
+}
+
+export function setTenantProfile(p: TenantProfile) {
+  writeJSON(KEY_PROFILE, p);
+  window.dispatchEvent(new CustomEvent(PROFILE_EVENT));
+}
+
+/** Display initials derived from the (possibly edited) profile name —
+ * first letters of the last two name parts, matching the seed ('MA'). */
+export function profileInitials(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return tenantUser.initials;
+  return parts.slice(-2).map((p) => p[0]).join('').toUpperCase();
+}
+
+/* ------------------------------------------- notification preferences */
+
+export interface NotificationPrefs {
+  email: boolean;
+  inApp: boolean;
+  push: boolean;
+}
+
+export const DEFAULT_NOTIF_PREFS: NotificationPrefs = { email: true, inApp: true, push: false };
+
+export function getNotificationPrefs(): NotificationPrefs {
+  const saved = readJSON<Partial<NotificationPrefs>>(KEY_NOTIF_PREFS);
+  return { ...DEFAULT_NOTIF_PREFS, ...(saved ?? {}) };
+}
+
+export function setNotificationPrefs(p: NotificationPrefs) {
+  writeJSON(KEY_NOTIF_PREFS, p);
 }
 
 export { allRooms };
