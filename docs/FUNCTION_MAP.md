@@ -248,7 +248,7 @@ or DTO anywhere in the repo.
 
 ---
 
-## 3. Frontend inventory — 26 routes + 5 overlay/state screens
+## 3. Frontend inventory — 28 routes + 5 overlay/state screens
 
 ### 3.1 Routes (`src/app/**/page.tsx`)
 | # | Route | File | Flow |
@@ -261,6 +261,8 @@ or DTO anywhere in the repo.
 | T6 | `/states` | `src/app/states/page.tsx` | Tenant — empty/loading showcase (not a UC screen) |
 | T7 | `/login` | `src/app/(auth)/login/page.tsx` | Tenant — login |
 | T8 | `/register` | `src/app/(auth)/register/page.tsx` | Tenant/Landlord — register |
+| T9 | `/notifications` | `src/app/notifications/page.tsx` | Tenant — notifications (UC07.7 receiver) |
+| T10 | `/profile` | `src/app/profile/page.tsx` | Tenant — profile (UC01.4) |
 | L1 | `/landlord` | `src/app/landlord/page.tsx` | Landlord — dashboard ("Hôm nay") |
 | L2 | `/landlord/rooms` | `src/app/landlord/rooms/page.tsx` | Landlord — houses & rooms |
 | L3 | `/landlord/listings` | `src/app/landlord/listings/page.tsx` | Landlord — my posts |
@@ -378,6 +380,18 @@ or DTO anywhere in the repo.
   2. **No validation/exception handling** — UC01.1's exceptions (duplicate email/username, missing required data, password < 8 chars) have no UI path; every submit "succeeds".
   3. "Tiếp tục với Google" button is dead and unsupported (same as T7).
   4. A landlord who registers here is sent to the tenant `/login`, not L11 (minor routing inconsistency).
+
+### T9 — `/notifications` Tenant notifications
+- **UC:** UC07.7 (notification receiver side).
+- **Backend:** `GET /api/notifications`, `GET /api/notifications/unread-count`, `PATCH /api/notifications/{id}/read`, `PATCH /api/notifications/read-all` (list is produced internally by services — no POST exists).
+- **Works (mock):** list seeded from the tenant story across all 5 `NotificationType` values; unread count in subtitle and on the header bell badge (same store); row click marks read; "Đánh dấu tất cả đã đọc" with Undo; filter chips per type with counts; "Hiển thị X / Y"; empty state per filter — all persisted in the tenant store (localStorage).
+- **Gaps:** no realtime push (gateway WebSocket `/api/ws/**` not wired — mock seam only); seed times are relative strings, not timestamps; no per-item delete (backend has none).
+
+### T10 — `/profile` Tenant profile
+- **UC:** UC01.4 (view + update own information), notification preferences.
+- **Backend:** `GET /api/users/me` exists; **no update endpoint yet** — profile edits, preferences and change-password run on the mock seam (tenant store) until the backend grows them.
+- **Works (mock):** header card (identity, verified email/phone rows); edit form (name/phone required with inline validation, optional address) persisted to the store, with the header/dropdown identity following the saved name; cancel restores; change-password card (show/hide, inline rules) with success toast; notification preferences — master switch shared two-way with the A9 dropdown plus email/in-app/push channel switches, all persisted; quick links to T4/T3/T9.
+- **Gaps:** no account deletion (backend has none — deliberately not invented); no edit history/undo for profile saves; email is the login identity and stays read-only here.
 
 ### A3 — AI panel (`AiPanel.tsx`, docked panel + `/ai`)
 - **UC:** UC06.1 (chat), UC06.2 (needs analysis → criteria chips), UC06.3 (RAG answers), UC06.4 (room recommendations with match %), UC06.5 (room Q&A, with T2), UC06.6 (advanced multi-criteria search).

@@ -20,6 +20,8 @@ Dấu `*` = điểm "Đạt (mock)" do người đánh giá ghi: chức năng ch
 | Tenant | `/states` — Showcase trạng thái (A7) | Không áp dụng | Một phần | Không áp dụng | Một phần | Một phần |
 | Tenant | `/favorites` — Phòng yêu thích (A8) | Một phần | Một phần | Đạt | Đạt | Một phần |
 | Tenant | A9 — Avatar dropdown (trong TenantHeader) | Không áp dụng | Không áp dụng | Đạt | Một phần | Một phần |
+| Tenant | `/notifications` — Thông báo (UC07.7) | Một phần | Đạt | Đạt | Đạt | Một phần |
+| Tenant | `/profile` — Hồ sơ cá nhân (UC01.4) | Đạt | Một phần | Đạt | Một phần | Một phần |
 | Landlord | Dashboard (B1) — `/landlord` | Không áp dụng | Đạt | Một phần | Đạt | Một phần |
 | Landlord | Rooms (B2) — `/landlord/rooms` | Đạt | Đạt | Một phần | Đạt | Một phần |
 | Landlord | Listings (B3) — `/landlord/listings` | Đạt | Đạt | Một phần | Đạt | Đạt |
@@ -270,7 +272,70 @@ hủy phiên phía client là cách duy nhất), UC01.4 điểm vào hồ sơ, t
   Toggle ở A9 hiện chỉ lưu preference, chưa có nơi hiển thị thông báo, cũng chưa có badge chưa đọc.
 - Tenant **không có màn hình hồ sơ cá nhân**: UC01.4 (xem + cập nhật thông tin) chưa có UI —
   dropdown mới hiển thị định danh read-only; backend cũng chỉ có `GET /api/users/me`, chưa có endpoint cập nhật.
+- → Cả hai khoảng trống trên **đã được bổ sung** ở mục 10 (`/notifications`) và mục 11
+  (`/profile`) ngay dưới đây; dropdown cũng có thêm hàng "Hồ sơ của tôi" và header có chuông
+  kèm badge chưa đọc.
 
+
+### 10. `/notifications` — Thông báo (đầu nhận UC07.7)
+
+**Chức năng đã khớp:** đầu nhận thông báo của tenant theo UC07.7, khớp module Notification
+của backend (`GET /api/notifications`, `GET /api/notifications/unread-count`,
+`PATCH /api/notifications/{id}/read`, `PATCH /api/notifications/read-all`) với đủ 5 giá trị
+`NotificationType` (SYSTEM / INVOICE / POST_APPROVAL / INTEREST_REQUEST / GENERAL).
+
+**Điều chỉnh đã làm (màn hình mới):**
+- Danh sách lấy từ tenant store, seed theo đúng mạch dữ liệu của app (yêu cầu Phòng 302 được
+  chấp nhận → Contact Card mở khóa, yêu cầu Phòng 405 đang chờ, hóa đơn tháng 10 của Phòng 302,
+  bài đăng phòng yêu thích được duyệt, thông báo hệ thống) — chấm màu theo loại dùng chung
+  mapping với B9 của chủ trọ.
+- Phụ đề đếm chưa đọc live; bấm vào một dòng để đánh dấu đã đọc (persist localStorage);
+  "Đánh dấu tất cả đã đọc" có toast **Hoàn tác** khôi phục nguyên trạng thái trước.
+- Chip lọc theo loại kèm số lượng từng loại, dòng "Hiển thị X / Y", empty state riêng khi bộ
+  lọc không khớp kèm nút xóa lọc.
+- Header có nút chuông với badge số chưa đọc lấy từ cùng store (đồng bộ hai chiều với trang
+  này qua event + storage); khi công tắc thông báo đang tắt, trang hiện banner nhắc và dẫn
+  sang `/profile` để bật lại.
+
+**Scorecard:**
+1. Hiệu suất nhập liệu — **Một phần** — không có form; mọi thao tác là 1 click (đọc, đọc tất cả, lọc) và chip là button focus được bằng bàn phím, nhưng chưa có tìm kiếm trong danh sách thông báo.
+2. Mật độ & phân cấp dữ liệu — **Đạt** — số chưa đọc nổi bật ở phụ đề và badge chuông, dòng chưa đọc có nền tint + chấm, chip lọc kèm counts và dòng "Hiển thị X / Y" luôn hiện.
+3. Tùy biến & phân quyền — **Đạt** — màn hình chỉ dành cho tenant (đầu nhận), trạng thái đã đọc và bộ lọc là dữ liệu cá nhân persist bền; không lộ thao tác của vai trò khác.
+4. Bao dung & phục hồi — **Đạt** — "đọc tất cả" hoàn tác được bằng toast; đánh dấu đã đọc từng dòng là thao tác nhẹ, không có hành động phá hủy nào trên màn này.
+5. Khả năng mở rộng — **Một phần** — store là seam 1-1 với các endpoint Notification (list / unread-count / read / read-all), nhưng push realtime qua WebSocket gateway (`/api/ws/**`) chưa được nối — hiện vẫn là mock.
+
+**Khoảng trống còn lại:** chưa có push realtime; thời gian hiển thị là chuỗi tương đối trong seed (chưa có timestamp thật); backend không có xóa từng thông báo nên UI không tự invent.
+
+### 11. `/profile` — Hồ sơ cá nhân (UC01.4)
+
+**Chức năng đã khớp:** UC01.4 — xem và cập nhật thông tin cá nhân, trạng thái xác minh, tùy
+chọn thông báo. Backend hiện có `GET /api/users/me`; cập nhật hồ sơ / đổi mật khẩu / lưu
+preference chưa có endpoint nên chạy trên mock seam của tenant store (đã ghi rõ trong code).
+
+**Điều chỉnh đã làm (màn hình mới):**
+- Thẻ định danh: avatar initials (suy ra từ tên đã lưu), tên/email/SĐT, hai hàng xác minh
+  Email/SĐT với dấu ✓, chip vai trò Khách thuê; thẻ liên kết nhanh sang Yêu cầu / Yêu thích /
+  Thông báo. Điểm vào: hàng "Hồ sơ của tôi" trong dropdown avatar (A9) và bấm thẳng vào khối
+  định danh của dropdown; tên + initials trên header cập nhật theo hồ sơ đã lưu.
+- Form thông tin: Họ tên* và SĐT* có **validate inline** (báo lỗi khi blur và khi gõ sau
+  touched, thông báo cụ thể — SĐT phải đủ 10 số bắt đầu bằng 0), email read-only kèm giải
+  thích, địa chỉ liên hệ tùy chọn; Lưu ghi vào store + toast thành công, Hủy khôi phục giá trị
+  đã lưu, nút Lưu chỉ bật khi có thay đổi.
+- Thẻ đổi mật khẩu: 3 trường có nút hiện/ẩn, validate inline (tối thiểu 8 ký tự, khác mật
+  khẩu hiện tại, nhập lại phải khớp), gửi xong xóa form + toast — kèm comment trong code ghi
+  rõ đây là mock seam, khi nối API thật sẽ gọi endpoint đổi mật khẩu của auth service.
+- Thẻ tùy chọn thông báo: công tắc chung **dùng chung khóa + event với switch ở A9** (đổi ở
+  một nơi, nơi còn lại cập nhật ngay) và 3 switch kênh Email / Trong ứng dụng / Thông báo đẩy,
+  tất cả persist trong store; tắt công tắc chung thì các switch kênh bị vô hiệu hóa.
+
+**Scorecard:**
+1. Hiệu suất nhập liệu — **Đạt** — validate inline lúc gõ/blur với thông báo cụ thể, dấu * cho trường bắt buộc, autocomplete đúng chuẩn (name / tel / street-address / current-password / new-password), nút Lưu chỉ bật khi form dirty.
+2. Mật độ & phân cấp dữ liệu — **Một phần** — màn cá nhân vốn ít dữ liệu; định danh + trạng thái xác minh thấy ngay ở thẻ đầu, các form chia thẻ rõ ràng, nhưng không có bảng/danh sách để đánh giá mật độ cao hơn.
+3. Tùy biến & phân quyền — **Đạt** — đây chính là bề mặt cá nhân hóa của tenant: sửa định danh + 4 switch thông báo persist thật và nhất quán giữa A9 và trang này; chỉ thao tác trong quyền tenant, và **không invent xóa tài khoản** (backend không có).
+4. Bao dung & phục hồi — **Một phần** — Hủy khôi phục được thay đổi chưa lưu và form mật khẩu tự xóa sau khi đổi, nhưng lưu hồ sơ chưa có Hoàn tác/lịch sử phiên bản (backend cũng chưa có endpoint cập nhật hay history).
+5. Khả năng mở rộng — **Một phần** — hồ sơ + preference nằm sau tenant-store seam, sẵn sàng thay bằng `GET/PATCH /api/users/me` khi backend bổ sung; mô hình preference (công tắc chung + theo kênh) ánh xạ thẳng sang một settings object.
+
+**Khoảng trống còn lại:** backend chưa có endpoint cập nhật hồ sơ và đổi mật khẩu (UI đang chạy mock seam); địa chỉ liên hệ chưa có trong bản ghi user gốc; chưa có lịch sử thay đổi hồ sơ.
 
 ## Luồng Landlord
 
