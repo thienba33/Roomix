@@ -4,30 +4,26 @@ import { useState, type FormEvent } from 'react';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
-import { notificationsAdmin, auditLog } from '@/lib/data';
-import type { NotificationItem, NotificationType } from '@/types';
+import { auditLog } from '@/lib/data';
 import { cn } from '@/lib/utils';
 
-const TYPE_DOT: Record<NotificationType, string> = {
-  SYSTEM: 'bg-primary',
-  INVOICE: 'bg-amber-500',
-  POST_APPROVAL: 'bg-green-600',
-  INTEREST_REQUEST: 'bg-sky-500',
-  GENERAL: 'bg-gray-400',
-};
+type Audience = 'all' | 'landlords' | 'tenants';
 
-const TYPE_LABEL: Record<NotificationType, string> = {
-  SYSTEM: 'Hệ thống',
-  INVOICE: 'Hóa đơn',
-  POST_APPROVAL: 'Kiểm duyệt',
-  INTEREST_REQUEST: 'Quan tâm',
-  GENERAL: 'Chung',
-};
+const AUDIENCE_OPTIONS: { value: Audience; label: string }[] = [
+  { value: 'all', label: 'Tất cả' },
+  { value: 'landlords', label: 'Chủ trọ' },
+  { value: 'tenants', label: 'Khách thuê' },
+];
+
+function timePartOf(time: string): string {
+  const idx = time.indexOf(' ');
+  return idx >= 0 ? time.slice(idx + 1) : time;
+}
 
 export default function NotificationsPage() {
-  const [items, setItems] = useState<NotificationItem[]>(notificationsAdmin);
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
+  const [audience, setAudience] = useState<Audience>('all');
   const [sent, setSent] = useState(false);
 
   const handleSubmit = (e: FormEvent) => {
@@ -35,15 +31,6 @@ export default function NotificationsPage() {
     const t = title.trim();
     const b = body.trim();
     if (!t || !b) return;
-    const next: NotificationItem = {
-      id: Date.now(),
-      type: 'SYSTEM',
-      title: t,
-      body: b,
-      time: 'Vừa xong',
-      read: false,
-    };
-    setItems((prev) => [next, ...prev]);
     setTitle('');
     setBody('');
     setSent(true);
@@ -52,30 +39,46 @@ export default function NotificationsPage() {
 
   return (
     <div>
-      <div className="mb-6">
-        <h1 className="text-[26px] font-extrabold tracking-tight text-ink">Thông báo hệ thống &amp; Nhật ký</h1>
-        <p className="mt-1 text-sm text-muted">Gửi thông báo tới người dùng và theo dõi hoạt động quản trị</p>
-      </div>
+      <h1 className="text-2xl font-semibold text-ink">Thông báo &amp; Nhật ký</h1>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        {/* LEFT — Notifications */}
+      <div className="mt-6 grid items-start gap-6 lg:grid-cols-2">
+        {/* LEFT — Compose */}
         <Card className="p-6">
-          <h2 className="text-base font-bold text-ink">Thông báo hệ thống</h2>
+          <h2 className="text-[17px] font-semibold text-ink">Tạo thông báo</h2>
 
-          <form onSubmit={handleSubmit} className="mt-4 space-y-3 rounded-2xl border border-line bg-page p-4">
+          <form onSubmit={handleSubmit} className="mt-5 space-y-4">
             <Input
               name="notifTitle"
               placeholder="Tiêu đề thông báo"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
+              className="h-[46px]"
             />
             <textarea
               value={body}
               onChange={(e) => setBody(e.target.value)}
-              placeholder="Nội dung thông báo..."
-              rows={3}
+              placeholder="Nội dung…"
+              rows={5}
               className="w-full resize-none rounded-xl border border-line bg-white px-4 py-3 text-sm text-ink outline-none transition placeholder:text-muted/70 focus:border-primary focus:ring-2 focus:ring-primary/20"
             />
+            <div>
+              <p className="text-[13px] font-medium text-ink">Gửi tới</p>
+              <div className="mt-2 flex gap-2">
+                {AUDIENCE_OPTIONS.map((opt) => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => setAudience(opt.value)}
+                    className={cn(
+                      'h-7 rounded-full px-3 text-xs font-medium',
+                      audience === opt.value ? 'bg-primary-soft text-primary' : 'bg-[#F7F7F7] text-muted',
+                    )}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
             <Button type="submit" className="w-full">
               Gửi thông báo
             </Button>
@@ -86,45 +89,22 @@ export default function NotificationsPage() {
               </p>
             )}
           </form>
-
-          <ul className="mt-5 divide-y divide-line">
-            {items.map((n) => (
-              <li key={n.id} className="flex gap-3 py-3.5 first:pt-0 last:pb-0">
-                <span className={cn('mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full', TYPE_DOT[n.type])} aria-hidden />
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <p className="text-sm font-semibold text-ink">{n.title}</p>
-                    <span className="rounded-full bg-page px-2 py-0.5 text-[11px] font-medium text-muted">{TYPE_LABEL[n.type]}</span>
-                    {!n.read && <span className="h-1.5 w-1.5 rounded-full bg-primary" aria-label="Chưa đọc" />}
-                  </div>
-                  <p className="mt-0.5 text-[13px] leading-relaxed text-muted">{n.body}</p>
-                  <p className="mt-0.5 text-xs text-muted">{n.time}</p>
-                </div>
-              </li>
-            ))}
-          </ul>
         </Card>
 
         {/* RIGHT — Audit log */}
-        <Card className="h-fit p-6">
-          <h2 className="text-base font-bold text-ink">Nhật ký hoạt động</h2>
-          <p className="mt-0.5 text-xs text-muted">Mọi hành động quản trị đều được ghi lại</p>
+        <Card className="p-6">
+          <h2 className="text-[17px] font-semibold text-ink">Nhật ký hoạt động</h2>
 
-          <ul className="mt-4 divide-y divide-line">
+          <div className="mt-4 divide-y divide-line">
             {auditLog.map((entry) => (
-              <li key={entry.id} className="py-3.5 first:pt-0 last:pb-0">
-                <p className="text-sm leading-relaxed text-ink">
-                  <span className="font-bold">{entry.actor}</span>{' '}
-                  <span>{entry.action}</span>
+              <div key={entry.id} className="grid grid-cols-[90px_1fr] gap-3 py-3.5">
+                <span className="text-[13px] text-muted">{timePartOf(entry.time)}</span>
+                <p className="truncate text-sm text-ink">
+                  {entry.actor} {entry.action} · {entry.target}
                 </p>
-                <p className="mt-0.5 truncate text-[13px] text-muted">{entry.target}</p>
-                <p className="mt-0.5 text-xs text-muted">
-                  {entry.time}
-                  {entry.ip ? ` · IP ${entry.ip}` : ''}
-                </p>
-              </li>
+              </div>
             ))}
-          </ul>
+          </div>
         </Card>
       </div>
     </div>

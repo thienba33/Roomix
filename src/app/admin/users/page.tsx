@@ -3,8 +3,7 @@
 import { useState } from 'react';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
-import Badge from '@/components/ui/Badge';
-import { usersAdminLandlords, usersAdminTenants } from '@/lib/data';
+import { usersAdmin, usersAdminLandlords, usersAdminTenants } from '@/lib/data';
 import { cn } from '@/lib/utils';
 import type { UserAccount } from '@/types';
 
@@ -16,12 +15,25 @@ function initialsOf(name: string): string {
   return (parts[parts.length - 2][0] + parts[parts.length - 1][0]).toUpperCase();
 }
 
+function defaultSelectedId(list: UserAccount[]): number {
+  const locked = list.find((u) => u.status === 'LOCKED');
+  return (locked ?? list[0])?.id ?? 0;
+}
+
 export default function UsersPage() {
   const [tab, setTab] = useState<Tab>('landlords');
   const [landlords, setLandlords] = useState<UserAccount[]>(usersAdminLandlords);
   const [tenants, setTenants] = useState<UserAccount[]>(usersAdminTenants);
+  const [selectedId, setSelectedId] = useState<number>(() => defaultSelectedId(usersAdminLandlords));
 
   const rows = tab === 'landlords' ? landlords : tenants;
+  const selected = rows.find((u) => u.id === selectedId) ?? rows[0];
+
+  const handleTabChange = (next: Tab) => {
+    setTab(next);
+    const nextRows = next === 'landlords' ? landlords : tenants;
+    setSelectedId(defaultSelectedId(nextRows));
+  };
 
   const toggleLock = (id: number) => {
     const flip = (list: UserAccount[]) =>
@@ -32,90 +44,82 @@ export default function UsersPage() {
 
   return (
     <div>
-      <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="text-[26px] font-extrabold tracking-tight text-ink">Quản lý người dùng</h1>
-          <p className="mt-1 text-sm text-muted">Chủ trọ và khách thuê trên hệ thống Roomix</p>
-        </div>
+      <h1 className="text-2xl font-semibold text-ink">Quản lý người dùng</h1>
+      <p className="mt-1 text-sm text-muted">{usersAdmin.length} tài khoản</p>
 
-        {/* Segmented control */}
-        <div className="inline-flex rounded-full border border-line bg-page p-1" role="tablist" aria-label="Nhóm người dùng">
-          <button
-            type="button"
-            role="tab"
-            aria-selected={tab === 'landlords'}
-            onClick={() => setTab('landlords')}
-            className={cn(
-              'rounded-full px-4 py-2 text-sm font-semibold transition',
-              tab === 'landlords' ? 'bg-white text-ink shadow-sm' : 'text-muted hover:text-ink',
-            )}
-          >
-            Chủ trọ
-          </button>
-          <button
-            type="button"
-            role="tab"
-            aria-selected={tab === 'tenants'}
-            onClick={() => setTab('tenants')}
-            className={cn(
-              'rounded-full px-4 py-2 text-sm font-semibold transition',
-              tab === 'tenants' ? 'bg-white text-ink shadow-sm' : 'text-muted hover:text-ink',
-            )}
-          >
-            Khách thuê
-          </button>
-        </div>
+      <div className="mt-4 flex gap-2">
+        <button
+          type="button"
+          onClick={() => handleTabChange('landlords')}
+          className={cn(
+            'h-7 rounded-full px-3 text-xs font-medium',
+            tab === 'landlords' ? 'bg-primary-soft text-primary' : 'bg-[#F7F7F7] text-muted',
+          )}
+        >
+          Chủ trọ · {usersAdminLandlords.length}
+        </button>
+        <button
+          type="button"
+          onClick={() => handleTabChange('tenants')}
+          className={cn(
+            'h-7 rounded-full px-3 text-xs font-medium',
+            tab === 'tenants' ? 'bg-primary-soft text-primary' : 'bg-[#F7F7F7] text-muted',
+          )}
+        >
+          Khách thuê · {usersAdminTenants.length}
+        </button>
       </div>
 
-      <Card className="overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[720px] text-left text-sm">
-            <thead>
-              <tr className="border-b border-line text-[11px] uppercase tracking-wider text-muted">
-                <th className="px-5 py-3.5 font-semibold">Người dùng</th>
-                <th className="px-5 py-3.5 font-semibold">SĐT</th>
-                <th className="px-5 py-3.5 font-semibold">Ngày tham gia</th>
-                <th className="px-5 py-3.5 font-semibold">Trạng thái</th>
-                <th className="px-5 py-3.5 text-right font-semibold">Thao tác</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((u) => {
-                const locked = u.status === 'LOCKED';
-                return (
-                  <tr key={u.id} className="border-b border-line last:border-0">
-                    <td className="px-5 py-4">
-                      <span className="flex items-center gap-3">
-                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-soft text-[13px] font-bold text-primary-dark">
-                          {initialsOf(u.name)}
-                        </span>
-                        <span className="min-w-0">
-                          <span className="block truncate font-semibold text-ink">{u.name}</span>
-                          <span className="block truncate text-[13px] text-muted">{u.email}</span>
-                          {u.house && <span className="block truncate text-xs text-muted">{u.house}{u.rooms ? ` · ${u.rooms} phòng` : ''}</span>}
-                        </span>
-                      </span>
-                    </td>
-                    <td className="whitespace-nowrap px-5 py-4 text-ink">{u.phone}</td>
-                    <td className="whitespace-nowrap px-5 py-4 text-muted">{u.joinedAt}</td>
-                    <td className="px-5 py-4">
-                      {locked ? <Badge tone="red" dot>Đã khóa</Badge> : <Badge tone="green" dot>Hoạt động</Badge>}
-                    </td>
-                    <td className="px-5 py-4 text-right">
-                      <Button size="sm" variant="outline" onClick={() => toggleLock(u.id)}>
-                        {locked ? 'Mở khóa' : 'Khóa'}
-                      </Button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+      <Card className="mt-5 overflow-hidden p-0">
+        <div className="px-5 pt-4 text-[11px] font-semibold uppercase tracking-wider text-muted">TÀI KHOẢN</div>
+        <div className="divide-y divide-line">
+          {rows.map((u) => {
+            const locked = u.status === 'LOCKED';
+            const isSelected = selected?.id === u.id;
+            return (
+              <button
+                key={u.id}
+                type="button"
+                onClick={() => setSelectedId(u.id)}
+                className={cn(
+                  'flex w-full items-center gap-3.5 px-5 py-3.5 text-left',
+                  isSelected && 'bg-primary-soft/40',
+                )}
+              >
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-soft text-[13px] font-bold text-primary">
+                  {initialsOf(u.name)}
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate font-semibold text-ink">{u.name}</span>
+                  <span className="block truncate text-[13px] text-muted">
+                    {tab === 'landlords' ? `Chủ trọ · ${u.house ?? ''}` : 'Khách thuê'}
+                  </span>
+                  <span className="block truncate text-[13px] text-muted">Tham gia {u.joinedAt}</span>
+                </span>
+                <span
+                  className={cn('shrink-0 text-[13px] font-semibold', locked ? 'text-[#B91C1C]' : 'text-[#15803D]')}
+                >
+                  {locked ? 'Đã khóa' : 'Đang hoạt động'}
+                </span>
+              </button>
+            );
+          })}
         </div>
-        <p className="border-t border-line px-5 py-3 text-xs text-muted">
-          Hiển thị {rows.length} {tab === 'landlords' ? 'chủ trọ' : 'khách thuê'}
-        </p>
       </Card>
+
+      {selected && (
+        <Card className="mt-5 p-5">
+          <p className="font-semibold text-ink">Đã chọn: {selected.name}</p>
+          <p className="mt-1 text-sm text-muted">
+            {selected.status === 'LOCKED'
+              ? 'Tài khoản bị khóa sau 2 báo cáo vi phạm đã xác nhận.'
+              : 'Tài khoản đang hoạt động bình thường.'}
+          </p>
+          <Button variant="outline" className="mt-4" onClick={() => toggleLock(selected.id)}>
+            {selected.status === 'LOCKED' ? 'Mở khóa tài khoản' : 'Khóa tài khoản'}
+          </Button>
+        </Card>
+      )}
     </div>
   );
 }
