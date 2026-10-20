@@ -1,10 +1,11 @@
 'use client';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { tenantUser } from '@/lib/data';
+import { OPEN_AI_EVENT, getNotificationsEnabled, setNotificationsEnabled } from '@/lib/tenant-store';
 import { useOnClickOutside } from '@/hooks/useOnClickOutside';
 import AiPanel from './AiPanel';
 
@@ -18,8 +19,28 @@ export default function TenantHeader({ defaultAiOpen = false }: { defaultAiOpen?
   const pathname = usePathname();
   const [aiOpen, setAiOpen] = useState(defaultAiOpen);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [notifOn, setNotifOn] = useState(true);
   const menuRef = useRef<HTMLDivElement>(null);
   useOnClickOutside(menuRef, () => setMenuOpen(false));
+
+  // Persisted notification preference (A9) — hydrated after mount.
+  useEffect(() => {
+    setNotifOn(getNotificationsEnabled());
+  }, []);
+
+  // Room detail ("Hỏi AI về phòng này") asks the header to open the panel.
+  useEffect(() => {
+    const open = () => setAiOpen(true);
+    window.addEventListener(OPEN_AI_EVENT, open);
+    return () => window.removeEventListener(OPEN_AI_EVENT, open);
+  }, []);
+
+  const toggleNotif = () => {
+    setNotifOn((on) => {
+      setNotificationsEnabled(!on);
+      return !on;
+    });
+  };
 
   return (
     <>
@@ -79,10 +100,20 @@ export default function TenantHeader({ defaultAiOpen = false }: { defaultAiOpen?
                     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" /></svg>
                     Phòng yêu thích
                   </Link>
-                  <div className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-ink">
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={notifOn}
+                    aria-label="Bật hoặc tắt thông báo"
+                    onClick={toggleNotif}
+                    className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-ink transition hover:bg-page"
+                  >
                     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" /><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" /></svg>
-                    Thông báo <span className="text-muted">· Bật</span>
-                  </div>
+                    Thông báo <span className="text-muted">· {notifOn ? 'Bật' : 'Tắt'}</span>
+                    <span className={cn('ml-auto flex h-5 w-9 shrink-0 items-center rounded-full p-0.5 transition', notifOn ? 'justify-end bg-primary' : 'justify-start bg-line')}>
+                      <span className="h-4 w-4 rounded-full bg-white shadow" />
+                    </span>
+                  </button>
                   <div className="border-t border-line" />
                   <Link href="/login" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-ink hover:bg-page">
                     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><path d="m16 17 5-5-5-5M21 12H9" /></svg>

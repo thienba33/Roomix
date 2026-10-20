@@ -14,20 +14,84 @@ const UserIcon = (
 const MailIcon = (
   <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="4" width="20" height="16" rx="2" /><path d="m22 7-10 6L2 7" /></svg>
 );
+const PhoneIcon = (
+  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z" /></svg>
+);
+const AtIcon = (
+  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="4" /><path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-4 8" /></svg>
+);
 const LockIcon = (
   <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="4" y="11" width="16" height="10" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" /></svg>
 );
 
 const ROLES = ['Khách thuê', 'Chủ trọ'] as const;
+type Role = (typeof ROLES)[number];
+
+type Field = 'fullName' | 'username' | 'email' | 'phone' | 'password';
+type Values = Record<Field, string>;
+type Errors = Record<Field, string>;
+
+/** Mirrors backend RegisterRequest (POST /api/auth/register). */
+const VALIDATORS: Record<Field, (v: string) => string> = {
+  fullName: (v) => (!v.trim() ? 'Vui lòng nhập họ tên.' : v.trim().length < 2 ? 'Họ tên quá ngắn.' : ''),
+  username: (v) =>
+    !v.trim()
+      ? 'Vui lòng nhập tên đăng nhập.'
+      : !/^[a-zA-Z0-9._-]{4,50}$/.test(v.trim())
+        ? 'Tên đăng nhập 4–50 ký tự, chỉ gồm chữ, số, dấu . _ -'
+        : '',
+  email: (v) => (!v.trim() ? 'Vui lòng nhập email.' : !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim()) ? 'Email chưa đúng định dạng.' : ''),
+  phone: (v) => (!v.trim() ? 'Vui lòng nhập số điện thoại.' : !/^0\d{9}$/.test(v.trim()) ? 'Số điện thoại gồm 10 chữ số, bắt đầu bằng 0.' : ''),
+  password: (v) => (!v ? 'Vui lòng nhập mật khẩu.' : v.length < 8 || v.length > 72 ? 'Mật khẩu từ 8–72 ký tự.' : ''),
+};
+
+const EMPTY: Values = { fullName: '', username: '', email: '', phone: '', password: '' };
+const NO_ERRORS: Errors = { fullName: '', username: '', email: '', phone: '', password: '' };
 
 export default function RegisterPage() {
   const router = useRouter();
-  const [role, setRole] = useState<(typeof ROLES)[number]>('Khách thuê');
+  const [role, setRole] = useState<Role>('Khách thuê');
+  const [showPassword, setShowPassword] = useState(false);
+  const [values, setValues] = useState<Values>(EMPTY);
+  const [errors, setErrors] = useState<Errors>(NO_ERRORS);
+  const [touched, setTouched] = useState<Record<Field, boolean>>({
+    fullName: false, username: false, email: false, phone: false, password: false,
+  });
+
+  const check = (field: Field, value: string) => {
+    const msg = VALIDATORS[field](value);
+    setErrors((e) => ({ ...e, [field]: msg }));
+    return msg;
+  };
+
+  const bind = (field: Field) => ({
+    value: values[field],
+    onChange: (e: React.ChangeEvent<HTMLInputElement>) => {
+      setValues((v) => ({ ...v, [field]: e.target.value }));
+      if (touched[field]) check(field, e.target.value);
+    },
+    onBlur: () => {
+      setTouched((t) => ({ ...t, [field]: true }));
+      check(field, values[field]);
+    },
+    'aria-required': true,
+    'aria-invalid': touched[field] && !!errors[field],
+  });
 
   const onSubmit = (e: FormEvent) => {
     e.preventDefault();
-    router.push('/login');
+    setTouched({ fullName: true, username: true, email: true, phone: true, password: true });
+    const msgs = (Object.keys(VALIDATORS) as Field[]).map((f) => check(f, values[f]));
+    if (msgs.some(Boolean)) return;
+    // Landlords land on their own login (L11); tenants on the tenant login.
+    router.push(role === 'Chủ trọ' ? '/landlord/login' : '/login');
   };
+
+  const errCls = (field: Field) => (touched[field] && errors[field] ? 'border-red-400 focus:border-red-500 focus:ring-red-200' : '');
+  const errMsg = (field: Field) =>
+    touched[field] && errors[field] ? (
+      <p role="alert" className="mt-1.5 text-[13px] font-medium text-red-600">{errors[field]}</p>
+    ) : null;
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-page px-4 py-10">
@@ -35,7 +99,7 @@ export default function RegisterPage() {
         <Image src="/images/logo.png" alt="Roomix" width={1500} height={520} className="h-10 w-auto" priority />
       </Link>
 
-      <Card className="grid w-full max-w-[1080px] overflow-hidden rounded-3xl shadow-[0_12px_40px_rgba(0,0,0,0.10)] md:h-[640px] md:grid-cols-2">
+      <Card className="grid w-full max-w-[1080px] overflow-hidden rounded-3xl shadow-[0_12px_40px_rgba(0,0,0,0.10)] md:min-h-[640px] md:grid-cols-2">
         <div className="relative hidden md:block">
           <Image src="/images/rooms/room-405.webp" alt="Phòng trọ Roomix" fill sizes="50vw" className="object-cover" priority />
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
@@ -45,14 +109,49 @@ export default function RegisterPage() {
           </div>
         </div>
 
-        <div className="flex flex-col justify-center p-8 sm:p-12">
+        <div className="flex flex-col justify-center p-8 sm:p-10">
           <h1 className="text-2xl font-extrabold text-ink">Tạo tài khoản</h1>
-          <p className="mt-1.5 text-sm text-muted">Điền thông tin để bắt đầu với Roomix</p>
+          <p className="mt-1.5 text-sm text-muted">Điền thông tin để bắt đầu với Roomix · <span className="text-red-500">*</span> là bắt buộc</p>
 
-          <form onSubmit={onSubmit} className="mt-7 space-y-4">
-            <Input name="fullname" type="text" placeholder="Họ tên" autoComplete="name" icon={UserIcon} className="h-[52px] rounded-xl text-[15px]" />
-            <Input name="account" type="text" placeholder="Email hoặc số điện thoại" autoComplete="username" icon={MailIcon} className="h-[52px] rounded-xl text-[15px]" />
-            <Input name="password" type="password" placeholder="Mật khẩu" autoComplete="new-password" icon={LockIcon} className="h-[52px] rounded-xl text-[15px]" />
+          <form onSubmit={onSubmit} noValidate className="mt-6 space-y-3.5">
+            <div>
+              <Input name="fullName" type="text" placeholder="Họ tên *" autoComplete="name" icon={UserIcon} className={cn('h-[48px] rounded-xl text-[15px]', errCls('fullName'))} {...bind('fullName')} />
+              {errMsg('fullName')}
+            </div>
+            <div>
+              <Input name="username" type="text" placeholder="Tên đăng nhập *" autoComplete="username" icon={AtIcon} className={cn('h-[48px] rounded-xl text-[15px]', errCls('username'))} {...bind('username')} />
+              {errMsg('username')}
+            </div>
+            <div>
+              <Input name="email" type="email" placeholder="Email *" autoComplete="email" inputMode="email" icon={MailIcon} className={cn('h-[48px] rounded-xl text-[15px]', errCls('email'))} {...bind('email')} />
+              {errMsg('email')}
+            </div>
+            <div>
+              <Input name="phoneNumber" type="tel" placeholder="Số điện thoại *" autoComplete="tel" inputMode="tel" icon={PhoneIcon} className={cn('h-[48px] rounded-xl text-[15px]', errCls('phone'))} {...bind('phone')} />
+              {errMsg('phone')}
+            </div>
+            <div>
+              <div className="relative">
+                <Input
+                  name="password"
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="Mật khẩu *"
+                  autoComplete="new-password"
+                  icon={LockIcon}
+                  className={cn('h-[48px] rounded-xl pr-11 text-[15px]', errCls('password'))}
+                  {...bind('password')}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((s) => !s)}
+                  aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted transition hover:text-ink"
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z" /><circle cx="12" cy="12" r="3" /></svg>
+                </button>
+              </div>
+              {errMsg('password')}
+            </div>
 
             <div>
               <p className="mb-1.5 text-sm font-medium text-ink">Bạn là</p>
@@ -62,6 +161,7 @@ export default function RegisterPage() {
                     key={r}
                     type="button"
                     onClick={() => setRole(r)}
+                    aria-pressed={role === r}
                     className={cn('flex-1 rounded-lg px-3 py-2.5 text-sm transition', role === r ? 'bg-white font-bold text-ink shadow-sm' : 'font-medium text-muted hover:text-ink')}
                   >
                     {r}
@@ -73,7 +173,7 @@ export default function RegisterPage() {
             <Button type="submit" size="lg" className="h-[52px] w-full">Đăng ký</Button>
           </form>
 
-          <div className="my-6 flex items-center gap-3 text-[13px] text-muted">
+          <div className="my-5 flex items-center gap-3 text-[13px] text-muted">
             <span className="h-px flex-1 bg-line" />
             hoặc
             <span className="h-px flex-1 bg-line" />
@@ -84,7 +184,7 @@ export default function RegisterPage() {
             Tiếp tục với Google
           </Button>
 
-          <p className="mt-7 text-center text-sm text-muted">
+          <p className="mt-6 text-center text-sm text-muted">
             Đã có tài khoản?{' '}
             <Link href="/login" className="font-semibold text-primary hover:underline">Đăng nhập</Link>
           </p>

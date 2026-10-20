@@ -1,13 +1,41 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import type { Room } from '@/types';
 import { formatPriceShort, formatRating, roomStatusLabel, roomStatusTone } from '@/lib/utils';
+import { FAVORITES_EVENT, getFavoriteIds, toggleFavoriteId } from '@/lib/tenant-store';
 import Badge from '@/components/ui/Badge';
 
-export default function RoomCard({ room, favorite = false }: { room: Room; favorite?: boolean }) {
+interface Props {
+  room: Room;
+  /** Initial hint only — the persisted tenant store is the source of truth. */
+  favorite?: boolean;
+  /** Notified after a toggle so hosts (e.g. /favorites) can offer Undo. */
+  onFavoriteChange?: (room: Room, nowFavorite: boolean) => void;
+}
+
+export default function RoomCard({ room, favorite = false, onFavoriteChange }: Props) {
   const [fav, setFav] = useState(favorite);
+
+  // Hydrate from the persisted store and stay in sync with toggles elsewhere.
+  useEffect(() => {
+    const sync = () => setFav(getFavoriteIds().includes(room.id));
+    sync();
+    window.addEventListener(FAVORITES_EVENT, sync);
+    window.addEventListener('storage', sync);
+    return () => {
+      window.removeEventListener(FAVORITES_EVENT, sync);
+      window.removeEventListener('storage', sync);
+    };
+  }, [room.id]);
+
+  const toggle = () => {
+    const now = toggleFavoriteId(room.id);
+    setFav(now);
+    onFavoriteChange?.(room, now);
+  };
+
   return (
     <div className="group">
       <div className="relative">
@@ -15,8 +43,9 @@ export default function RoomCard({ room, favorite = false }: { room: Room; favor
           <Image src={room.image} alt={room.name} width={640} height={427} className="aspect-[3/2] w-full rounded-[14px] object-cover" />
         </Link>
         <button
-          onClick={() => setFav((f) => !f)}
-          aria-label="Yêu thích"
+          onClick={toggle}
+          aria-label={fav ? 'Bỏ yêu thích' : 'Yêu thích'}
+          aria-pressed={fav}
           className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full transition hover:scale-110"
         >
           <svg width="22" height="22" viewBox="0 0 24 24" fill={fav ? '#4F46E5' : 'rgba(0,0,0,0.22)'} stroke="white" strokeWidth="1.8" strokeLinejoin="round" className="drop-shadow-[0_1px_2px_rgba(0,0,0,0.35)]">

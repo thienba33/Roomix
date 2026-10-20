@@ -1,8 +1,15 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Modal from '@/components/ui/Modal';
 import Button from '@/components/ui/Button';
 import { cn } from '@/lib/utils';
+import { rooms } from '@/lib/data';
+import {
+  DEFAULT_FILTERS,
+  applyRoomFilters,
+  type SortKey,
+  type TenantFilters,
+} from '@/lib/tenant-store';
 
 const SIZES = ['Dưới 20m²', '20–30m²', 'Trên 30m²'];
 const AMENITIES = ['Điều hòa', 'Máy giặt', 'Ban công', 'Gác lửng', 'WC riêng', 'Bếp', 'Gửi xe', 'Thang máy'];
@@ -18,26 +25,39 @@ function fmtPrice(n: number) {
   return `${String(n).replace('.', ',')}tr`;
 }
 
-export default function FilterModal({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const [size, setSize] = useState('20–30m²');
-  const [amen, setAmen] = useState<string[]>(['Điều hòa', 'Ban công', 'WC riêng']);
-  const [type, setType] = useState('Phòng trọ');
-  const [priceLo, setPriceLo] = useState(2);
-  const [priceHi, setPriceHi] = useState(4);
+interface Props {
+  open: boolean;
+  onClose: () => void;
+  /** Currently applied filters — the draft starts from these. */
+  value: TenantFilters;
+  onApply: (filters: TenantFilters) => void;
+  /** Page context the modal cannot see, so the live count stays exact. */
+  query?: string;
+  category?: string;
+  sort?: SortKey;
+}
+
+export default function FilterModal({ open, onClose, value, onApply, query = '', category = 'Tất cả', sort = 'newest' }: Props) {
+  const [draft, setDraft] = useState<TenantFilters>(value);
+
+  // Re-seed the draft from the applied filters every time the modal opens.
+  useEffect(() => {
+    if (open) setDraft(value);
+  }, [open, value]);
 
   const toggleAmen = (v: string) =>
-    setAmen((prev) => (prev.includes(v) ? prev.filter((x) => x !== v) : [...prev, v]));
+    setDraft((d) => ({ ...d, amenities: d.amenities.includes(v) ? d.amenities.filter((x) => x !== v) : [...d.amenities, v] }));
 
-  const reset = () => {
-    setAmen([]);
-    setSize('');
-    setType('Tất cả');
-    setPriceLo(PRICE_MIN);
-    setPriceHi(PRICE_MAX);
-  };
+  const reset = () => setDraft(DEFAULT_FILTERS);
 
-  const loPct = ((priceLo - PRICE_MIN) / (PRICE_MAX - PRICE_MIN)) * 100;
-  const hiPct = ((priceHi - PRICE_MIN) / (PRICE_MAX - PRICE_MIN)) * 100;
+  // Live result count for the draft, combined with the page's query/category.
+  const liveCount = useMemo(
+    () => applyRoomFilters(rooms, { query, category, filters: draft, sort }).length,
+    [draft, query, category, sort],
+  );
+
+  const loPct = ((draft.priceLo - PRICE_MIN) / (PRICE_MAX - PRICE_MIN)) * 100;
+  const hiPct = ((draft.priceHi - PRICE_MIN) / (PRICE_MAX - PRICE_MIN)) * 100;
 
   return (
     <Modal open={open} onClose={onClose} title="Bộ lọc nâng cao" widthClass="max-w-[720px]">
@@ -55,8 +75,8 @@ export default function FilterModal({ open, onClose }: { open: boolean; onClose:
               min={PRICE_MIN}
               max={PRICE_MAX}
               step={0.5}
-              value={priceLo}
-              onChange={(e) => setPriceLo(Math.min(Number(e.target.value), priceHi - 0.5))}
+              value={draft.priceLo}
+              onChange={(e) => setDraft((d) => ({ ...d, priceLo: Math.min(Number(e.target.value), d.priceHi - 0.5) }))}
               className={thumbClass}
               aria-label="Giá tối thiểu"
             />
@@ -65,13 +85,13 @@ export default function FilterModal({ open, onClose }: { open: boolean; onClose:
               min={PRICE_MIN}
               max={PRICE_MAX}
               step={0.5}
-              value={priceHi}
-              onChange={(e) => setPriceHi(Math.max(Number(e.target.value), priceLo + 0.5))}
+              value={draft.priceHi}
+              onChange={(e) => setDraft((d) => ({ ...d, priceHi: Math.max(Number(e.target.value), d.priceLo + 0.5) }))}
               className={thumbClass}
               aria-label="Giá tối đa"
             />
           </div>
-          <p className="mt-1.5 text-[13px] text-muted">{fmtPrice(priceLo)} — {fmtPrice(priceHi)}</p>
+          <p className="mt-1.5 text-[13px] text-muted">{fmtPrice(draft.priceLo)} — {fmtPrice(draft.priceHi)}</p>
         </section>
 
         <section>
@@ -80,8 +100,9 @@ export default function FilterModal({ open, onClose }: { open: boolean; onClose:
             {SIZES.map((s) => (
               <button
                 key={s}
-                onClick={() => setSize(s)}
-                className={cn('rounded-full px-5 py-2.5 text-sm font-medium transition', size === s ? 'bg-primary font-semibold text-white' : 'bg-page text-ink hover:bg-line/60')}
+                onClick={() => setDraft((d) => ({ ...d, size: d.size === s ? '' : s }))}
+                aria-pressed={draft.size === s}
+                className={cn('rounded-full px-5 py-2.5 text-sm font-medium transition', draft.size === s ? 'bg-primary font-semibold text-white' : 'bg-page text-ink hover:bg-line/60')}
               >
                 {s}
               </button>
@@ -93,9 +114,9 @@ export default function FilterModal({ open, onClose }: { open: boolean; onClose:
           <h4 className="text-[15px] font-bold text-ink">Tiện ích</h4>
           <div className="mt-3 grid grid-cols-2 gap-x-6 gap-y-3.5">
             {AMENITIES.map((a) => {
-              const checked = amen.includes(a);
+              const checked = draft.amenities.includes(a);
               return (
-                <button key={a} onClick={() => toggleAmen(a)} className="flex items-center gap-2.5 text-left text-sm text-ink">
+                <button key={a} onClick={() => toggleAmen(a)} aria-pressed={checked} className="flex items-center gap-2.5 text-left text-sm text-ink">
                   <span className={cn('flex h-5 w-5 shrink-0 items-center justify-center rounded-[5px] border transition', checked ? 'border-primary bg-primary text-white' : 'border-line bg-white text-transparent')}>
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
                   </span>
@@ -112,8 +133,9 @@ export default function FilterModal({ open, onClose }: { open: boolean; onClose:
             {TYPES.map((t) => (
               <button
                 key={t}
-                onClick={() => setType(t)}
-                className={cn('flex-1 rounded-lg px-2 py-2.5 text-sm transition', type === t ? 'bg-white font-bold text-ink shadow-sm' : 'font-medium text-muted hover:text-ink')}
+                onClick={() => setDraft((d) => ({ ...d, type: t }))}
+                aria-pressed={draft.type === t}
+                className={cn('flex-1 rounded-lg px-2 py-2.5 text-sm transition', draft.type === t ? 'bg-white font-bold text-ink shadow-sm' : 'font-medium text-muted hover:text-ink')}
               >
                 {t}
               </button>
@@ -123,7 +145,15 @@ export default function FilterModal({ open, onClose }: { open: boolean; onClose:
 
         <div className="flex items-center justify-between pt-1">
           <button onClick={reset} className="text-sm font-semibold text-primary hover:underline">Xóa lọc</button>
-          <Button onClick={onClose} className="rounded-xl px-6 py-3">Áp dụng · 24 phòng</Button>
+          <Button
+            onClick={() => {
+              onApply(draft);
+              onClose();
+            }}
+            className="rounded-xl px-6 py-3"
+          >
+            Áp dụng · {liveCount} phòng
+          </Button>
         </div>
       </div>
     </Modal>

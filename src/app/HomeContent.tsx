@@ -1,12 +1,23 @@
 'use client';
-import { useMemo, useState, type ReactNode } from 'react';
-import { rooms, favoriteRooms } from '@/lib/data';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import Link from 'next/link';
+import { rooms } from '@/lib/data';
 import { useDebounce } from '@/hooks/useDebounce';
 import RoomCard from '@/components/layouts/RoomCard';
 import FilterModal from '@/components/layouts/FilterModal';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import { cn } from '@/lib/utils';
+import {
+  DEFAULT_FILTERS,
+  SORT_OPTIONS,
+  applyRoomFilters,
+  getPersistedSearch,
+  isDefaultFilters,
+  persistSearch,
+  type SortKey,
+  type TenantFilters,
+} from '@/lib/tenant-store';
 
 const iconProps = {
   width: 17,
@@ -64,18 +75,72 @@ const CATEGORIES: { label: string; icon: ReactNode }[] = [
   },
 ];
 
+function fmtPrice(n: number) {
+  return `${String(n).replace('.', ',')}tr`;
+}
+
 export default function HomeContent() {
   const [query, setQuery] = useState('');
   const debounced = useDebounce(query, 300);
   const [category, setCategory] = useState('Tất cả');
+  const [filters, setFilters] = useState<TenantFilters>(DEFAULT_FILTERS);
+  const [sort, setSort] = useState<SortKey>('newest');
   const [filterOpen, setFilterOpen] = useState(false);
+  const [hydrated, setHydrated] = useState(false);
 
-  const favIds = useMemo(() => new Set(favoriteRooms.map((r) => r.id)), []);
-  const filtered = useMemo(() => {
-    const q = debounced.trim().toLowerCase();
-    if (!q) return rooms;
-    return rooms.filter((r) => r.name.toLowerCase().includes(q) || r.area.toLowerCase().includes(q) || r.house.toLowerCase().includes(q));
-  }, [debounced]);
+  // Restore the last-used search (UC02.1/02.2/02.3) on revisit.
+  useEffect(() => {
+    const saved = getPersistedSearch();
+    if (saved) {
+      setQuery(saved.query ?? '');
+      setCategory(saved.category ?? 'Tất cả');
+      setFilters({ ...DEFAULT_FILTERS, ...(saved.filters ?? {}) });
+      setSort(saved.sort ?? 'newest');
+    }
+    setHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    if (hydrated) persistSearch({ query, category, filters, sort });
+  }, [hydrated, query, category, filters, sort]);
+
+  const filtered = useMemo(
+    () => applyRoomFilters(rooms, { query: debounced, category, filters, sort }),
+    [debounced, category, filters, sort],
+  );
+
+  const filtersActive = !isDefaultFilters(filters);
+  const hasAnyCriteria = filtersActive || category !== 'Tất cả' || debounced.trim() !== '';
+
+  const clearAll = () => {
+    setFilters(DEFAULT_FILTERS);
+    setCategory('Tất cả');
+    setQuery('');
+  };
+
+  const chips: { key: string; label: string; clear: () => void }[] = [];
+  if (filtersActive) {
+    if (filters.priceLo !== DEFAULT_FILTERS.priceLo || filters.priceHi !== DEFAULT_FILTERS.priceHi) {
+      chips.push({
+        key: 'price',
+        label: `${fmtPrice(filters.priceLo)} — ${fmtPrice(filters.priceHi)}`,
+        clear: () => setFilters((f) => ({ ...f, priceLo: DEFAULT_FILTERS.priceLo, priceHi: DEFAULT_FILTERS.priceHi })),
+      });
+    }
+    if (filters.size) {
+      chips.push({ key: 'size', label: filters.size, clear: () => setFilters((f) => ({ ...f, size: '' })) });
+    }
+    if (filters.type !== 'Tất cả') {
+      chips.push({ key: 'type', label: filters.type, clear: () => setFilters((f) => ({ ...f, type: 'Tất cả' })) });
+    }
+    filters.amenities.forEach((a) =>
+      chips.push({
+        key: `amen-${a}`,
+        label: a,
+        clear: () => setFilters((f) => ({ ...f, amenities: f.amenities.filter((x) => x !== a) })),
+      }),
+    );
+  }
 
   return (
     <div className="w-full px-6 py-6 lg:px-12">
@@ -85,6 +150,7 @@ export default function HomeContent() {
             <button
               key={c.label}
               onClick={() => setCategory(c.label)}
+              aria-pressed={category === c.label}
               className={cn('flex items-center gap-2 border-b-2 px-3 py-2.5 text-sm transition', category === c.label ? 'border-ink font-bold text-ink' : 'border-transparent font-medium text-muted hover:text-ink')}
             >
               {c.icon}
@@ -92,35 +158,82 @@ export default function HomeContent() {
             </button>
           ))}
         </div>
-        <Button variant="outline" size="sm" onClick={() => setFilterOpen(true)} className="rounded-full px-4 py-2">
+        <label className="flex items-center gap-2 text-sm text-muted">
+          <span className="hidden sm:inline">Sắp xếp</span>
+          <select
+            value={sort}
+            onChange={(e) => setSort(e.target.value as SortKey)}
+            aria-label="Sắp xếp kết quả"
+            className="h-9 rounded-full border border-line bg-white px-3 text-sm font-medium text-ink outline-none transition focus:border-ink"
+          >
+            {SORT_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>{o.label}</option>
+            ))}
+          </select>
+        </label>
+        <Button variant="outline" size="sm" onClick={() => setFilterOpen(true)} className={cn('rounded-full px-4 py-2', filtersActive && 'border-primary font-bold text-primary')}>
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0" /><circle cx="16" cy="6" r="2" /><circle cx="10" cy="12" r="2" /><circle cx="18" cy="18" r="2" /></svg>
-          Bộ lọc
+          Bộ lọc{filtersActive ? ` · ${chips.length}` : ''}
         </Button>
       </div>
 
       <h1 className="mt-6 text-[28px] font-extrabold text-ink">Tìm phòng</h1>
-      <p className="mt-1 text-sm text-muted">128 phòng đang trống</p>
+      <p className="mt-1 text-sm text-muted" aria-live="polite">Hiển thị {filtered.length} / {rooms.length} phòng</p>
 
       <div className="mt-4">
         <Input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Tìm theo khu vực, tên nhà..."
+          aria-label="Tìm phòng theo khu vực hoặc tên nhà"
           className="h-[52px] rounded-xl text-sm"
         />
       </div>
 
+      {chips.length > 0 && (
+        <div className="mt-4 flex flex-wrap items-center gap-2">
+          {chips.map((chip) => (
+            <span key={chip.key} className="flex items-center gap-1.5 rounded-full bg-primary-soft py-1.5 pl-3 pr-2 text-[13px] font-medium text-primary">
+              {chip.label}
+              <button onClick={chip.clear} aria-label={`Bỏ lọc ${chip.label}`} className="flex h-4 w-4 items-center justify-center rounded-full hover:bg-white">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12" /></svg>
+              </button>
+            </span>
+          ))}
+          <button onClick={clearAll} className="text-[13px] font-semibold text-primary hover:underline">Xóa tất cả</button>
+        </div>
+      )}
+
       {filtered.length === 0 ? (
-        <p className="py-16 text-center text-sm text-muted">Không tìm thấy phòng phù hợp. Thử từ khóa khác nhé.</p>
+        <div className="py-16 text-center">
+          <p className="text-[17px] font-semibold text-ink">Không tìm thấy phòng phù hợp</p>
+          <p className="mx-auto mt-2 max-w-[420px] text-sm text-muted">
+            Không có phòng nào khớp với tiêu chí hiện tại. Thử nới khoảng giá hoặc bỏ bớt tiện ích nhé.
+          </p>
+          {hasAnyCriteria && (
+            <Button variant="outline" className="mt-6" onClick={clearAll}>Xóa bộ lọc</Button>
+          )}
+          <p className="mt-4 text-sm text-muted">
+            Hoặc <Link href="/ai" className="font-semibold text-primary hover:underline">hỏi Roomix AI</Link> để được gợi ý thêm.
+          </p>
+        </div>
       ) : (
         <div className="mt-7 grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((room) => (
-            <RoomCard key={room.id} room={room} favorite={favIds.has(room.id)} />
+            <RoomCard key={room.id} room={room} />
           ))}
         </div>
       )}
 
-      <FilterModal open={filterOpen} onClose={() => setFilterOpen(false)} />
+      <FilterModal
+        open={filterOpen}
+        onClose={() => setFilterOpen(false)}
+        value={filters}
+        onApply={setFilters}
+        query={debounced}
+        category={category}
+        sort={sort}
+      />
     </div>
   );
 }

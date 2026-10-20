@@ -3,9 +3,9 @@ import Link from 'next/link';
 import Image from 'next/image';
 import TenantShell from '@/components/layouts/TenantShell';
 import Card from '@/components/ui/Card';
-import Button from '@/components/ui/Button';
+import RoomDetailActions from './RoomDetailActions';
 import { rooms, landlord } from '@/lib/data';
-import { formatVND, formatPriceShort, roomStatusLabel } from '@/lib/utils';
+import { formatPriceShort, roomStatusLabel } from '@/lib/utils';
 
 export function generateStaticParams() {
   return rooms.map((r) => ({ id: String(r.id) }));
@@ -129,39 +129,9 @@ export default async function RoomDetailPage({ params }: { params: Promise<{ id:
                 </div>
               </Card>
 
-              <Card className="mt-5 p-6">
-                <p className="text-2xl font-extrabold text-ink">
-                  {formatPriceShort(room.price)} <span className="text-base font-medium text-muted">/ tháng</span>
-                </p>
-                <p className="mt-2 text-sm text-ink">
-                  <span className="font-bold">Chi phí mỗi tháng</span>{' '}
-                  <span className="text-[13px] text-muted">ước tính theo chỉ số trung bình</span>
-                </p>
-
-                <div className="mt-4 divide-y divide-line/70">
-                  {breakdown.map((row) => (
-                    <div key={row.label} className="flex items-baseline justify-between gap-3 py-2.5 text-sm">
-                      <span className="text-muted">{row.label}</span>
-                      <span className="shrink-0 font-medium text-ink">{formatVND(row.amount)}</span>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="mt-2 flex items-baseline justify-between border-t border-line pt-4">
-                  <span className="font-bold text-ink">Tổng dự kiến</span>
-                  <span className="text-lg font-extrabold text-ink">{formatVND(total)}</span>
-                </div>
-
-                <Button size="lg" className="mt-5 w-full">Gửi yêu cầu quan tâm</Button>
-              </Card>
-
-              <Card className="mt-5 p-6">
-                <p className="font-bold text-ink">Thông tin liên hệ đang khóa</p>
-                <p className="mt-1.5 text-sm leading-relaxed text-muted">
-                  Gửi yêu cầu quan tâm — chủ trọ chấp nhận mới mở SĐT và Zalo.
-                </p>
-                <Button variant="outline" size="lg" className="mt-4 w-full">Hỏi AI về phòng này</Button>
-              </Card>
+              <div className="mt-5">
+                <RoomDetailActions room={room} breakdown={breakdown} total={total} />
+              </div>
             </div>
           </div>
         </div>
