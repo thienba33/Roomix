@@ -57,7 +57,7 @@ export function LineChart({ data, height = 180, color = '#4F46E5', area = false 
   );
 }
 
-export function DonutChart({ data, size = 170, centerLabel, centerSub }: { data: ChartDatum[]; size?: number; centerLabel?: string; centerSub?: string }) {
+export function DonutChart({ data, size = 170, centerLabel, centerSub, hideLegend = false }: { data: ChartDatum[]; size?: number; centerLabel?: string; centerSub?: string; hideLegend?: boolean }) {
   const total = data.reduce((s, d) => s + d.value, 0) || 1;
   const r = 70, c = 2 * Math.PI * r;
   let offset = 0;
@@ -84,14 +84,16 @@ export function DonutChart({ data, size = 170, centerLabel, centerSub }: { data:
           </div>
         )}
       </div>
-      <div className="flex flex-wrap justify-center gap-x-4 gap-y-1">
-        {data.map((d) => (
-          <span key={d.label} className="flex items-center gap-1.5 text-[13px] text-[#484848]">
-            <span className="h-2 w-2 rounded-full" style={{ background: d.color ?? '#4F46E5' }} />
-            {d.label} · {Math.round((d.value / total) * 100)}%
-          </span>
-        ))}
-      </div>
+      {!hideLegend && (
+        <div className="flex flex-wrap justify-center gap-x-4 gap-y-1">
+          {data.map((d) => (
+            <span key={d.label} className="flex items-center gap-1.5 text-[13px] text-[#484848]">
+              <span className="h-2 w-2 rounded-full" style={{ background: d.color ?? '#4F46E5' }} />
+              {d.label} · {Math.round((d.value / total) * 100)}%
+            </span>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

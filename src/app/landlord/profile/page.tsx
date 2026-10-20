@@ -1,7 +1,7 @@
 import Image from 'next/image';
-import { house, landlord, stats } from '@/lib/data';
+import { landlord, stats } from '@/lib/data';
 import Card from '@/components/ui/Card';
-import Badge from '@/components/ui/Badge';
+import Button from '@/components/ui/Button';
 
 const checkIcon = (
   <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-green-100 text-green-700">
@@ -9,85 +9,71 @@ const checkIcon = (
   </span>
 );
 
-const HOUSE_ROWS = [
-  { label: 'Tên nhà', value: house.name },
-  { label: 'Địa chỉ', value: house.address },
-  { label: 'Tổng phòng', value: `${house.totalRooms} phòng` },
-  { label: 'Tỷ lệ lấp đầy', value: `${stats.occupancy}%` },
-];
+const VERIFICATIONS = ['Đã xác minh CCCD', 'Đã xác minh số điện thoại', 'Địa chỉ nhà khớp giấy tờ'];
 
 export default function HoSoPage() {
+  const joinedYear = landlord.joinedAt.split('/')[1] ?? landlord.joinedAt;
+
+  const fields = [
+    { label: 'SỐ ĐIỆN THOẠI', value: landlord.phone },
+    { label: 'EMAIL', value: landlord.email },
+    { label: 'ĐANG QUẢN LÝ', value: `3 nhà · ${stats.totalRooms} phòng` },
+    { label: 'KHU VỰC', value: 'Thanh Xuân, Hà Nội' },
+  ];
+
   return (
-    <div className="space-y-5">
+    <div>
       <div>
-        <h1 className="text-[28px] font-extrabold text-ink">Hồ sơ nhà trọ</h1>
-        <p className="mt-1 text-sm text-muted">Thông tin chủ trọ và Contact Card của bạn</p>
+        <h1 className="text-2xl font-semibold text-ink">Hồ sơ nhà trọ</h1>
       </div>
 
-      <div className="grid items-start gap-5 lg:grid-cols-[380px_1fr]">
-        <Card className="p-6">
-          <div className="flex flex-col items-center text-center">
-            <span className="flex h-20 w-20 items-center justify-center rounded-full bg-primary text-2xl font-extrabold text-white">
-              {landlord.initials}
-            </span>
-            <h2 className="mt-4 text-xl font-extrabold text-ink">{landlord.name}</h2>
-            <p className="mt-1 text-sm text-muted">Chủ trọ · Từ {landlord.joinedAt}</p>
-          </div>
-          <div className="mt-6 space-y-3 border-t border-line pt-5">
-            <div className="flex items-center gap-2.5 text-sm">
-              {checkIcon}
-              <span className="flex-1 truncate text-ink">{landlord.email}</span>
-              <span className="text-[13px] font-semibold text-green-700">Đã xác thực</span>
-            </div>
-            <div className="flex items-center gap-2.5 text-sm">
-              {checkIcon}
-              <span className="flex-1 text-ink">{landlord.phone}</span>
-              <span className="text-[13px] font-semibold text-green-700">Đã xác thực</span>
-            </div>
-          </div>
-        </Card>
-
-        <div className="space-y-5">
+      <div className="mt-5 grid items-start gap-6 lg:grid-cols-[320px_1fr]">
+        <div className="space-y-6">
           <Card className="p-6">
-            <h3 className="font-bold text-ink">Thông tin nhà trọ</h3>
-            <dl className="mt-4 divide-y divide-line/70">
-              {HOUSE_ROWS.map((row) => (
-                <div key={row.label} className="flex items-center justify-between gap-4 py-3">
-                  <dt className="text-sm text-muted">{row.label}</dt>
-                  <dd className="text-right text-sm font-semibold text-ink">{row.value}</dd>
+            <div className="flex items-center gap-4">
+              <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-primary-soft text-xl font-extrabold text-primary">
+                {landlord.initials}
+              </span>
+              <div>
+                <h2 className="text-[17px] font-semibold text-ink">{landlord.name}</h2>
+                <p className="mt-0.5 text-[13px] text-muted">Chủ trọ · tham gia từ {joinedYear}</p>
+              </div>
+            </div>
+            <div className="mt-6 space-y-4">
+              {fields.map((f) => (
+                <div key={f.label}>
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-muted">{f.label}</p>
+                  <p className="mt-0.5 font-medium text-ink">{f.value}</p>
                 </div>
               ))}
-            </dl>
+            </div>
+            <Button type="button" variant="outline" className="mt-6 w-[142px]">Chỉnh sửa</Button>
           </Card>
 
-          <Card className="border-primary/20 bg-primary-soft p-6">
-            <h3 className="font-bold text-ink">Contact Card của bạn</h3>
-            <p className="mt-1 text-[13px] text-muted">Khách thuê nhận được thẻ này khi yêu cầu quan tâm được chấp nhận.</p>
-            <div className="mt-4 rounded-2xl bg-white p-5 shadow-sm">
-              <div className="flex items-center gap-3">
-                <Image src="/images/logo-mark.png" alt="Roomix" width={36} height={36} className="h-9 w-9 object-contain" />
-                <div>
-                  <p className="font-extrabold text-ink">{landlord.name}</p>
-                  <p className="text-[13px] text-muted">{landlord.house}</p>
+          <Card className="p-5">
+            <h3 className="font-semibold text-ink">Xác minh chủ trọ</h3>
+            <div className="mt-4 space-y-3.5">
+              {VERIFICATIONS.map((v) => (
+                <div key={v} className="flex items-center gap-2.5 text-sm text-ink">
+                  {checkIcon}
+                  <span>{v}</span>
                 </div>
-              </div>
-              <div className="mt-4 space-y-2 text-sm text-ink">
-                <p className="flex items-center gap-2.5">
-                  <svg className="text-muted" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" /></svg>
-                  {landlord.phone}
-                </p>
-                <p className="flex items-center gap-2.5">
-                  <svg className="text-muted" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="4" width="20" height="16" rx="2" /><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" /></svg>
-                  {landlord.email}
-                </p>
-              </div>
-              <div className="mt-4 flex flex-wrap gap-2">
-                <Badge tone="sky">Zalo</Badge>
-                <Badge tone="indigo">{landlord.phone}</Badge>
-              </div>
+              ))}
             </div>
           </Card>
         </div>
+
+        <Card className="p-6">
+          <h3 className="font-semibold text-ink">Danh thiếp gửi cho khách</h3>
+          <p className="mt-1 text-[13px] text-muted">Contact Card — khách chỉ thấy sau khi bạn chấp nhận</p>
+          <div className="mt-5 max-w-[480px] rounded-2xl border border-line p-6">
+            <Image src="/images/logo.png" alt="Roomix" width={1500} height={520} className="h-[52px] w-auto" />
+            <p className="mt-4 font-semibold text-ink">{landlord.name} — Chủ trọ Roomix</p>
+            <p className="mt-2 text-sm text-ink">SĐT / Zalo · {landlord.phone}</p>
+            <p className="mt-1.5 text-[13px] text-muted">Thường phản hồi trong ~1 giờ</p>
+          </div>
+          <p className="mt-4 text-[13px] text-muted">Xem trước đúng như khách nhận được.</p>
+        </Card>
       </div>
     </div>
   );
