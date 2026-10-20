@@ -14,6 +14,7 @@ export interface Room {
   image: string;
   gallery?: string[];
   amenities: string[];
+  note?: string;
 }
 
 export type PostStatus = 'DRAFT' | 'PENDING' | 'APPROVED' | 'REJECTED' | 'HIDDEN';

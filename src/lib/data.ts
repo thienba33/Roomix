@@ -230,3 +230,68 @@ export const activities: ActivityItem[] = [
 ];
 
 export const adminStats = { totalUsers: 248, totalLandlords: 32, totalPosts: 186, pendingPosts: 4, revenuePlatform: 204400000 };
+
+const landlordRoomImages = [
+  '/images/rooms/room-302-a.jpg',
+  '/images/rooms/room-405.webp',
+  '/images/rooms/room-201.jpg',
+  '/images/rooms/room-510.jpg',
+  '/images/rooms/room-102.webp',
+  '/images/rooms/room-303.jpg',
+  '/images/rooms/room-302-b.jpg',
+];
+
+const landlordPriceCycle = [2400000, 2600000, 2800000, 2500000, 2900000, 2700000, 3000000, 2300000, 3200000];
+const landlordSizeCycle = [20, 24, 28, 22, 26, 30, 21, 25, 32];
+
+function makeLandlordRoom(floor: number, position: number, status: Room['status'], price: number, size: number, note?: string): Room {
+  const code = `${floor}${String(position + 1).padStart(2, '0')}`;
+  const globalIndex = (floor - 1) * 9 + position;
+  const image = landlordRoomImages[globalIndex % landlordRoomImages.length];
+  return {
+    id: Number(code),
+    code,
+    name: `Phòng ${code} — Lê Văn Lương`,
+    house: 'Roomix Lê Văn Lương',
+    area: 'Thanh Xuân',
+    price,
+    size,
+    floor,
+    status,
+    rating: 4.7,
+    image,
+    gallery: [image],
+    amenities: AMEN,
+    ...(note ? { note } : {}),
+  };
+}
+
+function buildLandlordFloor(floor: 1 | 2 | 4): Room[] {
+  return Array.from({ length: 9 }, (_, position) => {
+    const code = `${floor}${String(position + 1).padStart(2, '0')}`;
+    let status: Room['status'] = 'OCCUPIED';
+    if ((floor === 1 && code === '105') || (floor === 2 && code === '205')) {
+      status = 'AVAILABLE';
+    }
+    return makeLandlordRoom(floor, position, status, landlordPriceCycle[position], landlordSizeCycle[position]);
+  });
+}
+
+const landlordFloor3: Room[] = [
+  makeLandlordRoom(3, 0, 'AVAILABLE', 2600000, 22),
+  makeLandlordRoom(3, 1, 'OCCUPIED', 2800000, 25),
+  makeLandlordRoom(3, 2, 'AVAILABLE', 2900000, 26),
+  makeLandlordRoom(3, 3, 'RESERVED', 3000000, 27),
+  makeLandlordRoom(3, 4, 'OCCUPIED', 2700000, 24),
+  makeLandlordRoom(3, 5, 'MAINTENANCE', 2700000, 24, 'Sửa điện nước, dự kiến xong 25/10'),
+  makeLandlordRoom(3, 6, 'AVAILABLE', 2600000, 23),
+  makeLandlordRoom(3, 7, 'OCCUPIED', 3100000, 28),
+  makeLandlordRoom(3, 8, 'OCCUPIED', 2800000, 25),
+];
+
+export const landlordRooms: Room[] = [
+  ...buildLandlordFloor(1),
+  ...buildLandlordFloor(2),
+  ...landlordFloor3,
+  ...buildLandlordFloor(4),
+].sort((a, b) => a.id - b.id);
