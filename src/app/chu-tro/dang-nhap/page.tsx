@@ -1,4 +1,5 @@
 'use client';
+import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -13,8 +14,13 @@ const lockIcon = (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg>
 );
 
+const eyeIcon = (
+  <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2.06 12.35a1 1 0 0 1 0-.7 10.75 10.75 0 0 1 19.88 0 1 1 0 0 1 0 .7 10.75 10.75 0 0 1-19.88 0" /><circle cx="12" cy="12" r="3" /></svg>
+);
+
 export default function DangNhapChuTroPage() {
   const router = useRouter();
+  const [showPassword, setShowPassword] = useState(false);
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-page px-4 py-10">
       <div className="flex items-center gap-2">
@@ -46,7 +52,24 @@ export default function DangNhapChuTroPage() {
             }}
           >
             <Input name="email" type="text" placeholder="Email hoặc số điện thoại" icon={mailIcon} autoComplete="username" />
-            <Input name="password" type="password" placeholder="Mật khẩu" icon={lockIcon} autoComplete="current-password" />
+            <div className="relative">
+              <Input
+                name="password"
+                type={showPassword ? 'text' : 'password'}
+                placeholder="Mật khẩu"
+                icon={lockIcon}
+                autoComplete="current-password"
+                className="pr-11"
+              />
+              <button
+                type="button"
+                aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
+                onClick={() => setShowPassword((v) => !v)}
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted transition hover:text-ink"
+              >
+                {eyeIcon}
+              </button>
+            </div>
             <div className="flex items-center justify-between text-sm">
               <label className="flex cursor-pointer items-center gap-2 text-muted">
                 <input type="checkbox" className="h-4 w-4 accent-[#4F46E5]" />

@@ -6,37 +6,44 @@ import { posts } from '@/lib/data';
 import type { PostStatus } from '@/types';
 import { cn, formatPriceShort, postStatusLabel } from '@/lib/utils';
 import Card from '@/components/ui/Card';
-import Badge from '@/components/ui/Badge';
 
 type Filter = PostStatus | 'ALL';
 
+// Figma B3 wording: APPROVED posts are shown as "Đang hiển thị", REJECTED as "Bị từ chối".
+const listLabel: Record<PostStatus, string> = {
+  ...postStatusLabel,
+  APPROVED: 'Đang hiển thị',
+  REJECTED: 'Bị từ chối',
+};
+
 const FILTERS: { key: Filter; label: string }[] = [
   { key: 'ALL', label: 'Tất cả' },
-  { key: 'DRAFT', label: postStatusLabel.DRAFT },
-  { key: 'PENDING', label: postStatusLabel.PENDING },
-  { key: 'APPROVED', label: postStatusLabel.APPROVED },
-  { key: 'REJECTED', label: postStatusLabel.REJECTED },
-  { key: 'HIDDEN', label: postStatusLabel.HIDDEN },
+  { key: 'APPROVED', label: listLabel.APPROVED },
+  { key: 'PENDING', label: listLabel.PENDING },
+  { key: 'DRAFT', label: listLabel.DRAFT },
+  { key: 'REJECTED', label: listLabel.REJECTED },
+  { key: 'HIDDEN', label: listLabel.HIDDEN },
 ];
 
-const postTone: Record<PostStatus, 'gray' | 'amber' | 'green' | 'red'> = {
-  DRAFT: 'gray',
-  PENDING: 'amber',
-  APPROVED: 'green',
-  REJECTED: 'red',
-  HIDDEN: 'gray',
+const statusText: Record<PostStatus, string> = {
+  APPROVED: 'text-green-700',
+  PENDING: 'text-amber-700',
+  DRAFT: 'text-gray-500',
+  REJECTED: 'text-red-600',
+  HIDDEN: 'text-gray-500',
 };
 
 export default function BaiDangPage() {
   const [filter, setFilter] = useState<Filter>('ALL');
   const filtered = filter === 'ALL' ? posts : posts.filter((p) => p.status === filter);
+  const liveCount = posts.filter((p) => p.status === 'APPROVED').length;
 
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-[28px] font-extrabold text-ink">Bài đăng</h1>
-          <p className="mt-1 text-sm text-muted">{posts.length} bài đăng · Roomix Lê Văn Lương</p>
+          <p className="mt-1 text-sm text-muted">{posts.length} bài · {liveCount} đang hiển thị</p>
         </div>
         <Link
           href="/chu-tro/bai-dang/tao"
@@ -52,10 +59,10 @@ export default function BaiDangPage() {
             key={f.key}
             onClick={() => setFilter(f.key)}
             className={cn(
-              'rounded-full border px-4 py-2 text-sm font-medium transition',
+              'rounded-full px-4 py-2 text-sm transition',
               filter === f.key
-                ? 'border-primary bg-primary text-white'
-                : 'border-line bg-white text-muted hover:border-primary hover:text-primary',
+                ? 'bg-primary-soft font-semibold text-primary-dark'
+                : 'font-medium text-muted hover:bg-page hover:text-ink',
             )}
           >
             {f.label}
@@ -66,24 +73,30 @@ export default function BaiDangPage() {
       {filtered.length === 0 ? (
         <Card className="p-10 text-center text-sm text-muted">Chưa có bài đăng nào ở trạng thái này.</Card>
       ) : (
-        <div className="space-y-3">
-          {filtered.map((post) => (
-            <Card key={post.id} className="flex items-center gap-4 p-4">
-              <Image src={post.image} alt={post.title} width={224} height={168} className="h-[84px] w-28 shrink-0 rounded-xl object-cover" />
-              <div className="min-w-0 flex-1">
-                <h3 className="truncate font-semibold text-ink">{post.title}</h3>
-                <p className="mt-0.5 text-sm text-muted">Đăng {post.createdAt} · {post.views} lượt xem</p>
-              </div>
-              <div className="shrink-0 text-right">
-                <p className="font-bold text-ink">{formatPriceShort(post.price)}<span className="text-sm font-normal text-muted"> / tháng</span></p>
-                <div className="mt-1.5">
-                  <Badge tone={postTone[post.status]} dot>{postStatusLabel[post.status]}</Badge>
+        <Card className="overflow-hidden p-0">
+          <div className="hidden grid-cols-[1fr_130px_110px_130px] gap-4 border-b border-line/70 px-5 pb-3 pt-4 sm:grid">
+            <span className="text-[11px] font-semibold uppercase tracking-wide text-muted">Bài đăng</span>
+            <span className="text-[11px] font-semibold uppercase tracking-wide text-muted">Phòng</span>
+            <span className="text-[11px] font-semibold uppercase tracking-wide text-muted">Giá</span>
+            <span className="text-[11px] font-semibold uppercase tracking-wide text-muted">Trạng thái</span>
+          </div>
+          <div className="divide-y divide-line/70">
+            {filtered.map((post) => (
+              <div key={post.id} className="grid grid-cols-[1fr_auto] items-center gap-4 px-5 py-3.5 sm:grid-cols-[1fr_130px_110px_130px]">
+                <div className="flex min-w-0 items-center gap-3.5">
+                  <Image src={post.image} alt={post.title} width={96} height={96} className="h-12 w-12 shrink-0 rounded-lg object-cover" />
+                  <div className="min-w-0">
+                    <h3 className="truncate text-sm font-semibold text-ink">{post.title}</h3>
+                    <p className="mt-0.5 text-[13px] text-muted">Đăng {post.createdAt} · {post.views} lượt xem</p>
+                  </div>
                 </div>
+                <span className="hidden text-sm text-muted sm:block">Phòng {post.roomCode}</span>
+                <span className="hidden text-sm text-muted sm:block">{formatPriceShort(post.price)}</span>
+                <span className={cn('text-sm font-semibold', statusText[post.status])}>{listLabel[post.status]}</span>
               </div>
-              <svg className="shrink-0 text-muted" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg>
-            </Card>
-          ))}
-        </div>
+            ))}
+          </div>
+        </Card>
       )}
     </div>
   );

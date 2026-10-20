@@ -23,11 +23,11 @@ export default function KhachThuePage() {
         <p className="mt-1 text-sm text-muted">{tenancies.length} khách thuê · hợp đồng đang quản lý</p>
       </div>
 
-      <div className="space-y-3">
+      <Card className="divide-y divide-line/70 overflow-hidden p-0">
         {tenancies.map((t) => {
           const st = statusMap[t.status];
           return (
-            <Card key={t.id} className="flex flex-wrap items-center gap-4 p-5">
+            <div key={t.id} className="flex flex-wrap items-center gap-4 px-5 py-4">
               <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary-soft text-sm font-bold text-primary">
                 {t.initials ?? 'KH'}
               </span>
@@ -45,10 +45,10 @@ export default function KhachThuePage() {
                 <p className="mt-0.5 text-sm font-semibold text-ink">Cọc {formatVND(t.deposit)}</p>
               </div>
               <Badge tone={st.tone} dot>{st.label}</Badge>
-            </Card>
+            </div>
           );
         })}
-      </div>
+      </Card>
     </div>
   );
 }

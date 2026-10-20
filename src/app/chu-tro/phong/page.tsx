@@ -19,10 +19,10 @@ export default function PhongPage() {
         const available = floorRooms.filter((r) => r.status === 'AVAILABLE').length;
         return (
           <section key={floor}>
-            <div className="mb-3 flex flex-wrap items-center gap-3">
-              <h2 className="text-lg font-bold text-ink">Tầng {floor}</h2>
-              <span className="rounded-full bg-primary-soft px-3 py-1 text-xs font-semibold text-primary-dark">
-                Tầng {floor} · {floorRooms.length} phòng · {rented} đang thuê · {available} còn trống
+            <div className="mb-3 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+              <h2 className="text-[17px] font-bold text-ink">Tầng {floor}</h2>
+              <span className="text-[13px] text-muted">
+                {floorRooms.length} phòng · {rented} đang thuê · {available} còn trống
               </span>
             </div>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

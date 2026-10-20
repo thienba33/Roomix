@@ -1,6 +1,29 @@
-import { activities, occupancyDonut, revenueBar, revenueLine, stats } from '@/lib/data';
+import { activities, revenueBar, revenueLine, stats } from '@/lib/data';
 import Card from '@/components/ui/Card';
-import { BarChart, DonutChart, LineChart } from '@/components/ui/Charts';
+import { BarChart, LineChart } from '@/components/ui/Charts';
+
+function OccupancyDonut() {
+  const pct = stats.occupancy;
+  const r = 70;
+  const c = 2 * Math.PI * r;
+  return (
+    <div className="flex flex-col items-center">
+      <div className="relative h-[170px] w-[170px]">
+        <svg viewBox="0 0 180 180" className="h-full w-full -rotate-90">
+          <circle cx="90" cy="90" r={r} fill="none" stroke="#E5E7EB" strokeWidth="22" />
+          <circle
+            cx="90" cy="90" r={r} fill="none" stroke="#4F46E5" strokeWidth="22"
+            strokeDasharray={`${(pct / 100) * c} ${c}`}
+          />
+        </svg>
+        <div className="absolute inset-0 flex items-center justify-center">
+          <span className="text-[32px] font-extrabold text-ink">{pct}%</span>
+        </div>
+      </div>
+      <p className="mt-3 text-[13px] text-muted">{stats.rented} / {stats.totalRooms} phòng đang thuê</p>
+    </div>
+  );
+}
 
 const KPIS = [
   { label: 'TỔNG PHÒNG', value: String(stats.totalRooms), sub: '+2 phòng mới' },
@@ -58,17 +81,20 @@ export default function ChuTroHomePage() {
         </Card>
         <Card className="p-5">
           <h3 className="font-bold text-ink">Tỷ lệ lấp đầy</h3>
-          <div className="mt-3">
-            <DonutChart data={occupancyDonut} centerLabel="82%" centerSub="29 / 36 phòng đang thuê" />
+          <div className="mt-4">
+            <OccupancyDonut />
           </div>
         </Card>
       </div>
 
-      <Card className="p-5">
+      <Card className="px-5 py-5">
         <h3 className="font-bold text-ink">Cần xử lý</h3>
         <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {TODO_ITEMS.map((item) => (
-            <div key={item.text} className="flex items-center gap-2.5 text-sm font-medium text-ink">
+          {TODO_ITEMS.map((item, i) => (
+            <div
+              key={item.text}
+              className={`flex items-center gap-2.5 text-sm font-medium text-ink ${i > 0 ? 'lg:border-l lg:border-line/70 lg:pl-5' : ''}`}
+            >
               <span className={`h-2 w-2 shrink-0 rounded-full ${item.dot}`} />
               {item.text}
             </div>
@@ -80,7 +106,7 @@ export default function ChuTroHomePage() {
         <h3 className="font-bold text-ink">Hoạt động gần đây</h3>
         <div className="mt-2 divide-y divide-line/70">
           {activities.map((a) => (
-            <div key={a.id} className="flex flex-wrap items-center gap-x-4 gap-y-1 py-3.5">
+            <div key={a.id} className="flex flex-wrap items-center gap-x-4 gap-y-1 py-5">
               <span className="w-28 shrink-0 font-semibold text-ink">{a.room}</span>
               <span className="min-w-40 flex-1 text-sm text-muted">{a.text}</span>
               <span className="w-28 text-sm text-muted">{a.date}</span>
