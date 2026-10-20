@@ -2,6 +2,7 @@
 
 import { usePathname } from 'next/navigation';
 import AdminTopbar from '@/components/layouts/AdminTopbar';
+import { ToastProvider } from '@/components/ui/Toast';
 import type { ReactNode } from 'react';
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
@@ -12,9 +13,11 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="min-h-screen bg-white">
-      <AdminTopbar />
-      <main className="mx-auto max-w-[1180px] px-6 py-8">{children}</main>
-    </div>
+    <ToastProvider>
+      <div className="min-h-screen bg-white">
+        <AdminTopbar />
+        <main className="mx-auto max-w-[1180px] px-6 py-8">{children}</main>
+      </div>
+    </ToastProvider>
   );
 }

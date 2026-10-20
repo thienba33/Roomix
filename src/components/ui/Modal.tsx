@@ -1,5 +1,5 @@
 'use client';
-import { type ReactNode } from 'react';
+import { useEffect, type ReactNode } from 'react';
 
 interface Props {
   open: boolean;
@@ -10,6 +10,16 @@ interface Props {
 }
 
 export default function Modal({ open, onClose, title, children, widthClass = 'max-w-lg' }: Props) {
+  // Esc-to-close lives here so every dialog built on Modal gets it for free.
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [open, onClose]);
+
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-[80] flex items-center justify-center p-4">

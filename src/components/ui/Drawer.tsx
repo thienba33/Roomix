@@ -1,9 +1,19 @@
 'use client';
-import { type ReactNode } from 'react';
+import { useEffect, type ReactNode } from 'react';
 
 interface Props { open: boolean; onClose: () => void; title?: string; children: ReactNode }
 
 export default function Drawer({ open, onClose, title, children }: Props) {
+  // Esc-to-close lives here so every drawer built on Drawer gets it for free.
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [open, onClose]);
+
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-[80]">

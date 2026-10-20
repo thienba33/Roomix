@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Image from 'next/image';
 
 const QUICK = ['Phòng dưới 3 triệu gần Bách Khoa', 'Phòng trống ở Cầu Giấy?', 'So sánh phòng 302 và 405', 'Tư vấn phòng cho 2 người'];
@@ -8,6 +8,15 @@ const CHIPS = ['Gợi ý phòng', 'Giá điện nước', 'Tiện ích', 'Gặp 
 export default function AiPanel({ onClose }: { onClose: () => void }) {
   const [extraMsg, setExtraMsg] = useState<string | null>(null);
   const [input, setInput] = useState('');
+
+  // Shared panel (not built on Modal/Drawer), so Esc-to-close is wired here once.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [onClose]);
 
   return (
     <aside className="fixed inset-y-0 right-0 z-[70] flex w-full max-w-[440px] flex-col border-l border-line bg-white shadow-2xl">

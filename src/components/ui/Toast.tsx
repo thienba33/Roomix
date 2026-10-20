@@ -1,18 +1,55 @@
 'use client';
-import { createContext, useCallback, useContext, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useRef, useState, type ReactNode } from 'react';
 
-interface ToastItem { id: number; title: string; body?: string }
-const ToastCtx = createContext<{ push: (title: string, body?: string) => void }>({ push: () => {} });
+/** Optional action rendered as a button inside the toast (e.g. "Hoàn tác" / Undo). */
+export interface ToastAction {
+  label: string;
+  onClick: () => void;
+}
+
+interface ToastItem {
+  id: number;
+  title: string;
+  body?: string;
+  action?: ToastAction;
+}
+
+type PushFn = (title: string, body?: string, action?: ToastAction) => void;
+
+const ToastCtx = createContext<{ push: PushFn }>({ push: () => {} });
 export const useToast = () => useContext(ToastCtx);
+
+const PLAIN_DURATION_MS = 3500;
+/** Toasts carrying an action (e.g. Undo) stay longer so the user can act on them. */
+const ACTION_DURATION_MS = 6000;
 
 let seq = 0;
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<ToastItem[]>([]);
-  const push = useCallback((title: string, body?: string) => {
-    const id = ++seq;
-    setToasts((t) => [...t, { id, title, body }]);
-    setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), 3500);
+  const timers = useRef(new Map<number, ReturnType<typeof setTimeout>>());
+
+  const dismiss = useCallback((id: number) => {
+    setToasts((t) => t.filter((x) => x.id !== id));
+    const timer = timers.current.get(id);
+    if (timer) {
+      clearTimeout(timer);
+      timers.current.delete(id);
+    }
   }, []);
+
+  const push = useCallback<PushFn>(
+    (title, body, action) => {
+      const id = ++seq;
+      setToasts((t) => [...t, { id, title, body, action }]);
+      const timer = setTimeout(
+        () => dismiss(id),
+        action ? ACTION_DURATION_MS : PLAIN_DURATION_MS,
+      );
+      timers.current.set(id, timer);
+    },
+    [dismiss],
+  );
+
   return (
     <ToastCtx.Provider value={{ push }}>
       {children}
@@ -26,6 +63,20 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               {t.title}
             </p>
             {t.body && <p className="mt-1 pl-7 text-[13px] text-muted">{t.body}</p>}
+            {t.action && (
+              <div className="mt-2 pl-7">
+                <button
+                  type="button"
+                  onClick={() => {
+                    t.action?.onClick();
+                    dismiss(t.id);
+                  }}
+                  className="text-[13px] font-bold text-primary hover:text-primary-dark hover:underline"
+                >
+                  {t.action.label}
+                </button>
+              </div>
+            )}
           </div>
         ))}
       </div>

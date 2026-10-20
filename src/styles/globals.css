@@ -36,3 +36,11 @@ body {
 ::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-thumb { background: #DDDDDD; border-radius: 999px; }
 ::-webkit-scrollbar-track { background: transparent; }
+
+/* Visible keyboard focus for every interactive element (indigo = primary token).
+   Components that manage their own focus ring via utilities keep working;
+   this guarantees a visible ring wherever no component-level style exists. */
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
