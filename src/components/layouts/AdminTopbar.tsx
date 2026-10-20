@@ -21,7 +21,7 @@ export default function AdminTopbar() {
     <header className="sticky top-0 z-50 border-b border-line bg-white/95 backdrop-blur">
       <div className="flex h-16 w-full items-center gap-4 px-6 lg:px-12">
         <Link href="/admin" className="flex shrink-0 items-center gap-2.5">
-          <Image src="/images/logo.png" alt="Roomix" width={1500} height={520} className="h-[22px] w-auto" priority />
+          <Image src="/images/logo.png" alt="Roomix" width={1961} height={680} className="h-[22px] w-auto" priority />
           <span className="ml-3 rounded-full bg-primary-soft px-3 py-1.5 text-[11px] font-bold tracking-[0.08em] text-primary">ADMIN CONSOLE</span>
         </Link>
         <nav className="mx-auto hidden items-center gap-1 rounded-full bg-[#F7F7F7] p-1 lg:flex">

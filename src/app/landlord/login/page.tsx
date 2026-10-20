@@ -28,7 +28,7 @@ export default function DangNhapChuTroPage() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-page px-4 py-10">
       <div className="flex items-center gap-2">
-        <Image src="/images/logo.png" alt="Roomix" width={1500} height={520} className="h-10 w-auto" priority />
+        <Image src="/images/logo.png" alt="Roomix" width={1961} height={680} className="h-10 w-auto" priority />
       </div>
 
       <Card className="mt-8 grid w-full max-w-5xl overflow-hidden rounded-3xl p-0 shadow-xl md:grid-cols-2">

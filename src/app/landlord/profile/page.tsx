@@ -61,7 +61,7 @@ export default function HoSoPage() {
         </div>
         <Card className="p-6">
           <h3 className="font-semibold text-ink">Danh thiếp gửi cho khách</h3><p className="mt-1 text-[13px] text-muted">Contact Card — khách chỉ thấy sau khi bạn chấp nhận</p>
-          <div className="mt-5 max-w-[480px] rounded-2xl border border-line p-6"><Image src="/images/logo.png" alt="Roomix" width={1500} height={520} className="h-[52px] w-auto" /><p className="mt-4 font-semibold text-ink">{display.name} — Chủ trọ Roomix</p><p className="mt-2 text-sm text-ink">SĐT / Zalo · {display.phone}</p><p className="mt-1 text-[13px] text-muted">{display.email}</p><p className="mt-1.5 text-[13px] text-muted">Thường phản hồi trong ~1 giờ</p></div>
+          <div className="mt-5 max-w-[480px] rounded-2xl border border-line p-6"><Image src="/images/logo.png" alt="Roomix" width={1961} height={680} className="h-[52px] w-auto" /><p className="mt-4 font-semibold text-ink">{display.name} — Chủ trọ Roomix</p><p className="mt-2 text-sm text-ink">SĐT / Zalo · {display.phone}</p><p className="mt-1 text-[13px] text-muted">{display.email}</p><p className="mt-1.5 text-[13px] text-muted">Thường phản hồi trong ~1 giờ</p></div>
           <p className="mt-4 text-[13px] text-muted">Xem trước đúng như khách nhận được — cập nhật theo hồ sơ vừa lưu.</p>
         </Card>
       </div>

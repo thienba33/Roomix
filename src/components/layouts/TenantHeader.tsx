@@ -92,7 +92,7 @@ export default function TenantHeader({ defaultAiOpen = false }: { defaultAiOpen?
       <header className="sticky top-0 z-50 border-b border-line bg-white/95 backdrop-blur">
         <div className="flex h-16 w-full items-center gap-10 px-6 lg:px-12">
           <Link href="/" className="flex shrink-0 items-center" aria-label="Roomix">
-            <Image src="/images/logo.png" alt="Roomix" width={1500} height={520} className="h-6 w-auto" priority />
+            <Image src="/images/logo.png" alt="Roomix" width={1961} height={680} className="h-6 w-auto" priority />
           </Link>
 
           <nav className="hidden items-center gap-7 md:flex">
