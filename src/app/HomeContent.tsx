@@ -55,24 +55,6 @@ const CATEGORIES: { label: string; icon: ReactNode }[] = [
       <svg {...iconProps}><path d="m3 10 9-7 9 7" /><path d="M5 9.5V21h14V9.5" /><path d="M10 21v-6h4v6" /></svg>
     ),
   },
-  {
-    label: 'Gần trường',
-    icon: (
-      <svg {...iconProps}><path d="m2 9 10-5 10 5-10 5z" /><path d="M6 11.5V16c0 1.7 2.7 3 6 3s6-1.3 6-3v-4.5" /><path d="M22 9v5" /></svg>
-    ),
-  },
-  {
-    label: 'Ban công',
-    icon: (
-      <svg {...iconProps}><rect x="5" y="3" width="14" height="18" rx="1" /><path d="M5 12h14" /><path d="M9 21v-4M15 21v-4" /><path d="M9 7h2M13 7h2" /></svg>
-    ),
-  },
-  {
-    label: 'Máy giặt',
-    icon: (
-      <svg {...iconProps}><rect x="4" y="2.5" width="16" height="19" rx="2" /><circle cx="12" cy="13" r="4.5" /><path d="M7 5.5h.01M17 5.5h.01" /></svg>
-    ),
-  },
 ];
 
 function fmtPrice(n: number) {
@@ -93,7 +75,7 @@ export default function HomeContent() {
     const saved = getPersistedSearch();
     if (saved) {
       setQuery(saved.query ?? '');
-      setCategory(saved.category ?? 'Tất cả');
+      setCategory(saved.category && CATEGORIES.some((c) => c.label === saved.category) ? saved.category : 'Tất cả');
       setFilters({ ...DEFAULT_FILTERS, ...(saved.filters ?? {}) });
       setSort(saved.sort ?? 'newest');
     }
