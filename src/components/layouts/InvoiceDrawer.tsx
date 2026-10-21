@@ -28,7 +28,6 @@ interface Props {
 export default function InvoiceDrawer({ invoice, open, onClose, onRemind, onConfirmInvoice, onPay, reminders }: Props) {
   if (!invoice) return null;
   const overdue = isOverdue(invoice);
-  const effectiveStatus = overdue ? 'OVERDUE' : invoice.status;
   const displayTone = overdue ? 'red' : toneMap[invoice.status as keyof typeof toneMap] ?? 'amber';
   return (
     <Drawer open={open} onClose={onClose} title={`Hóa đơn · ${invoice.room}`}>
@@ -52,7 +51,7 @@ export default function InvoiceDrawer({ invoice, open, onClose, onRemind, onConf
           </div>
         ))}
       </div>
-      <p className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-[12px] text-amber-800">Lưu ý: Backend InvoiceItemType chỉ có ROOM_RENT / ELECTRICITY / WATER. Dòng &quot;Phí dịch vụ&quot; (nếu có) là UI-ahead theo công thức UC05.7, chưa có charge type ở backend.</p>
+      <p className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-[12px] text-amber-800">Hóa đơn minh họa · Xác nhận các khoản thu trước khi thanh toán.</p>
 
       <div className="mt-5 flex items-center justify-between border-t border-line pt-4">
         <span className="font-bold text-ink">Tổng cộng / Còn phải thu</span>

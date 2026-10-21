@@ -34,7 +34,7 @@ export default function HoSoPage() {
     setErrors(e); if (Object.keys(e).length) return;
     const prev = profile; setProfile(draft); try { localStorage.setItem(LS_KEYS.profile, JSON.stringify(draft)); } catch { /* ignore */ }
     setEditing(false);
-    toast.push('Đã lưu hồ sơ (mock)', 'Backend chưa có endpoint cập nhật hồ sơ — xem đánh giá', { label: 'Hoàn tác', onClick: () => { setProfile(prev); try { localStorage.setItem(LS_KEYS.profile, JSON.stringify(prev)); } catch { /* ignore */ } } });
+    toast.push('Đã lưu hồ sơ minh họa', 'Thông tin được lưu trong trình duyệt.', { label: 'Hoàn tác', onClick: () => { setProfile(prev); try { localStorage.setItem(LS_KEYS.profile, JSON.stringify(prev)); } catch { /* ignore */ } } });
   };
 
   return (
@@ -52,7 +52,7 @@ export default function HoSoPage() {
                 <div><label className="mb-1.5 block text-[13px] font-semibold text-ink">Họ tên <span className="text-red-600">*</span></label><input value={draft.name} onChange={(e) => setDraft((d) => ({ ...d, name: e.target.value }))} className={inputCls} autoComplete="name" />{errors.name && <p className="mt-1 text-[13px] text-red-600" role="alert">{errors.name}</p>}</div>
                 <div><label className="mb-1.5 block text-[13px] font-semibold text-ink">Số điện thoại <span className="text-red-600">*</span></label><input value={draft.phone} onChange={(e) => setDraft((d) => ({ ...d, phone: e.target.value }))} className={inputCls} autoComplete="tel" />{errors.phone && <p className="mt-1 text-[13px] text-red-600" role="alert">{errors.phone}</p>}</div>
                 <div><label className="mb-1.5 block text-[13px] font-semibold text-ink">Email <span className="text-red-600">*</span></label><input value={draft.email} onChange={(e) => setDraft((d) => ({ ...d, email: e.target.value }))} className={inputCls} autoComplete="email" />{errors.email && <p className="mt-1 text-[13px] text-red-600" role="alert">{errors.email}</p>}</div>
-                <p className="rounded-lg bg-amber-50 px-3 py-2 text-[12px] text-amber-800">Backend hiện chỉ có GET /users/me, chưa có PUT/PATCH cập nhật hồ sơ — lưu ở đây là mock cục bộ (UI-ahead theo UC01.4).</p>
+                <p className="rounded-lg bg-amber-50 px-3 py-2 text-[12px] text-amber-800">Chế độ minh họa · Hồ sơ được lưu trong trình duyệt này.</p>
                 <div className="flex gap-2"><Button onClick={save}>Lưu</Button><Button variant="outline" onClick={() => setEditing(false)}>Hủy</Button></div>
               </div>
             )}

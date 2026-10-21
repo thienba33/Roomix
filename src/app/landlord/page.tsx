@@ -49,14 +49,6 @@ export default function ChuTroHomePage() {
   return (
     <div className="space-y-6">
       <div><h1 className="text-[28px] font-extrabold text-ink">Xin chào, Nguyễn Văn An</h1><p className="mt-1 text-sm text-muted">Tổng quan · Roomix Lê Văn Lương</p></div>
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {KPIS.map((k) => (<Card key={k.label} className="p-5"><p className="text-xs font-semibold uppercase tracking-wide text-muted">{k.label}</p><p className="mt-2 text-[32px] font-extrabold leading-none text-ink">{k.value}</p><p className="mt-2 text-[13px] font-medium text-green-600">{k.sub}</p></Card>))}
-      </div>
-      <div className="grid gap-4 lg:grid-cols-3">
-        <Card className="p-5"><h3 className="font-bold text-ink">Doanh thu 6 tháng</h3><p className="mt-0.5 text-[13px] text-muted">triệu đồng</p><div className="mt-3"><BarChart data={revenueBar} /></div></Card>
-        <Card className="p-5"><h3 className="font-bold text-ink">Xu hướng doanh thu</h3><p className="mt-0.5 text-[13px] text-muted">triệu đồng</p><div className="mt-3"><LineChart data={revenueLine} /></div></Card>
-        <Card className="p-5"><h3 className="font-bold text-ink">Tỷ lệ lấp đầy</h3><div className="mt-4"><OccupancyDonut /></div></Card>
-      </div>
       <Card className="px-5 py-5">
         <h3 className="font-bold text-ink">Cần xử lý</h3>
         <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -67,6 +59,14 @@ export default function ChuTroHomePage() {
           ))}
         </div>
       </Card>
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {KPIS.map((k) => (<Card key={k.label} className="p-5"><p className="text-xs font-semibold uppercase tracking-wide text-muted">{k.label}</p><p className="mt-2 text-[32px] font-extrabold leading-none text-ink">{k.value}</p><p className="mt-2 text-[13px] font-medium text-green-600">{k.sub}</p></Card>))}
+      </div>
+      <div className="grid gap-4 lg:grid-cols-3">
+        <Card className="p-5"><h3 className="font-bold text-ink">Doanh thu 6 tháng</h3><p className="mt-0.5 text-[13px] text-muted">triệu đồng</p><div className="mt-3"><BarChart data={revenueBar} /></div></Card>
+        <Card className="p-5"><h3 className="font-bold text-ink">Xu hướng doanh thu</h3><p className="mt-0.5 text-[13px] text-muted">triệu đồng</p><div className="mt-3"><LineChart data={revenueLine} /></div></Card>
+        <Card className="p-5"><h3 className="font-bold text-ink">Tỷ lệ lấp đầy</h3><div className="mt-4"><OccupancyDonut /></div></Card>
+      </div>
       <Card className="p-5">
         <h3 className="font-bold text-ink">Hoạt động gần đây</h3>
         <div className="mt-2 divide-y divide-line/70">

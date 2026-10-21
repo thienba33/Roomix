@@ -63,7 +63,7 @@ export default function HoaDonPage() {
         { label: 'Tiền phòng', detail: 'Tháng 11/2026', amount: prev.rent },
         { label: 'Tiền điện', detail: `${elecUsage} số × ${ELEC_PRICE.toLocaleString('vi-VN')}đ`, amount: elecAmt },
         { label: 'Tiền nước', detail: `${waterUsage} khối × ${WATER_PRICE.toLocaleString('vi-VN')}đ`, amount: waterAmt },
-        { label: 'Phí dịch vụ', detail: 'Vệ sinh, thang máy, rác (UC05.7 — chưa có InvoiceItemType ở backend)', amount: SERVICE_FEE },
+        { label: 'Phí dịch vụ', detail: 'Vệ sinh, thang máy, rác', amount: SERVICE_FEE },
       ],
       total: liveTotal, history: [], reminders: [],
     };
@@ -87,39 +87,42 @@ export default function HoaDonPage() {
   const handleRemind = (inv: Invoice) => {
     const prevList = invoices;
     setInvoices((list) => list.map((i) => (i.id === inv.id ? { ...i, reminders: [...(i.reminders ?? []), { date: todayVN() }] } : i)));
-    toast.push('Đã gửi nhắc thanh toán', `${inv.room} · ${inv.period} (InvoiceReminder đã ghi)`, { label: 'Hoàn tác', onClick: () => setInvoices(prevList) });
+    toast.push('Đã gửi nhắc thanh toán', `${inv.room} · ${inv.period}`, { label: 'Hoàn tác', onClick: () => setInvoices(prevList) });
   };
 
   const openInvoice = (inv: Invoice) => { const full = invoices.find((i) => i.id === inv.id) ?? inv; setSelected(full as Invoice); setOpen(true); };
   const selectedFull = selected ? invoices.find((i) => i.id === selected.id) : null;
 
   const numField = (label: string, key: keyof MeterDraft, placeholder: string) => (
-    <div><label className="mb-1 block text-[12px] font-semibold text-muted">{label}</label><input type="number" value={draft[key]} placeholder={placeholder} onChange={(e) => setDraft((d) => ({ ...d, [key]: e.target.value }))} className="w-full rounded-lg border border-line px-3 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20" /></div>
+    <div><label htmlFor={`meter-${key}`} className="mb-1 block text-[12px] font-semibold text-muted">{label}</label><input id={`meter-${key}`} min="0" type="number" value={draft[key]} placeholder={placeholder} onChange={(e) => setDraft((d) => ({ ...d, [key]: e.target.value }))} className="w-full rounded-lg border border-line px-3 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20" /></div>
   );
 
   return (
     <div className="space-y-5">
-      <div><h1 className="text-[28px] font-extrabold text-ink">Điện – Nước &amp; Hóa đơn</h1><p className="mt-1 text-sm text-muted">Kỳ tháng 10/2026 · Quá hạn được tính từ hạn thanh toán (không có trạng thái OVERDUE ở backend)</p></div>
+      <div><h1 className="text-[28px] font-extrabold text-ink">Điện – Nước &amp; Hóa đơn</h1><p className="mt-1 text-sm text-muted">Theo dõi thanh toán và lập hóa đơn · Dữ liệu minh họa</p></div>
       <div className="flex flex-wrap gap-2">{CHIPS.map((c) => (<button key={c.key} onClick={() => setChip(c.key)} className={cn('rounded-full px-4 py-2 text-sm transition', chip === c.key ? 'bg-primary-soft font-semibold text-primary-dark' : 'font-medium text-muted hover:bg-page hover:text-ink')}>{c.label}{c.key === 'OVERDUE' ? ` (${invoices.filter((i) => isOverdue(i)).length})` : ''}</button>))}</div>
       <div className="grid items-start gap-5 lg:grid-cols-[1.8fr_1fr]">
         <div className="space-y-5">
           <Card className="p-5">
-            <h2 className="text-[17px] font-bold text-ink">Ghi chỉ số điện – nước · tháng 11</h2>
+            <h2 className="text-[17px] font-bold text-ink">Tạo hóa đơn · Tháng 11/2026</h2>
+            <p className="mt-4 text-xs font-semibold text-muted">1. Chọn phòng · Kỳ tháng 11/2026</p>
             <div className="mt-3 flex flex-wrap gap-2">{METER_ROOMS.map((r) => (<button key={r} onClick={() => pickRoom(r)} className={cn('rounded-full px-3 py-1.5 text-[13px]', meterRoom === r ? 'bg-primary-soft font-semibold text-primary' : 'bg-page text-muted')}>{r}{recordedRooms.includes(r) ? ' ✓' : ''}</button>))}</div>
-            <div className="mt-4 grid gap-4 sm:grid-cols-2">
-              <div className="rounded-xl border border-line p-4"><p className="mb-3 text-sm font-bold text-ink">Điện (UC05.5) · {ELEC_PRICE.toLocaleString('vi-VN')}đ/số</p><div className="grid grid-cols-2 gap-3">{numField('Chỉ số cũ', 'oldElec', '')}{numField('Chỉ số mới *', 'newElec', 'Nhập chỉ số mới')}</div>{elecError && <p className="mt-2 text-[13px] font-medium text-red-600" role="alert">{elecError}</p>}{elecUsage !== null && !elecError && <p className="mt-2 text-sm text-primary">Tiêu thụ: <b>{elecUsage} số</b> · {formatVND(elecAmt)}</p>}</div>
-              <div className="rounded-xl border border-line p-4"><p className="mb-3 text-sm font-bold text-ink">Nước (UC05.6) · {WATER_PRICE.toLocaleString('vi-VN')}đ/khối</p><div className="grid grid-cols-2 gap-3">{numField('Chỉ số cũ', 'oldWater', '')}{numField('Chỉ số mới *', 'newWater', 'Nhập chỉ số mới')}</div>{waterError && <p className="mt-2 text-[13px] font-medium text-red-600" role="alert">{waterError}</p>}{waterUsage !== null && !waterError && <p className="mt-2 text-sm text-primary">Tiêu thụ: <b>{waterUsage} khối</b> · {formatVND(waterAmt)}</p>}</div>
+            <p className="mt-5 text-xs font-semibold text-muted">2. Ghi chỉ số điện và nước</p>
+            <div className="mt-3 grid gap-4 sm:grid-cols-2">
+              <div className="rounded-xl border border-line p-4"><p className="mb-3 text-sm font-bold text-ink">Điện · {ELEC_PRICE.toLocaleString('vi-VN')}đ/số</p><div className="grid grid-cols-2 gap-3">{numField('Chỉ số cũ', 'oldElec', '')}{numField('Chỉ số mới *', 'newElec', 'Nhập chỉ số mới')}</div>{elecError && <p className="mt-2 text-[13px] font-medium text-red-600" role="alert">{elecError}</p>}{elecUsage !== null && !elecError && <p className="mt-2 text-sm text-primary">Tiêu thụ: <b>{elecUsage} số</b> · {formatVND(elecAmt)}</p>}</div>
+              <div className="rounded-xl border border-line p-4"><p className="mb-3 text-sm font-bold text-ink">Nước · {WATER_PRICE.toLocaleString('vi-VN')}đ/khối</p><div className="grid grid-cols-2 gap-3">{numField('Chỉ số cũ', 'oldWater', '')}{numField('Chỉ số mới *', 'newWater', 'Nhập chỉ số mới')}</div>{waterError && <p className="mt-2 text-[13px] font-medium text-red-600" role="alert">{waterError}</p>}{waterUsage !== null && !waterError && <p className="mt-2 text-sm text-primary">Tiêu thụ: <b>{waterUsage} khối</b> · {formatVND(waterAmt)}</p>}</div>
             </div>
-            <div className="mt-4 rounded-xl bg-page px-4 py-3 text-sm">
+            <p className="mt-5 text-xs font-semibold text-muted">3. Kiểm tra tổng tiền</p>
+            <div className="mt-3 rounded-xl bg-page px-4 py-3 text-sm">
               <div className="flex justify-between"><span>Tiền phòng</span><b>{formatVND(prev.rent)}</b></div>
               <div className="mt-1 flex justify-between"><span>Điện + Nước</span><b>{formatVND(elecAmt + waterAmt)}</b></div>
-              <div className="mt-1 flex justify-between"><span>Phí dịch vụ (UC05.7)</span><b>{formatVND(SERVICE_FEE)}</b></div>
+              <div className="mt-1 flex justify-between"><span>Phí dịch vụ</span><b>{formatVND(SERVICE_FEE)}</b></div>
               <div className="mt-2 flex justify-between border-t border-line pt-2 text-base font-bold"><span>Tổng hóa đơn dự kiến</span><span className="text-primary">{formatVND(liveTotal)}</span></div>
-              <p className="mt-2 text-[12px] text-amber-700">Backend gap: InvoiceItemType chỉ có ROOM_RENT/ELECTRICITY/WATER — dòng phí dịch vụ chưa có charge type tương ứng.</p>
+              <p className="mt-2 text-[12px] text-amber-700">Các khoản phí đang dùng dữ liệu minh họa.</p>
             </div>
             <Button className="mt-4" disabled={!canCreate} onClick={createInvoice}>Tạo hóa đơn tháng 11 cho {meterRoom}</Button>
             {!canCreate && <p className="mt-2 text-[13px] text-muted">Nhập đủ chỉ số mới điện &amp; nước (≥ chỉ số cũ) để tạo hóa đơn.</p>}
-            <p className="mt-3 text-[13px] text-muted">Chỉ số mới nhỏ hơn chỉ số cũ sẽ bị chặn. Chỉ số được gửi kèm trong CreateInvoiceRequest (backend không có endpoint meter-reading riêng).</p>
+            <p className="mt-3 text-[13px] text-muted">Kiểm tra chỉ số và tổng tiền trước khi tạo hóa đơn.</p>
           </Card>
           <Card className="p-5">
             <h2 className="text-[17px] font-bold text-ink">Hóa đơn gần đây {chip === 'UNRECORDED' && '(mục Chưa ghi chỉ số xem ở form phía trên)'}</h2>
@@ -133,12 +136,13 @@ export default function HoaDonPage() {
           </Card>
         </div>
         {featured && (
-          <Card className="cursor-pointer p-5 transition hover:shadow-md" onClick={() => openInvoice(featured)}>
+          <Card className="p-5">
             <div className="flex items-start justify-between gap-3"><h2 className="text-[17px] font-bold text-ink">Hóa đơn #{featured.code}</h2><Badge tone={isOverdue(featured) ? 'red' : 'amber'} dot>{isOverdue(featured) ? 'Quá hạn' : 'Chưa thanh toán'}</Badge></div>
             <div className="mt-5 space-y-3.5">{featured.items.map((it) => (<div key={it.label} className="flex items-center justify-between gap-4"><span className="text-sm text-muted">{it.label === 'Tiền điện' ? `Điện · ${it.detail}` : it.label === 'Tiền nước' ? `Nước · ${it.detail}` : it.label}</span><span className="text-sm font-semibold text-ink">{formatVND(it.amount)}</span></div>))}</div>
             <div className="mt-5 flex items-center justify-between border-t border-line pt-4"><span className="font-bold text-ink">Tổng cộng</span><span className="text-lg font-extrabold text-primary">{formatVND(featured.total)}</span></div>
             <p className="mt-3 text-[13px] text-muted">Hạn thanh toán: {featured.dueDate}</p>
-            <Button size="lg" className="mt-5 w-full" onClick={(e) => { e.stopPropagation(); pickRoom(featured.room in PREV ? featured.room : 'Phòng 405'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>Ghi chỉ số &amp; tạo hóa đơn tháng 11</Button>
+            <Button variant="outline" className="mt-4 w-full" onClick={() => openInvoice(featured)}>Xem chi tiết hóa đơn</Button>
+            <Button size="lg" className="mt-3 w-full" onClick={(e) => { e.stopPropagation(); pickRoom(featured.room in PREV ? featured.room : 'Phòng 405'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>Ghi chỉ số &amp; tạo hóa đơn tháng 11</Button>
           </Card>
         )}
       </div>

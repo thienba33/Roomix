@@ -78,11 +78,11 @@ function ListingsInner() {
       </div>
       {filtered.length === 0 ? (<Card className="p-10 text-center text-sm text-muted">{search ? `Không tìm thấy bài đăng khớp "${search}".` : 'Chưa có bài đăng nào ở trạng thái này.'}</Card>) : (
         <Card className="overflow-hidden p-0">
-          <div className="hidden grid-cols-[1fr_100px_90px_110px_240px] gap-4 border-b border-line/70 px-5 pb-3 pt-4 sm:grid"><span className="text-[11px] font-semibold uppercase tracking-wide text-muted">Bài đăng</span><span className="text-[11px] font-semibold uppercase tracking-wide text-muted">Phòng</span><span className="text-[11px] font-semibold uppercase tracking-wide text-muted">Giá</span><span className="text-[11px] font-semibold uppercase tracking-wide text-muted">Trạng thái</span><span className="text-[11px] font-semibold uppercase tracking-wide text-muted">Thao tác</span></div>
+          <div className="hidden grid-cols-[minmax(0,1fr)_70px_80px_100px_220px] gap-4 border-b border-line/70 px-5 pb-3 pt-4 xl:grid"><span className="text-[11px] font-semibold uppercase tracking-wide text-muted">Bài đăng</span><span className="text-[11px] font-semibold uppercase tracking-wide text-muted">Phòng</span><span className="text-[11px] font-semibold uppercase tracking-wide text-muted">Giá</span><span className="text-[11px] font-semibold uppercase tracking-wide text-muted">Trạng thái</span><span className="text-[11px] font-semibold uppercase tracking-wide text-muted">Thao tác</span></div>
           <div className="divide-y divide-line/70">
             {filtered.map((post) => (
               <div key={post.id} className="px-5 py-3.5">
-                <div className="grid grid-cols-[1fr_auto] items-center gap-4 sm:grid-cols-[1fr_100px_90px_110px_240px]">
+                <div className="grid grid-cols-1 items-center gap-4 xl:grid-cols-[minmax(0,1fr)_70px_80px_100px_220px]">
                   <div className="flex min-w-0 items-center gap-3.5"><Image src={post.image} alt={post.title} width={96} height={96} className="h-12 w-12 shrink-0 rounded-lg object-cover" /><div className="min-w-0"><h3 className="truncate text-sm font-semibold text-ink">{post.title}</h3><p className="mt-0.5 text-[13px] text-muted">Đăng {post.createdAt} · {post.views} lượt xem</p></div></div>
                   <span className="hidden text-sm text-muted sm:block">Phòng {post.roomCode}</span><span className="hidden text-sm text-muted sm:block">{formatPriceShort(post.price)}</span>
                   <span className={cn('text-sm font-semibold', statusText[post.status])}>{listLabel[post.status]}</span>
@@ -102,7 +102,7 @@ function ListingsInner() {
           </div>
         </Card>
       )}
-      <p className="text-[12px] text-muted">Ghi chú: Backend chưa có DELETE /landlords/rooms — xóa ở đây là xóa cục bộ (mock) kèm Hoàn tác.</p>
+      <p className="text-[12px] text-muted">Chế độ minh họa · Thay đổi được lưu trong trình duyệt và có thể hoàn tác.</p>
       <ConfirmDialog open={deleteId !== null} title="Xóa bài đăng?" description="Bài đăng sẽ bị xóa khỏi danh sách của bạn. Thao tác này có thể hoàn tác ngay qua nút Hoàn tác trong thông báo." confirmLabel="Xóa bài đăng" danger onConfirm={doDelete} onCancel={() => setDeleteId(null)} />
       <Modal open={editPost !== null} onClose={() => setEditPost(null)} title="Sửa bài đăng" widthClass="max-w-xl">
         <div className="space-y-4">

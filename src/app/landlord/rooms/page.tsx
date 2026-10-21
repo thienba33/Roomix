@@ -61,8 +61,8 @@ export default function PhongPage() {
         <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Tìm theo mã phòng… (vd 302)" aria-label="Tìm phòng theo mã" className="h-9 w-56 rounded-full border border-line px-4 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20" />
         {search && <span className="text-[13px] text-muted">Hiển thị {floorRooms.length} phòng</span>}
       </div>
-      <div className="mt-5 grid items-start gap-6 lg:grid-cols-[1fr_324px]">
-        <div className="grid grid-cols-2 gap-6 xl:grid-cols-4">
+      <div className="mt-5 grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_324px]">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 2xl:grid-cols-4">
           {floorRooms.length === 0 && <p className="col-span-full py-8 text-sm text-muted">Không tìm thấy phòng nào khớp mã &quot;{search}&quot; ở tầng {selectedFloor}.</p>}
           {floorRooms.map((room) => { const isSelected = selectedRoom?.id === room.id; return (
             <button key={room.id} type="button" onClick={() => setSelectedRoomId(room.id)} className={cn('h-[126px] rounded-xl border border-line p-4 text-left', statusBg[room.status], isSelected && 'border-primary ring-1 ring-primary/40')}>

@@ -100,20 +100,20 @@ export default function KhachThuePage() {
           <Button type="button" variant="outline" onClick={() => setSettleOpen(true)}>Trả phòng / Tất toán</Button>
           {selected.status === 'PENDING' && !selected.depositConfirmed && <Button type="button" onClick={() => setDepositConfirmId(selected.id)}>Xác nhận đã nhận cọc</Button>}
         </div>
-        <p className="mt-3 text-[12px] text-muted">Phân phòng ở đây áp dụng cho khách đã có hợp đồng; khách mới vào qua luồng Chấp nhận yêu cầu (B5) — backend không có endpoint gán phòng độc lập (UC05.2).</p>
+        <p className="mt-3 text-[12px] text-muted">Phân phòng dành cho khách đã có hợp đồng. Với khách mới, hãy xử lý trong mục Yêu cầu.</p>
       </Card>
 
       <Modal open={assignOpen} onClose={() => setAssignOpen(false)} title={`Phân phòng cho ${selected.name}`} widthClass="max-w-lg">
-        <p className="mb-4 text-sm text-muted">Chọn một phòng đang trống (AVAILABLE). Sau khi xác nhận, phòng sẽ chuyển sang Đang thuê.</p>
+        <p className="mb-4 text-sm text-muted">Chọn một phòng đang trống. Sau khi xác nhận, phòng sẽ chuyển sang Đang thuê.</p>
         {availableRooms.length === 0 ? <p className="text-sm text-muted">Hiện không có phòng trống.</p> : (
           <div className="grid grid-cols-3 gap-2">{availableRooms.slice(0, 12).map((r) => (<button key={r.id} type="button" onClick={() => setAssignRoomId(r.id)} className={cn('rounded-xl border px-3 py-3 text-left', assignRoomId === r.id ? 'border-primary bg-primary-soft/50' : 'border-line')}><span className="block font-bold text-ink">{r.code}</span><span className="text-[12px] text-muted">{formatPriceShort(r.price)}/th · T{r.floor}</span></button>))}</div>
         )}
         <div className="mt-6 flex justify-end gap-2"><Button variant="outline" onClick={() => setAssignOpen(false)}>Hủy</Button><Button disabled={!assignRoomId} onClick={() => setAssignConfirm(true)}>Tiếp tục</Button></div>
       </Modal>
-      <ConfirmDialog open={assignConfirm} title="Xác nhận phân phòng" description={assignRoomId ? `Gán ${selected.name} vào Phòng ${availableRooms.find((r) => r.id === assignRoomId)?.code}. Phòng sẽ chuyển sang trạng thái Đang thuê (OCCUPIED).` : ''} confirmLabel="Xác nhận phân phòng" onConfirm={doAssign} onCancel={() => setAssignConfirm(false)} />
+      <ConfirmDialog open={assignConfirm} title="Xác nhận phân phòng" description={assignRoomId ? `Gán ${selected.name} vào Phòng ${availableRooms.find((r) => r.id === assignRoomId)?.code}. Phòng sẽ chuyển sang trạng thái Đang thuê.` : ''} confirmLabel="Xác nhận phân phòng" onConfirm={doAssign} onCancel={() => setAssignConfirm(false)} />
 
       <Modal open={settleOpen} onClose={() => setSettleOpen(false)} title={`Tất toán · ${selected.name} · ${selected.room}`} widthClass="max-w-lg">
-        <p className="mb-4 text-sm text-muted">Xem trước tất toán (mock — tương ứng Settlement Preview của backend). Chỉ số cuối là số liệu mô phỏng.</p>
+        <p className="mb-4 text-sm text-muted">Xem trước tất toán · Chỉ số cuối kỳ là dữ liệu minh họa.</p>
         <div className="space-y-2.5 text-sm">
           <div className="flex justify-between"><span>Điện cuối kỳ · {settle.finalElecUsage} số × {selected.elecUnitPrice.toLocaleString('vi-VN')}đ</span><span className="font-semibold">{formatVND(settle.elecAmt)}</span></div>
           <div className="flex justify-between"><span>Nước cuối kỳ · {settle.finalWaterUsage} khối × {selected.waterUnitPrice.toLocaleString('vi-VN')}đ</span><span className="font-semibold">{formatVND(settle.waterAmt)}</span></div>

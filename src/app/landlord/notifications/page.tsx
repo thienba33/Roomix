@@ -28,7 +28,7 @@ export default function ThongBaoPage() {
     e.preventDefault(); const trimmed = text.trim(); if (!trimmed) return;
     const newItem: NotificationItem = { id: Math.max(0, ...items.map((n) => n.id)) + 1, type: 'SYSTEM', title: 'Thông báo từ chủ trọ', body: trimmed, time: 'Vừa xong', read: false };
     setItems((prev) => [newItem, ...prev]); setText('');
-    toast.push('Đã thêm thông báo (cục bộ)', 'Backend chưa có POST /notifications — thông báo do hệ thống tạo qua Kafka');
+    toast.push('Đã thêm thông báo (cục bộ)', 'Thông báo được lưu trong trình duyệt ở chế độ minh họa.');
   };
 
   return (
@@ -55,7 +55,7 @@ export default function ThongBaoPage() {
             <input value={text} onChange={(e) => setText(e.target.value)} placeholder="Nội dung thông báo…" className="mt-4 h-[46px] w-full rounded-xl border border-line bg-white px-4 text-sm text-ink placeholder:text-muted outline-none transition focus:border-ink focus:ring-1 focus:ring-ink/15" />
             <p className="mt-3 text-[13px] text-muted">Gửi tới: tất cả khách đang thuê</p>
             <Button type="submit" variant="primary" className="mt-3 w-full">Gửi thông báo</Button>
-            <p className="mt-3 text-[12px] text-muted">Lưu ý backend: chưa có endpoint tạo thông báo — chức năng gửi hiện là UI-ahead.</p>
+            <p className="mt-3 text-[12px] text-muted">Chế độ minh họa · Thông báo được lưu trong trình duyệt.</p>
           </form>
         </div>
       </div>

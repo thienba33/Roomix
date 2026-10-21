@@ -2,7 +2,6 @@
 import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { rooms } from '@/lib/data';
 import { HOUSES, LS_KEYS, nextId, nowTime, todayVN, usePostsState } from '@/lib/landlord-store';
 import { cn, formatPriceShort, roomStatusLabel, roomStatusTone } from '@/lib/utils';
@@ -21,7 +20,6 @@ interface Draft { roomId: number; houseId: number; floorId: number; title: strin
 
 export default function TaoBaiDangPage() {
   const toast = useToast();
-  const router = useRouter();
   const [posts, setPosts] = usePostsState();
   const [done, setDone] = useState<'PENDING' | 'DRAFT' | null>(null);
   const [roomId, setRoomId] = useState(rooms[0].id);
@@ -76,8 +74,8 @@ export default function TaoBaiDangPage() {
     if (!deposit || Number(deposit) < 0) e.deposit = 'Tiền cọc là bắt buộc';
     if (!availableFrom) e.availableFrom = 'Chọn ngày có thể vào ở';
     if (!maxTenants || Number(maxTenants) <= 0) e.maxTenants = 'Số người tối đa phải > 0';
-    if (!houseId) e.houseId = 'Chọn nhà (houseId bắt buộc ở backend)';
-    if (!floorId) e.floorId = 'Chọn tầng (floorId bắt buộc ở backend)';
+    if (!houseId) e.houseId = 'Chọn nhà';
+    if (!floorId) e.floorId = 'Chọn tầng';
     setErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -131,7 +129,7 @@ export default function TaoBaiDangPage() {
           <div><Input label="Tiêu đề bài đăng *" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Ví dụ: Phòng 302 — Lê Văn Lương, full nội thất" />{err('title')}</div>
           <div><div className="mb-1.5 flex items-center justify-between"><label htmlFor="desc" className="text-[13px] font-semibold text-ink">Mô tả</label><Button type="button" variant="outline" size="sm" onClick={() => setDescription(AI_DESC)}>AI gợi ý</Button></div><textarea id="desc" rows={4} value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Mô tả phòng, tiện ích xung quanh, quy định nhà trọ..." className={inputCls} /></div>
           <div><p className="mb-2 text-[13px] font-semibold text-ink">Tiện ích</p><div className="flex flex-wrap gap-2">{ALL_AMENITIES.map((a) => (<button key={a} type="button" onClick={() => toggleAmenity(a)} className={cn('flex h-7 items-center rounded-full border px-3 text-xs font-medium transition', amenities.includes(a) ? 'border-transparent bg-primary-soft text-primary' : 'border-line bg-white text-muted')}>{a}</button>))}</div></div>
-          <div><p className="mb-2 text-[13px] font-semibold text-ink">Ảnh phòng</p><button type="button" onClick={() => toast.push('Ảnh mẫu được dùng cho bản mock', 'Upload multipart sẽ nối khi có API thật')} className="flex h-11 w-full items-center rounded-xl border border-dashed border-line bg-page px-4 text-sm text-muted">+ Tải ảnh lên (tối đa 8 ảnh)</button>
+          <div><p className="mb-2 text-[13px] font-semibold text-ink">Ảnh phòng</p><button type="button" onClick={() => toast.push('Đang dùng ảnh minh họa', 'Tải ảnh lên chưa khả dụng trong bản minh họa.')} className="flex h-11 w-full items-center rounded-xl border border-dashed border-line bg-page px-4 text-sm text-muted">+ Tải ảnh lên (tối đa 8 ảnh)</button>
             <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">{photos.map((src, i) => (<div key={src} className="relative"><Image src={src} alt={`Ảnh phòng ${i + 1}`} width={300} height={300} className="aspect-square w-full rounded-xl object-cover" />{i === 0 && <span className="absolute left-2 top-2 rounded-full bg-primary px-2.5 py-1 text-[11px] font-bold text-white">Ảnh bìa</span>}</div>))}</div></div>
         </div>
         <div className="mt-6 flex flex-wrap gap-3"><Link href="/landlord/listings"><Button type="button" variant="outline">Quay lại</Button></Link><Button type="button" variant="outline" onClick={() => createPost('DRAFT')}>Lưu nháp</Button><Button type="button" onClick={() => createPost('PENDING')}>Gửi duyệt</Button></div>
@@ -139,7 +137,7 @@ export default function TaoBaiDangPage() {
         <div className="space-y-6">
           <Card className="p-5"><h3 className="font-semibold text-ink">Gợi ý giá AI</h3><p className="mt-3 text-sm text-muted">Giá thị trường khu Thanh Xuân:</p><p className="mt-1 font-semibold text-ink">2,7 – 3,0 tr / tháng</p><p className="mt-4 text-sm text-muted">Đề xuất cho phòng này (rag /pricing)</p><p className="mt-1 text-2xl font-extrabold text-ink">2,8 tr / tháng</p><Button type="button" className="mt-4 w-full" onClick={() => setPrice('2800000')}>Áp dụng giá đề xuất</Button><p className="mt-3 text-xs text-muted">Dựa trên 48 phòng cùng khu vực · độ tin cậy mô phỏng</p></Card>
           <div><p className="text-[13px] font-medium text-muted">Xem trước như khách thấy</p><Card className="mt-3 p-4"><Image src={selected.image} alt={selected.name} width={640} height={480} className="aspect-[4/3] w-full rounded-xl object-cover" /><h3 className="mt-3 font-semibold text-ink">{title.trim() || selected.name}</h3><p className="mt-1 text-[15px]"><span className="font-bold text-ink">{formatPriceShort(Number(price) || selected.price)}</span><span className="text-muted"> / tháng</span></p><p className="mt-0.5 text-sm text-muted">{selected.size} m² · Tầng {selected.floor} · {selected.area}</p><div className="mt-2.5"><Badge tone={roomStatusTone[selected.status]} dot>{roomStatusLabel[selected.status]}</Badge></div>{amenities.length > 0 && (<div className="mt-3 flex flex-wrap gap-1.5">{amenities.slice(0, 4).map((a) => (<span key={a} className="rounded-full bg-page px-2.5 py-1 text-xs text-muted">{a}</span>))}{amenities.length > 4 && <span className="rounded-full bg-page px-2.5 py-1 text-xs text-muted">+{amenities.length - 4}</span>}</div>)}</Card></div>
-          <p className="text-[12px] text-muted">Nháp tự lưu vào trình duyệt (localStorage) — rời trang và quay lại sẽ được khôi phục. Nút &quot;Về danh sách&quot; ở màn hình thành công dùng router: {router ? 'sẵn sàng' : ''}</p>
+          <p className="text-[12px] text-muted">Bản nháp tự lưu trong trình duyệt và được khôi phục khi bạn quay lại.</p>
         </div>
       </div>
     </div>

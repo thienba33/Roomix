@@ -123,7 +123,7 @@ export default function YeuCauPage() {
       </div>
 
       <Modal open={acceptId !== null} onClose={() => setAcceptId(null)} title="Điều khoản hợp đồng" widthClass="max-w-xl">
-        <p className="-mt-2 mb-5 text-sm text-muted">{acceptTarget ? `${acceptTarget.tenant} · ${acceptTarget.room} — các trường * là bắt buộc theo AcceptRentalRequest (backend).` : ''}</p>
+        <p className="-mt-2 mb-5 text-sm text-muted">{acceptTarget ? `${acceptTarget.tenant} · ${acceptTarget.room} — điền các trường có dấu * để tiếp tục.` : ''}</p>
         <div className="grid gap-4 sm:grid-cols-2">
           {field('Tiền thuê / tháng', 'rent', 'number')}
           {field('Tiền đặt cọc', 'deposit', 'number')}
