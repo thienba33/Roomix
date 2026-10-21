@@ -26,7 +26,7 @@
   background: linear-gradient(135deg, #4F46E5, #7C3AED);
 }
 
-html { scroll-behavior: smooth; }
+html { scroll-behavior: smooth; scrollbar-gutter: stable; }
 body {
   background: #ffffff;
   color: var(--color-ink);
@@ -48,7 +48,8 @@ body {
 
 /* Layout responds to available content width, including the AI column. */
 .tenant-content { container-type: inline-size; container-name: tenant; }
-.room-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); }
+/* Keep empty columns so filtering never stretches the remaining cards. */
+.room-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr)); align-items: start; }
 .ai-panel { position: fixed; inset: 0; z-index: 70; height: 100dvh; animation: ai-enter 180ms ease-out; }
 .ai-composer { padding-bottom: env(safe-area-inset-bottom, 0px); }
 @media (min-width: 1280px) {

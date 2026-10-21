@@ -134,7 +134,7 @@ export default function HomeContent() {
   }
 
   return (
-    <div className="w-full px-4 py-6 sm:px-6 lg:px-8">
+    <div className="mx-auto w-full max-w-[1440px] px-4 py-6 sm:px-6 lg:px-8">
       <div className="flex flex-wrap items-center gap-3">
         <div className="flex flex-1 flex-wrap items-center gap-1">
           {CATEGORIES.map((c) => (

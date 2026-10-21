@@ -37,10 +37,10 @@ export default function RoomCard({ room, favorite = false, onFavoriteChange }: P
   };
 
   return (
-    <div className="group">
+    <div className="group min-w-0">
       <div className="relative">
-        <Link href={`/rooms/${room.id}`}>
-          <Image src={room.image} alt={room.name} width={640} height={427} className="aspect-[3/2] w-full rounded-[14px] object-cover" />
+        <Link href={`/rooms/${room.id}`} className="relative block aspect-[3/2] overflow-hidden rounded-[14px]">
+          <Image src={room.image} alt={room.name} fill sizes="(max-width: 639px) 100vw, (max-width: 1023px) 50vw, (max-width: 1279px) 33vw, 360px" className="object-cover" />
         </Link>
         <button
           onClick={toggle}
@@ -55,7 +55,7 @@ export default function RoomCard({ room, favorite = false, onFavoriteChange }: P
       </div>
       <Link href={`/rooms/${room.id}`} className="block pt-3">
         <div className="flex items-start justify-between gap-2">
-          <h3 className="text-[15px] font-bold text-ink">{room.name}</h3>
+          <h3 className="min-w-0 truncate text-[15px] font-bold text-ink" title={room.name}>{room.name}</h3>
           <span className="flex shrink-0 items-center gap-1 text-[13px] font-medium text-ink">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z" /></svg>
             {formatRating(room.rating)}

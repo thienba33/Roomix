@@ -40,7 +40,7 @@ export default function FavoritesPage() {
 
   return (
     <TenantShell>
-      <div className="w-full px-6 py-6 lg:px-12">
+      <div className="mx-auto w-full max-w-[1440px] px-4 py-6 sm:px-6 lg:px-8">
         <h1 className="text-[28px] font-extrabold text-ink">Phòng yêu thích</h1>
         <p className="mt-1 text-sm text-muted" aria-live="polite">{favoriteRoomsList.length} phòng đã lưu</p>
 
@@ -54,11 +54,9 @@ export default function FavoritesPage() {
             </Link>
           </div>
         ) : (
-          <div className="mt-7 grid grid-cols-1 gap-x-5 gap-y-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="mt-7 room-grid gap-x-5 gap-y-8">
             {favoriteRoomsList.map((room) => (
-              <div key={room.id} className="rounded-2xl border border-[#E7E7E7] bg-white p-3 pb-4">
-                <RoomCard room={room} favorite onFavoriteChange={onFavoriteChange} />
-              </div>
+              <RoomCard key={room.id} room={room} favorite onFavoriteChange={onFavoriteChange} />
             ))}
           </div>
         )}

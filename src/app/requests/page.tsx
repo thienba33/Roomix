@@ -67,19 +67,19 @@ export default function MyRequestsPage() {
               const room = rooms.find((r) => r.id === req.roomId);
               const meta = STATUS_META[req.status];
               return (
-                <Card key={req.id} className="flex gap-5 p-4">
+                <Card key={req.id} className="flex flex-col gap-4 p-4 sm:flex-row sm:gap-5">
                   {room ? (
                     <Link
                       href={`/rooms/${room.id}`}
-                      className="relative h-[150px] w-[200px] shrink-0 overflow-hidden rounded-xl"
+                      className="relative h-[180px] w-full shrink-0 sm:h-[150px] sm:w-[200px] overflow-hidden rounded-xl"
                     >
                       <Image src={room.image} alt={room.name} fill sizes="200px" className="object-cover" />
                     </Link>
                   ) : (
-                    <div className="h-[150px] w-[200px] shrink-0 rounded-xl bg-[#F7F7F7]" />
+                    <div className="h-[180px] w-full shrink-0 rounded-xl sm:h-[150px] sm:w-[200px] bg-[#F7F7F7]" />
                   )}
                   <div className="min-w-0 flex-1 py-1">
-                    <div className="flex items-start justify-between gap-3">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
                       <h3 className="text-[17px] font-semibold text-ink">{room ? room.name : req.room}</h3>
                       <Badge tone={meta.tone} dot>{meta.label}</Badge>
                     </div>
