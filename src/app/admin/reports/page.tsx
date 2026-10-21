@@ -76,7 +76,7 @@ export default function ReportsPage() {
     <div>
       <h1 className="text-2xl font-semibold text-ink">Báo cáo vi phạm</h1>
       <p className="mt-1 text-sm text-muted">{pendingCount} báo cáo đang mở · Hiển thị {filtered.length} / {list.length}</p>
-      <p className="mt-1 text-[13px] font-medium text-amber-700">Chế độ mô phỏng — UC07.6 chưa có module backend.</p>
+      <p className="mt-1 text-[13px] font-medium text-amber-700">Chế độ minh họa · Báo cáo được lưu trong trình duyệt.</p>
 
       <div className="mt-4 flex flex-wrap gap-2">
         <button type="button" onClick={() => setStatusFilter('all')} className={chip(statusFilter === 'all')}>Tất cả · {list.length}</button>
@@ -85,7 +85,7 @@ export default function ReportsPage() {
         <button type="button" onClick={() => setStatusFilter('DISMISSED')} className={chip(statusFilter === 'DISMISSED')}>Đã đóng · {list.filter((r) => r.status === 'DISMISSED').length}</button>
       </div>
 
-      <div className="mt-5 grid items-start gap-6 lg:grid-cols-[1fr_456px]">
+      <div className="mt-5 grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
         <Card className="divide-y divide-line overflow-hidden p-0">
           {filtered.map((report) => {
             const badge = badgeForStatus(report.status);
@@ -147,7 +147,7 @@ export default function ReportsPage() {
       <ConfirmDialog
         open={action === 'takedown'}
         title="Gỡ bài đăng bị báo cáo?"
-        description={selected ? `Bài đăng trong “${selected.target}” sẽ bị gỡ khỏi hiển thị và báo cáo được đánh dấu đã xử lý. Lưu ý: backend chưa có endpoint gỡ bài (UC04.9) lẫn module báo cáo (UC07.6) — đây là thao tác mô phỏng, có thể hoàn tác.` : ''}
+        description={selected ? `Bài đăng trong “${selected.target}” sẽ bị gỡ khỏi hiển thị và báo cáo được đánh dấu đã xử lý. Đây là thao tác minh họa và có thể hoàn tác.` : ''}
         confirmLabel="Gỡ bài đăng"
         danger
         onConfirm={confirmAction}

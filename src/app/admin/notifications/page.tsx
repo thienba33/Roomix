@@ -91,7 +91,7 @@ export default function NotificationsPage() {
     appendAudit(setAuditExtra, 'Gửi thông báo', `${t} → ${label}`);
     setTitle('');
     setBody('');
-    push('Đã ghi nhận thông báo (mô phỏng)', `Gửi tới: ${label} — backend chưa có endpoint tạo thông báo.`);
+    push('Đã ghi nhận thông báo (mô phỏng)', `Gửi tới: ${label} · Dữ liệu minh họa.`);
   };
 
   const markRead = (id: number) =>
@@ -111,7 +111,7 @@ export default function NotificationsPage() {
         <div className="space-y-6">
           <Card className="p-6">
             <h2 className="text-[17px] font-semibold text-ink">Tạo thông báo</h2>
-            <p className="mt-1 text-[13px] font-medium text-amber-700">Mô phỏng — backend Notification chưa có endpoint POST/tạo thông báo.</p>
+            <p className="mt-1 text-[13px] font-medium text-amber-700">Chế độ minh họa · Thông báo được lưu trong trình duyệt.</p>
 
             <form onSubmit={handleSubmit} noValidate className="mt-5 space-y-4">
               <div>

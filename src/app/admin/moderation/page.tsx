@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
@@ -30,10 +31,11 @@ function StatusBadge({ status }: { status: PostStatus }) {
 
 export default function ModerationPage() {
   const { push } = useToast();
+  const router = useRouter();
   const [decisions, setDecisions] = useModerationDecisions();
   const [, setAuditExtra] = useAuditExtra();
   const [selectedId, setSelectedId] = useState<number>(moderationQueue[0]?.id ?? 0);
-  const [quickChecked, setQuickChecked] = useState<string[]>(QUICK_CHECKS);
+  const [checklist, setChecklist] = useState<{ id?: number; items: string[] }>({ items: [] });
   const [approveTarget, setApproveTarget] = useState<number | null>(null);
   const [rejectTarget, setRejectTarget] = useState<number | null>(null);
   const [rejectReason, setRejectReason] = useState('');
@@ -46,6 +48,8 @@ export default function ModerationPage() {
   );
   const pendingCount = pendingItems.length;
   const selected = pendingItems.find((i) => i.id === selectedId) ?? pendingItems[0];
+
+  const quickChecked = checklist.id === selected?.id ? checklist.items : [];
 
   const decide = (id: number, status: 'APPROVED' | 'REJECTED', reason?: string) => {
     const post = moderationQueue.find((p) => p.id === id);
@@ -85,7 +89,7 @@ export default function ModerationPage() {
   const confirmReject = () => {
     const reason = rejectReason.trim();
     if (!reason) {
-      setRejectError('Lý do từ chối là bắt buộc — chủ trọ sẽ nhận được lý do này (UC04.8).');
+      setRejectError('Lý do từ chối là bắt buộc — chủ trọ sẽ nhận được lý do này.');
       return;
     }
     if (rejectTarget != null) decide(rejectTarget, 'REJECTED', reason);
@@ -101,8 +105,8 @@ export default function ModerationPage() {
         <p className="mt-1 text-sm text-muted">{pendingCount} bài đang chờ</p>
       </div>
 
-      <div className="grid items-start gap-6 lg:grid-cols-[1fr_400px]">
-        <div className="space-y-6">
+      <div className="grid grid-cols-1 items-start gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
+        <div className="min-w-0 space-y-6">
           <Card className="overflow-hidden">
             {pendingItems.map((post, idx) => {
               const active = selected?.id === post.id;
@@ -110,14 +114,14 @@ export default function ModerationPage() {
                 <button
                   key={post.id}
                   type="button"
-                  onClick={() => setSelectedId(post.id)}
+                  onClick={() => { if (window.matchMedia('(max-width: 1279px)').matches) { router.push(`/admin/moderation/${post.id}`); } else { setSelectedId(post.id); setChecklist({ id: post.id, items: [] }); } }}
                   className={cn(
-                    'flex w-full items-center gap-4 px-5 py-4 text-left transition',
+                    'grid w-full grid-cols-[64px_minmax(0,1fr)] items-center gap-x-3 gap-y-2 px-4 py-4 text-left transition sm:flex sm:gap-4 sm:px-5',
                     idx > 0 && 'border-t border-line',
                     active ? 'bg-primary-soft/50' : 'hover:bg-page/70',
                   )}
                 >
-                  <span className="relative h-[84px] w-[120px] shrink-0 overflow-hidden rounded-lg">
+                  <span className="relative row-span-2 h-16 w-16 sm:h-[84px] sm:w-[120px] shrink-0 overflow-hidden rounded-lg">
                     <Image src={post.image} alt={post.title} fill className="object-cover" sizes="120px" />
                   </span>
                   <span className="min-w-0 flex-1">
@@ -127,7 +131,7 @@ export default function ModerationPage() {
                     </span>
                     <span className="mt-0.5 block text-[13px] text-muted">Đăng {post.createdAt}</span>
                   </span>
-                  <span className="shrink-0 self-start">
+                  <span className="col-start-2 shrink-0 self-start">
                     <StatusBadge status="PENDING" />
                   </span>
                 </button>
@@ -166,7 +170,7 @@ export default function ModerationPage() {
         </div>
 
         {selected && (
-          <Card className="overflow-hidden">
+          <Card className="hidden overflow-hidden xl:block">
             <div className="p-5 pb-0">
               <div className="relative aspect-[16/10] w-full overflow-hidden rounded-xl">
                 <Image src={selected.image} alt={selected.title} fill className="object-cover" sizes="400px" />
@@ -193,7 +197,7 @@ export default function ModerationPage() {
                       <button
                         type="button"
                         aria-pressed={on}
-                        onClick={() => setQuickChecked((prev) => (prev.includes(c) ? prev.filter((x) => x !== c) : [...prev, c]))}
+                        onClick={() => setChecklist({ id: selected.id, items: quickChecked.includes(c) ? quickChecked.filter((x) => x !== c) : [...quickChecked, c] })}
                         className="flex items-center gap-2.5 text-sm text-ink"
                       >
                         <span className={cn('h-2 w-2 shrink-0 rounded-full', on ? 'bg-green-600' : 'bg-gray-300')} />
@@ -239,7 +243,7 @@ export default function ModerationPage() {
 
       <Modal open={rejectTarget != null} onClose={() => setRejectTarget(null)} title="Từ chối bài đăng" widthClass="max-w-md">
         <p className="text-sm leading-relaxed text-muted">
-          {rejectPost ? `Bài “${rejectPost.title}” sẽ bị từ chối. ` : ''}Lý do là bắt buộc — backend lưu lý do này (<span className="font-mono text-[13px]">PostRejectionRequest</span>) và chủ trọ sẽ nhìn thấy để sửa bài.
+          {rejectPost ? `Bài “${rejectPost.title}” sẽ bị từ chối. ` : ''}Chủ trọ sẽ nhận được lý do từ chối để chỉnh sửa bài đăng.
         </p>
         <label htmlFor="moderation-reject-reason" className="mt-4 block text-[13px] font-semibold text-ink">Lý do từ chối *</label>
         <textarea

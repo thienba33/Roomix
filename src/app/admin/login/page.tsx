@@ -240,7 +240,7 @@ export default function AdminLoginPage() {
             </div>
 
             <p className="mt-4 text-center text-xs leading-relaxed text-muted">
-              Mô phỏng — face-auth-service chưa có endpoint nào ở backend.
+              Xác minh khuôn mặt đang ở chế độ mô phỏng.
             </p>
 
             {/* Step indicator — traversed for real */}
@@ -266,7 +266,7 @@ export default function AdminLoginPage() {
         </div>
       </Card>
 
-      <p className="mt-6 text-xs text-muted">C1 · UC01.6 · UC01.2</p>
+      <p className="mt-6 text-xs text-muted">Bảo mật tài khoản quản trị</p>
     </div>
   );
 }

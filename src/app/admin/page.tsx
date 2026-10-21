@@ -32,13 +32,11 @@ function PostDonut() {
   const total = postDonut.reduce((s, d) => s + d.value, 0) || 1;
   const r = 52;
   const c = 2 * Math.PI * r;
-  let acc = 0;
-  const arcs = postDonut.map((d) => {
-    const frac = d.value / total;
-    const arc = { dash: frac * c, offset: -acc * c, color: d.color };
-    acc += frac;
-    return arc;
-  });
+  const arcs = postDonut.map((d, index) => ({
+    dash: (d.value / total) * c,
+    offset: -(postDonut.slice(0, index).reduce((sum, item) => sum + item.value, 0) / total) * c,
+    color: d.color,
+  }));
   const approved = postDonut[0];
   return (
     <div className="relative h-[128px] w-[128px] shrink-0">
@@ -114,6 +112,30 @@ export default function AdminDashboardPage() {
         <p className="mt-1 text-sm text-muted">Toàn bộ Roomix · cập nhật hôm nay</p>
       </div>
 
+      {/* Attention strip — live counts from the shared admin store, each item navigates to its queue */}
+      <Card className="mb-6 p-5">
+        <h2 className="text-[16px] font-bold text-ink">Cần chú ý</h2>
+        <div className="mt-3 grid gap-2.5 sm:grid-cols-3">
+          {attention.map((a) => (
+            <Link
+              key={a.href + a.label}
+              href={a.href}
+              className={cn(
+                'flex items-center gap-2.5 rounded-xl border px-3.5 py-3 text-sm font-medium text-ink transition',
+                a.ring,
+                a.priority && 'font-semibold',
+              )}
+            >
+              <span className={cn('h-2 w-2 shrink-0 rounded-full', a.dot)} />
+              <span>
+                <span className="font-extrabold">{a.count}</span> {a.label}
+              </span>
+              <span className="ml-auto text-muted" aria-hidden>→</span>
+            </Link>
+          ))}
+        </div>
+      </Card>
+
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {KPIS.map((k) => (
           <Card key={k.label} className="p-5">
@@ -167,43 +189,19 @@ export default function AdminDashboardPage() {
         </Card>
       </div>
 
-      {/* Attention strip — live counts from the shared admin store, each item navigates to its queue */}
-      <Card className="mt-6 p-5">
-        <h2 className="text-[16px] font-bold text-ink">Cần chú ý</h2>
-        <div className="mt-3 grid gap-2.5 sm:grid-cols-3">
-          {attention.map((a) => (
-            <Link
-              key={a.href + a.label}
-              href={a.href}
-              className={cn(
-                'flex items-center gap-2.5 rounded-xl border px-3.5 py-3 text-sm font-medium text-ink transition',
-                a.ring,
-                a.priority && 'font-semibold',
-              )}
-            >
-              <span className={cn('h-2 w-2 shrink-0 rounded-full', a.dot)} />
-              <span>
-                <span className="font-extrabold">{a.count}</span> {a.label}
-              </span>
-              <span className="ml-auto text-muted" aria-hidden>→</span>
-            </Link>
-          ))}
-        </div>
-      </Card>
-
       <Card className="mt-6 overflow-hidden">
         <h2 className="px-5 pt-5 text-[16px] font-bold text-ink">Phòng trống theo chủ trọ</h2>
         <div className="mt-2 overflow-x-auto px-5 pb-3">
-          <table className="w-full min-w-[640px] text-left text-sm">
+          <table className="management-table w-full text-left text-sm">
             <tbody>
               {adminLandlords.map((l) => {
                 const vacant = vacantOf(l.rooms, l.occupancy);
                 return (
                   <tr key={l.id} className="border-b border-line last:border-0">
-                    <td className="py-4 pr-4 font-medium text-ink">{l.name}</td>
-                    <td className="py-4 pr-4 text-muted">{l.house}</td>
-                    <td className="py-4 pr-4 text-muted">{l.rooms} phòng</td>
-                    <td className={`py-4 text-right font-medium ${vacant > 0 ? 'text-green-600' : 'text-muted'}`}>
+                    <td data-label="Chủ trọ" className="py-4 pr-4 font-medium text-ink">{l.name}</td>
+                    <td data-label="Nhà" className="py-4 pr-4 text-muted">{l.house}</td>
+                    <td data-label="Tổng phòng" className="py-4 pr-4 text-muted">{l.rooms} phòng</td>
+                    <td data-label="Còn trống" className={`py-4 text-right font-medium ${vacant > 0 ? 'text-green-600' : 'text-muted'}`}>
                       {vacant} trống
                     </td>
                   </tr>

@@ -25,11 +25,16 @@ const DESCRIPTION_SAMPLE =
 // and shown. Both actions sit behind ConfirmDialog with an undo toast.
 export default function ModerationDetailPage() {
   const params = useParams<{ id: string }>();
+  return <ModerationDetail key={params.id} />;
+}
+
+function ModerationDetail() {
+  const params = useParams<{ id: string }>();
   const router = useRouter();
   const { push } = useToast();
   const [decisions, setDecisions] = useModerationDecisions();
   const [, setAuditExtra] = useAuditExtra();
-  const [checked, setChecked] = useState<string[]>(CHECKLIST);
+  const [checked, setChecked] = useState<string[]>([]);
   const [reason, setReason] = useState('');
   const [reasonError, setReasonError] = useState('');
   const [confirm, setConfirm] = useState<'APPROVE' | 'REJECT' | null>(null);
@@ -82,7 +87,7 @@ export default function ModerationDetailPage() {
 
   const requestReject = () => {
     if (!reason.trim()) {
-      setReasonError('Lý do từ chối là bắt buộc — chủ trọ sẽ nhận được lý do này (UC04.8).');
+      setReasonError('Lý do từ chối là bắt buộc — chủ trọ sẽ nhận được lý do này.');
       return;
     }
     setConfirm('REJECT');
@@ -98,7 +103,7 @@ export default function ModerationDetailPage() {
         Quay lại
       </Link>
 
-      <div className="mt-5 grid gap-6 lg:grid-cols-[1fr_380px] lg:gap-10">
+      <div className="mt-5 grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px] xl:gap-10">
         <div className="min-w-0">
           <div className="relative aspect-[16/10] w-full overflow-hidden rounded-2xl border border-line bg-page">
             <Image src={mainImage} alt={post.title} fill className="object-cover" sizes="(max-width: 1024px) 100vw, 700px" priority />
@@ -177,7 +182,7 @@ export default function ModerationDetailPage() {
                 </ul>
 
                 <div className="mt-5">
-                  <Badge tone="green" className="px-4 py-1.5">Rủi ro thấp</Badge>
+                  <Badge tone={checked.length === CHECKLIST.length ? 'green' : 'amber'} className="px-4 py-1.5">{checked.length === CHECKLIST.length ? 'Đã kiểm tra đủ tiêu chí' : 'Cần kiểm tra nội dung'}</Badge>
                 </div>
 
                 <div className="mt-5">
