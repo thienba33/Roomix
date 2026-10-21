@@ -27,15 +27,15 @@ export default async function RoomDetailPage({ params }: { params: Promise<{ id:
   const breakdown = [
     { label: 'Tiền phòng', amount: room.price },
     { label: 'Điện (ước tính)', amount: ELECTRIC },
-    { label: 'Nước', amount: WATER },
-    { label: 'Phí dịch vụ', amount: SERVICE },
+    { label: 'Nước (ước tính)', amount: WATER },
+    { label: 'Phí dịch vụ (ước tính)', amount: SERVICE },
   ];
 
   const specs = [
     { label: 'Diện tích', value: `${room.size} m²` },
     { label: 'Tầng', value: `Tầng ${room.floor}` },
-    { label: 'Tối đa', value: '2 người' },
-    { label: 'Đặt cọc', value: '1 tháng' },
+    { label: 'Số người', value: 'Cần xác nhận' },
+    { label: 'Đặt cọc', value: 'Cần xác nhận' },
   ];
 
   const otherRooms = rooms.filter((r) => r.id !== room.id).slice(0, 2);
@@ -64,9 +64,9 @@ export default async function RoomDetailPage({ params }: { params: Promise<{ id:
           </div>
         </div>
 
-        <div className="mt-8 grid gap-10 lg:grid-cols-3">
+        <div className="room-detail-columns mt-8 grid gap-10 lg:grid-cols-3">
           {/* Content */}
-          <div className="lg:col-span-2">
+          <div className="room-detail-body lg:col-span-2">
             <div className="flex items-center gap-4">
               <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-primary-soft text-base font-bold text-primary">{landlord.initials}</span>
               <div>
@@ -80,7 +80,7 @@ export default async function RoomDetailPage({ params }: { params: Promise<{ id:
               <p className="text-sm leading-relaxed text-ink">
                 <span className="font-bold">AI TÓM TẮT</span>
                 <span className="text-muted"> · </span>
-                Phòng sáng, đủ tiện ích cho 2 người, giá thấp hơn mặt bằng khu vực 8%.
+                {room.size} m² · {room.area} · {room.amenities.slice(0, 3).join(' · ')}.
               </p>
             </div>
 
@@ -122,7 +122,7 @@ export default async function RoomDetailPage({ params }: { params: Promise<{ id:
 
           {/* Sticky booking column */}
           <div>
-            <div className="lg:sticky lg:top-24">
+            <div className="room-booking lg:sticky lg:top-24">
               <Card className="p-5">
                 <p className="text-[15px] font-bold text-ink">Phòng khác của chủ trọ</p>
                 <div className="mt-3 space-y-2.5">

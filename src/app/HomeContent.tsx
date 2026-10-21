@@ -69,17 +69,24 @@ export default function HomeContent() {
   const [sort, setSort] = useState<SortKey>('newest');
   const [filterOpen, setFilterOpen] = useState(false);
   const [hydrated, setHydrated] = useState(false);
+  const [aiNotes, setAiNotes] = useState<string[]>([]);
 
-  // Restore the last-used search (UC02.1/02.2/02.3) on revisit.
+  // Read on mount and when AI applies criteria while this route remains mounted.
   useEffect(() => {
-    const saved = getPersistedSearch();
-    if (saved) {
-      setQuery(saved.query ?? '');
-      setCategory(saved.category && CATEGORIES.some((c) => c.label === saved.category) ? saved.category : 'Tất cả');
-      setFilters({ ...DEFAULT_FILTERS, ...(saved.filters ?? {}) });
-      setSort(saved.sort ?? 'newest');
-    }
-    setHydrated(true);
+    const restore = () => {
+      const saved = getPersistedSearch();
+      if (saved) {
+        setQuery(saved.query ?? '');
+        setCategory(saved.category && CATEGORIES.some((c) => c.label === saved.category) ? saved.category : 'Tất cả');
+        setFilters({ ...DEFAULT_FILTERS, ...(saved.filters ?? {}) });
+        setSort(saved.sort ?? 'newest');
+      }
+      try { const notes = JSON.parse(sessionStorage.getItem('roomix:tenant:ai-search-notes') || '[]'); setAiNotes(Array.isArray(notes) ? notes : []); } catch { setAiNotes([]); }
+      setHydrated(true);
+    };
+    restore();
+    window.addEventListener('roomix:tenant:search-applied', restore);
+    return () => window.removeEventListener('roomix:tenant:search-applied', restore);
   }, []);
 
   useEffect(() => {
@@ -98,6 +105,8 @@ export default function HomeContent() {
     setFilters(DEFAULT_FILTERS);
     setCategory('Tất cả');
     setQuery('');
+    setAiNotes([]);
+    try { sessionStorage.removeItem('roomix:tenant:ai-search-notes'); } catch { /* Optional storage. */ }
   };
 
   const chips: { key: string; label: string; clear: () => void }[] = [];
@@ -125,7 +134,7 @@ export default function HomeContent() {
   }
 
   return (
-    <div className="w-full px-6 py-6 lg:px-12">
+    <div className="w-full px-4 py-6 sm:px-6 lg:px-8">
       <div className="flex flex-wrap items-center gap-3">
         <div className="flex flex-1 flex-wrap items-center gap-1">
           {CATEGORIES.map((c) => (
@@ -172,6 +181,7 @@ export default function HomeContent() {
         />
       </div>
 
+      {aiNotes.length > 0 && <p role="status" className="mt-3 rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-800">Cần xác nhận thêm: {aiNotes.join(' · ')}</p>}
       {chips.length > 0 && (
         <div className="mt-4 flex flex-wrap items-center gap-2">
           {chips.map((chip) => (
@@ -200,7 +210,7 @@ export default function HomeContent() {
           </p>
         </div>
       ) : (
-        <div className="mt-7 grid grid-cols-1 gap-x-5 gap-y-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div className="mt-7 room-grid gap-x-5 gap-y-8">
           {filtered.map((room) => (
             <RoomCard key={room.id} room={room} />
           ))}

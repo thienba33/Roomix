@@ -7,7 +7,6 @@ import { cn } from '@/lib/utils';
 import { tenantUser } from '@/lib/data';
 import {
   NOTIFICATIONS_EVENT,
-  OPEN_AI_EVENT,
   PROFILE_EVENT,
   getNotificationsEnabled,
   getTenantProfile,
@@ -17,8 +16,8 @@ import {
   type TenantProfile,
 } from '@/lib/tenant-store';
 import { useOnClickOutside } from '@/hooks/useOnClickOutside';
-import { Mascot } from 'page-mascot';
-import AiPanel from './AiPanel';
+import { useAi } from './AiProvider';
+import MobileNavigation from './MobileNavigation';
 
 const NAV = [
   { label: 'Tìm phòng', href: '/' },
@@ -26,9 +25,9 @@ const NAV = [
   { label: 'Yêu cầu của tôi', href: '/requests' },
 ];
 
-export default function TenantHeader({ defaultAiOpen = false }: { defaultAiOpen?: boolean }) {
+export default function TenantHeader() {
   const pathname = usePathname();
-  const [aiOpen, setAiOpen] = useState(defaultAiOpen);
+  const { state: { open: aiOpen }, update, reset } = useAi();
   const [menuOpen, setMenuOpen] = useState(false);
   const [notifOn, setNotifOn] = useState(true);
   const [unread, setUnread] = useState(0);
@@ -74,13 +73,6 @@ export default function TenantHeader({ defaultAiOpen = false }: { defaultAiOpen?
     };
   }, []);
 
-  // Room detail ("Hỏi AI về phòng này") asks the header to open the panel.
-  useEffect(() => {
-    const open = () => setAiOpen(true);
-    window.addEventListener(OPEN_AI_EVENT, open);
-    return () => window.removeEventListener(OPEN_AI_EVENT, open);
-  }, []);
-
   const toggleNotif = () => {
     setNotifOn((on) => {
       setNotificationsEnabled(!on);
@@ -91,11 +83,12 @@ export default function TenantHeader({ defaultAiOpen = false }: { defaultAiOpen?
   return (
     <>
       <header className="sticky top-0 z-50 border-b border-line bg-white/95 backdrop-blur">
-        <div className="flex h-16 w-full items-center gap-10 px-6 lg:px-12">
+        <div className="flex h-16 w-full items-center gap-3 px-4 sm:px-6 lg:gap-8 lg:px-12">
           <Link href="/" className="flex shrink-0 items-center" aria-label="Roomix">
             <Image src="/images/logo.png" alt="Roomix" width={1961} height={680} className="h-6 w-auto" priority />
           </Link>
 
+          <div className="md:hidden"><MobileNavigation title="Khách thuê" groups={[{ title: 'Khám phá', items: NAV }]} /></div>
           <nav className="hidden items-center gap-7 md:flex">
             {NAV.map((n) => {
               const active = n.href === '/' ? pathname === '/' : pathname.startsWith(n.href);
@@ -107,7 +100,7 @@ export default function TenantHeader({ defaultAiOpen = false }: { defaultAiOpen?
             })}
           </nav>
 
-          <div className="ml-auto flex items-center gap-3">
+          <div className="ml-auto flex items-center gap-2">
             <Link
               href="/notifications"
               aria-label={unread > 0 ? `Thông báo, ${unread} chưa đọc` : 'Thông báo'}
@@ -125,11 +118,13 @@ export default function TenantHeader({ defaultAiOpen = false }: { defaultAiOpen?
             </Link>
 
             <button
-              onClick={() => setAiOpen((o) => !o)}
-              aria-label="Mở Roomix AI"
-              className={cn('flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border bg-white transition hover:shadow', aiOpen ? 'border-sea shadow' : 'border-line')}
+              onClick={() => update({ open: !aiOpen })}
+              aria-label={aiOpen ? 'Đóng Roomix AI' : 'Mở Roomix AI'}
+              aria-expanded={aiOpen}
+              aria-controls="roomix-ai"
+              className={cn('flex h-10 items-center justify-center gap-2 rounded-full border bg-white px-3 text-sm font-semibold text-primary transition hover:bg-primary-soft', aiOpen ? 'border-sea shadow' : 'border-line')}
             >
-              <Mascot directions="/mascots/fox-directions.webp" reactions="/mascots/fox-reactions.webp" size={36} label="Roomix AI" />
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden><path d="M21 11a8 8 0 0 1-8 8H5l-3 3V11a9 9 0 0 1 19 0Z" /><path d="M7 10h9M7 14h6" /></svg><span className="hidden sm:inline">Hỏi AI</span>
             </button>
 
             <div className="relative" ref={menuRef}>
@@ -168,7 +163,7 @@ export default function TenantHeader({ defaultAiOpen = false }: { defaultAiOpen?
                     </span>
                   </button>
                   <div className="border-t border-line" />
-                  <Link href="/login" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-ink hover:bg-page">
+                  <Link href="/login" onClick={() => { reset(); setMenuOpen(false); }} className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-ink hover:bg-page">
                     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><path d="m16 17 5-5-5-5M21 12H9" /></svg>
                     Đăng xuất
                   </Link>
@@ -178,7 +173,7 @@ export default function TenantHeader({ defaultAiOpen = false }: { defaultAiOpen?
           </div>
         </div>
       </header>
-      {aiOpen && <AiPanel onClose={() => setAiOpen(false)} />}
+
     </>
   );
 }

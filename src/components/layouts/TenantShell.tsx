@@ -1,16 +1,25 @@
-import { type ReactNode } from 'react';
+'use client';
+import { useCallback, useEffect, type ReactNode } from 'react';
 import TenantHeader from './TenantHeader';
+import AiPanel from './AiPanel';
+import { useAi } from './AiProvider';
 import Footer from './Footer';
 import { ToastProvider } from '@/components/ui/Toast';
 
-export default function TenantShell({ children, defaultAiOpen = false }: { children: ReactNode; defaultAiOpen?: boolean }) {
-  return (
-    <ToastProvider>
-      <div className="flex min-h-screen flex-col bg-white">
-        <TenantHeader defaultAiOpen={defaultAiOpen} />
-        <main className="flex-1">{children}</main>
-        <Footer />
+export default function TenantShell({ children, defaultAiOpen = false }: { children: ReactNode; defaultAiOpen?: boolean; }) {
+  const { state, ready, update } = useAi();
+  const closeAi = useCallback(() => update({ open: false }), [update]);
+  useEffect(() => { if (ready && defaultAiOpen) update({ open: true }); }, [ready, defaultAiOpen, update]);
+  return <ToastProvider>
+    <div className="flex min-h-screen flex-col bg-white">
+      <TenantHeader />
+      <div className={`tenant-workspace flex flex-1 ${state.open ? 'ai-is-open' : ''}`}>
+        <div className="tenant-content flex min-w-0 flex-1 flex-col">
+          <main className="flex-1">{children}</main>
+          <Footer />
+        </div>
+        {state.open && <AiPanel onClose={closeAi} />}
       </div>
-    </ToastProvider>
-  );
+    </div>
+  </ToastProvider>;
 }

@@ -15,8 +15,7 @@ const SIZES = ['Dưới 20m²', '20–30m²', 'Trên 30m²'];
 const AMENITIES = ['Điều hòa', 'Máy giặt', 'Ban công', 'Gác lửng', 'WC riêng', 'Bếp', 'Gửi xe', 'Thang máy'];
 const TYPES = ['Tất cả', 'Phòng trọ', 'Chung cư mini', 'KTX'];
 
-const PRICE_MIN = 1;
-const PRICE_MAX = 5;
+const PRICE_MIN = 0;
 
 const thumbClass =
   'pointer-events-none absolute inset-x-0 top-1/2 h-6 w-full -translate-y-1/2 appearance-none bg-transparent [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-primary [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:shadow [&::-moz-range-thumb]:pointer-events-auto [&::-moz-range-thumb]:h-5 [&::-moz-range-thumb]:w-5 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-primary [&::-moz-range-thumb]:bg-white';
@@ -56,6 +55,7 @@ export default function FilterModal({ open, onClose, value, onApply, query = '',
     [draft, query, category, sort],
   );
 
+  const PRICE_MAX = Math.max(5, Math.ceil(value.priceHi));
   const loPct = ((draft.priceLo - PRICE_MIN) / (PRICE_MAX - PRICE_MIN)) * 100;
   const hiPct = ((draft.priceHi - PRICE_MIN) / (PRICE_MAX - PRICE_MIN)) * 100;
 
@@ -74,9 +74,9 @@ export default function FilterModal({ open, onClose, value, onApply, query = '',
               type="range"
               min={PRICE_MIN}
               max={PRICE_MAX}
-              step={0.5}
+              step={0.1}
               value={draft.priceLo}
-              onChange={(e) => setDraft((d) => ({ ...d, priceLo: Math.min(Number(e.target.value), d.priceHi - 0.5) }))}
+              onChange={(e) => setDraft((d) => ({ ...d, priceLo: Math.min(Number(e.target.value), d.priceHi - 0.1) }))}
               className={thumbClass}
               aria-label="Giá tối thiểu"
             />
@@ -84,9 +84,9 @@ export default function FilterModal({ open, onClose, value, onApply, query = '',
               type="range"
               min={PRICE_MIN}
               max={PRICE_MAX}
-              step={0.5}
+              step={0.1}
               value={draft.priceHi}
-              onChange={(e) => setDraft((d) => ({ ...d, priceHi: Math.max(Number(e.target.value), d.priceLo + 0.5) }))}
+              onChange={(e) => setDraft((d) => ({ ...d, priceHi: Math.max(Number(e.target.value), d.priceLo + 0.1) }))}
               className={thumbClass}
               aria-label="Giá tối đa"
             />

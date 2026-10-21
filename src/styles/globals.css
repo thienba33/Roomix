@@ -45,3 +45,30 @@ body {
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;
 }
+
+/* Layout responds to available content width, including the AI column. */
+.tenant-content { container-type: inline-size; container-name: tenant; }
+.room-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); }
+.ai-panel { position: fixed; inset: 0; z-index: 70; height: 100dvh; animation: ai-enter 180ms ease-out; }
+.ai-composer { padding-bottom: env(safe-area-inset-bottom, 0px); }
+@media (min-width: 1280px) {
+  .ai-is-open .tenant-content { margin-right: 400px; }
+  .ai-panel { inset: 64px 0 0 auto; width: 400px; height: calc(100dvh - 64px); border-left: 1px solid var(--color-line); z-index: 40; }
+}
+@container tenant (max-width: 959px) {
+  .room-detail-columns { grid-template-columns: minmax(0, 1fr); gap: 24px; }
+  .room-detail-body { grid-column: auto; }
+  .room-booking { position: static; }
+}
+@keyframes ai-enter { from { opacity: 0; transform: translateX(12px); } to { opacity: 1; transform: translateX(0); } }
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+}
+@media (max-width: 639px) {
+  .management-table thead { display: none; }
+  .management-table, .management-table tbody, .management-table tr, .management-table td { display: block; width: 100%; }
+  .management-table tr { padding: 12px; border-bottom: 1px solid var(--color-line); }
+  .management-table td { padding: 6px 0; white-space: normal; }
+  .management-table td[data-label]::before { content: attr(data-label); display: block; margin-bottom: 3px; font-size: 11px; color: var(--color-muted); }
+}

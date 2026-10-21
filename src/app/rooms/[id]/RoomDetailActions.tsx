@@ -1,4 +1,5 @@
 'use client';
+import { openAi } from '@/components/layouts/AiProvider';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Card from '@/components/ui/Card';
@@ -8,8 +9,6 @@ import { formatVND, formatPriceShort } from '@/lib/utils';
 import { landlord } from '@/lib/data';
 import type { Room } from '@/types';
 import {
-  KEY_AI_CONTEXT,
-  OPEN_AI_EVENT,
   createRequest,
   getActiveRequestForRoom,
   getFavoriteIds,
@@ -55,14 +54,7 @@ export default function RoomDetailActions({ room, breakdown, total }: Props) {
     });
   };
 
-  const askAi = () => {
-    try {
-      window.sessionStorage.setItem(KEY_AI_CONTEXT, JSON.stringify({ roomId: room.id }));
-    } catch {
-      /* session storage unavailable — panel opens without room context */
-    }
-    window.dispatchEvent(new CustomEvent(OPEN_AI_EVENT));
-  };
+  const askAi = () => openAi({ roomId: room.id });
 
   const accepted = existing?.status === 'ACCEPTED';
 
