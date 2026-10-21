@@ -17,6 +17,7 @@ import {
   type TenantProfile,
 } from '@/lib/tenant-store';
 import { useOnClickOutside } from '@/hooks/useOnClickOutside';
+import { BotAvatar } from 'bot-avatars';
 import AiPanel from './AiPanel';
 
 const NAV = [
@@ -128,7 +129,7 @@ export default function TenantHeader({ defaultAiOpen = false }: { defaultAiOpen?
               aria-label="Mở Roomix AI"
               className={cn('flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border bg-white transition hover:shadow', aiOpen ? 'border-sea shadow' : 'border-line')}
             >
-              <Image src="/images/ai-icon.png" alt="AI" width={24} height={24} />
+              <BotAvatar type="droid" color="#4F46E5" size={34} aria-hidden />
             </button>
 
             <div className="relative" ref={menuRef}>
@@ -145,27 +146,14 @@ export default function TenantHeader({ defaultAiOpen = false }: { defaultAiOpen?
                     <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary-soft font-bold text-primary">{profileInitials(profile.name)}</span>
                     <div className="min-w-0">
                       <p className="truncate font-bold text-ink">{profile.name}</p>
-                      <p className="truncate text-[13px] text-muted">{tenantUser.email}</p>
                     </div>
                   </Link>
-                  <div className="space-y-1 px-3 pb-2 text-[13px] text-muted">
-                    <p><span className="mr-1.5 font-bold text-primary">✓</span>Email đã xác minh</p>
-                    <p><span className="mr-1.5 font-bold text-primary">✓</span>{profile.phone} đã xác minh</p>
-                  </div>
                   <div className="border-t border-line" />
                   <Link href="/profile" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-ink hover:bg-page">
                     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
                     Hồ sơ của tôi
                   </Link>
-                  <Link href="/requests" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-ink hover:bg-page">
-                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M4 6h16M4 12h16M4 18h10" /></svg>
-                    Yêu cầu của tôi
-                  </Link>
-                  <Link href="/favorites" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-ink hover:bg-page">
-                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" /></svg>
-                    Phòng yêu thích
-                  </Link>
-                  <button
+                                                      <button
                     type="button"
                     role="switch"
                     aria-checked={notifOn}
