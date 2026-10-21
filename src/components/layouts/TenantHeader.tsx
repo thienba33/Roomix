@@ -18,6 +18,7 @@ import {
 import { useOnClickOutside } from '@/hooks/useOnClickOutside';
 import { useAi } from './AiProvider';
 import MobileNavigation from './MobileNavigation';
+import HouseBotIcon from '@/components/ui/HouseBotIcon';
 
 const NAV = [
   { label: 'Tìm phòng', href: '/' },
@@ -124,7 +125,7 @@ export default function TenantHeader() {
               aria-controls="roomix-ai"
               className={cn('flex h-10 items-center justify-center gap-2 rounded-full border bg-white px-3 text-sm font-semibold text-primary transition hover:bg-primary-soft', aiOpen ? 'border-sea shadow' : 'border-line')}
             >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden><path d="M21 11a8 8 0 0 1-8 8H5l-3 3V11a9 9 0 0 1 19 0Z" /><path d="M7 10h9M7 14h6" /></svg><span className="hidden sm:inline">Hỏi AI</span>
+              <HouseBotIcon size={26} /><span className="hidden sm:inline">Hỏi AI</span>
             </button>
 
             <div className="relative" ref={menuRef}>
