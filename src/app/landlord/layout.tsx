@@ -13,7 +13,7 @@ export default function ChuTroLayout({ children }: { children: ReactNode }) {
     <ToastProvider>
       <div className="flex min-h-screen bg-white">
         <HostSidebar />
-        <main className="mx-auto w-full min-w-0 max-w-[1180px] flex-1 px-6 pb-8 pt-[104px] lg:pt-8">{children}</main>
+        <main className="mx-auto w-full min-w-0 max-w-[1180px] flex-1 px-4 pb-8 pt-[88px] sm:px-6 lg:pt-8">{children}</main>
       </div>
     </ToastProvider>
   );

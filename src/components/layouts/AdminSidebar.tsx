@@ -4,6 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
+import MobileNavigation from './MobileNavigation';
 import { pendingModerationCount, useModerationDecisions } from '@/lib/admin-store';
 
 function I({ children }: { children: ReactNode }) {
@@ -45,29 +46,19 @@ export default function AdminSidebar() {
 
   return (
     <>
-      {/* Mobile: slim top bar + scrollable nav row (sidebar is desktop-first) */}
       <div className="fixed inset-x-0 top-0 z-50 border-b border-line bg-white lg:hidden">
-        <div className="flex h-14 items-center justify-between px-4">
-          <Link href="/admin" aria-label="Roomix" className="flex items-center gap-2">
-            <Image src="/images/logo.png" alt="Roomix" width={1961} height={680} className="h-[22px] w-auto" priority />
-            <span className="rounded-full bg-primary-soft px-2.5 py-1 text-[10px] font-bold tracking-[0.08em] text-primary">ADMIN CONSOLE</span>
-          </Link>
-          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-ink text-[12px] font-bold text-white">AD</span>
+        <div className="flex h-16 items-center justify-between gap-3 px-4">
+          <Link href="/admin" aria-label="Roomix"><Image src="/images/logo.png" alt="Roomix" width={1961} height={680} className="h-6 w-auto" priority /></Link>
+          <p className="min-w-0 flex-1 truncate text-right text-sm font-semibold">{ALL_ITEMS.find((item) => isActive(item.href))?.label}</p>
+          <MobileNavigation title="Quản trị" groups={[...GROUPS.map((g) => ({ title: g.title, items: g.items.map((t) => ({ label: t.label, href: t.href, count: t.badge ? pendingCount : 0 })) })), { title: 'Tài khoản', items: [{ label: 'Đăng xuất', href: '/admin/login' }] }]} />
         </div>
-        <nav className="flex gap-1 overflow-x-auto px-3 pb-2.5">
-          {ALL_ITEMS.map((t) => (
-            <Link key={t.href} href={t.href} className={cn('whitespace-nowrap rounded-full px-3.5 py-1.5 text-[13px]', isActive(t.href) ? 'bg-primary-soft font-semibold text-primary' : 'font-medium text-[#484848]')}>
-              {t.label}{t.badge && pendingCount > 0 && <span className="ml-1.5 inline-flex h-4.5 min-w-4.5 items-center justify-center rounded-full bg-amber-500 px-1 text-[10px] font-bold text-white">{pendingCount}</span>}
-            </Link>
-          ))}
-        </nav>
       </div>
 
       {/* Desktop: left sidebar */}
       <aside className="sticky top-0 hidden h-screen w-[264px] shrink-0 flex-col border-r border-line bg-white lg:flex">
         <div className="border-b border-line px-5 pb-4 pt-5">
           <Link href="/admin" aria-label="Roomix" className="inline-flex"><Image src="/images/logo.png" alt="Roomix" width={1961} height={680} className="h-7 w-auto" priority /></Link>
-          <p className="mt-2.5"><span className="rounded-full bg-primary-soft px-2.5 py-1 text-[10px] font-bold tracking-[0.08em] text-primary">ADMIN CONSOLE</span></p>
+          <p className="mt-2.5"><span className="rounded-full bg-primary-soft px-2.5 py-1 text-[10px] font-bold tracking-[0.08em] text-primary">QUẢN TRỊ</span></p>
         </div>
         <nav className="flex-1 space-y-7 overflow-y-auto px-3 py-5" aria-label="Điều hướng Admin">
           {GROUPS.map((g) => (

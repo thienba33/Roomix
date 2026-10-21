@@ -4,6 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
+import MobileNavigation from './MobileNavigation';
 import { landlord, house } from '@/lib/data';
 import { pendingRequestCountFromStorage, unreadCountFromStorage } from '@/lib/landlord-store';
 
@@ -58,19 +59,12 @@ export default function HostSidebar() {
 
   return (
     <>
-      {/* Mobile: slim top bar + scrollable nav row (sidebar is desktop-first) */}
       <div className="fixed inset-x-0 top-0 z-50 border-b border-line bg-white lg:hidden">
-        <div className="flex h-14 items-center justify-between px-4">
-          <Link href="/landlord" aria-label="Roomix"><Image src="/images/logo.png" alt="Roomix" width={1961} height={680} className="h-[22px] w-auto" priority /></Link>
-          <Link href="/landlord/profile" className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-soft text-[13px] font-bold text-primary">{landlord.initials}</Link>
+        <div className="flex h-16 items-center justify-between gap-3 px-4">
+          <Link href="/landlord" aria-label="Roomix"><Image src="/images/logo.png" alt="Roomix" width={1961} height={680} className="h-6 w-auto" priority /></Link>
+          <p className="min-w-0 flex-1 truncate text-right text-sm font-semibold">{ALL_ITEMS.find((item) => isActive(item.href))?.label}</p>
+          <MobileNavigation title="Chủ trọ" groups={[...GROUPS.map((g) => ({ title: g.title, items: g.items.map((t) => ({ label: t.label, href: t.href, count: badgeFor(t.badge) })) })), { title: 'Tài khoản', items: [{ label: 'Đăng xuất', href: '/landlord/login' }] }]} />
         </div>
-        <nav className="flex gap-1 overflow-x-auto px-3 pb-2.5">
-          {ALL_ITEMS.map((t) => (
-            <Link key={t.href} href={t.href} className={cn('whitespace-nowrap rounded-full px-3.5 py-1.5 text-[13px]', isActive(t.href) ? 'bg-primary-soft font-semibold text-primary' : 'font-medium text-[#484848]')}>
-              {t.label}{badgeFor(t.badge) > 0 && <span className="ml-1.5 inline-flex h-4.5 min-w-4.5 items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-bold text-white">{badgeFor(t.badge)}</span>}
-            </Link>
-          ))}
-        </nav>
       </div>
 
       {/* Desktop: left sidebar */}
