@@ -42,3 +42,4 @@ next-env.d.ts
 
 # Local UI review screenshots
 /docs/ui-review/
+AGENTS.md
