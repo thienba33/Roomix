@@ -25,11 +25,11 @@ export default function HostTopbar() {
   useEffect(() => { const refresh = () => { try { setPendingCount(pendingRequestCountFromStorage()); setUnreadCount(unreadCountFromStorage()); } catch {} }; refresh(); const id = setInterval(refresh, 1500); window.addEventListener('storage', refresh); window.addEventListener('focus', refresh); return () => { clearInterval(id); window.removeEventListener('storage', refresh); window.removeEventListener('focus', refresh); }; }, [pathname]);
   return (
     <header className="sticky top-0 z-50 border-b border-line bg-white/95 backdrop-blur">
-      <div className="flex h-16 w-full items-center gap-4 px-6 lg:px-12">
+      <div className="flex h-16 w-full items-center gap-6 px-6 lg:px-12">
         <Link href="/landlord" className="flex shrink-0 items-center" aria-label="Roomix">
           <Image src="/images/logo.png" alt="Roomix" width={1961} height={680} className="h-[22px] w-auto" priority />
         </Link>
-        <nav className="mx-auto hidden items-center gap-1 rounded-full bg-[#F7F7F7] p-1 lg:flex">
+        <nav className="hidden items-center gap-1 rounded-full bg-[#F7F7F7] p-1 lg:flex">
           {TABS.map((t) => {
             const active = t.href === '/landlord' ? pathname === '/landlord' : pathname.startsWith(t.href);
             return (
@@ -39,7 +39,7 @@ export default function HostTopbar() {
             );
           })}
         </nav>
-        <div className="ml-auto flex shrink-0 items-center gap-3 lg:ml-0">
+        <div className="ml-auto flex shrink-0 items-center gap-3">
           <Link href="/landlord/notifications" aria-label="Thông báo" className="relative flex h-10 w-10 items-center justify-center rounded-full text-ink transition hover:bg-page">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" /><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" /></svg>
             {unreadCount > 0 ? (<span className="absolute -right-0.5 -top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1 text-[11px] font-bold text-white ring-2 ring-white">{unreadCount}</span>) : (<span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-primary ring-2 ring-white" />)}

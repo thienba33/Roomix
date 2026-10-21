@@ -19,12 +19,12 @@ export default function AdminTopbar() {
   const pendingCount = pendingModerationCount(decisions);
   return (
     <header className="sticky top-0 z-50 border-b border-line bg-white/95 backdrop-blur">
-      <div className="flex h-16 w-full items-center gap-4 px-6 lg:px-12">
+      <div className="flex h-16 w-full items-center gap-6 px-6 lg:px-12">
         <Link href="/admin" className="flex shrink-0 items-center gap-2.5">
           <Image src="/images/logo.png" alt="Roomix" width={1961} height={680} className="h-[22px] w-auto" priority />
           <span className="ml-3 rounded-full bg-primary-soft px-3 py-1.5 text-[11px] font-bold tracking-[0.08em] text-primary">ADMIN CONSOLE</span>
         </Link>
-        <nav className="mx-auto hidden items-center gap-1 rounded-full bg-[#F7F7F7] p-1 lg:flex">
+        <nav className="hidden items-center gap-1 rounded-full bg-[#F7F7F7] p-1 lg:flex">
           {TABS.map((t) => {
             const active = t.href === '/admin' ? pathname === '/admin' : pathname.startsWith(t.href);
             const showBadge = t.href === '/admin/moderation' && pendingCount > 0;
@@ -42,7 +42,7 @@ export default function AdminTopbar() {
             );
           })}
         </nav>
-        <div className="ml-auto flex shrink-0 items-center gap-3 lg:ml-0">
+        <div className="ml-auto flex shrink-0 items-center gap-3">
           <span className="flex items-center gap-2.5 rounded-full border border-line py-1.5 pl-1.5 pr-4">
             <span className="flex h-8 w-8 items-center justify-center rounded-full bg-ink text-[13px] font-bold text-white">AD</span>
             <span className="hidden text-sm font-medium text-[#484848] sm:block">Admin</span>
