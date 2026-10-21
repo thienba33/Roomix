@@ -95,11 +95,16 @@ export default async function RoomDetailPage({ params }: { params: Promise<{ id:
 
             <ul className="mt-6 grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-2">
               {room.amenities.map((a) => (
-                <li key={a} className="text-[15px] text-ink">{a}</li>
+                <li key={a} className="flex items-center gap-2.5 text-[15px] text-ink">
+                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-emerald-600" aria-hidden>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
+                  </span>
+                  {a}
+                </li>
               ))}
             </ul>
 
-            <h2 className="mt-9 text-lg font-bold text-ink">Nơi bạn sẽ ngủ</h2>
+            <h2 className="mt-9 text-lg font-bold text-ink">Mô tả chi tiết</h2>
             <div className="mt-3 grid grid-cols-3 gap-3">
               {sleepImages.map((src, i) => (
                 <div key={i} className="relative h-[110px] overflow-hidden rounded-xl">
