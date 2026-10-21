@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { rooms } from '@/lib/data';
 import { formatPriceShort } from '@/lib/utils';
 import { KEY_AI_CONTEXT } from '@/lib/tenant-store';
+import { BotAvatar } from 'bot-avatars';
 import type { Room } from '@/types';
 
 const QUICK = ['Phòng dưới 3 triệu gần Bách Khoa', 'Phòng trống ở Cầu Giấy?', 'So sánh phòng 302 và 405', 'Tư vấn phòng cho 2 người'];
@@ -236,8 +237,8 @@ export default function AiPanel({ onClose }: { onClose: () => void }) {
   return (
     <aside className="fixed inset-y-0 right-0 z-[70] flex w-full max-w-[440px] flex-col border-l border-line bg-white shadow-2xl">
       <div className="bg-sea-gradient flex items-center gap-3 px-5 py-4 text-white">
-        <span className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-white/20">
-          <Image src="/images/ai-icon.png" alt="Roomix AI" width={26} height={26} />
+        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white shadow-sm">
+          <BotAvatar type="droid" color="#4F46E5" size={36} />
         </span>
         <div className="flex-1">
           <p className="font-bold leading-tight">Roomix AI</p>
@@ -250,8 +251,8 @@ export default function AiPanel({ onClose }: { onClose: () => void }) {
 
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-5 py-5">
         <div className="flex items-center gap-3">
-          <span className="bg-sea-gradient flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-white">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden><path d="M12 2l1.9 5.7L20 9.6l-6.1 1.9L12 17.2l-1.9-5.7L4 9.6l6.1-1.9z" /><path d="M19 15.5l.8 2.4 2.4.8-2.4.8-.8 2.4-.8-2.4-2.4-.8 2.4-.8z" /></svg>
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center">
+            <BotAvatar type="droid" color="#4F46E5" size={44} />
           </span>
           <div>
             <p className="font-bold text-ink">Xin chào, Minh Anh</p>
