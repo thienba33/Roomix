@@ -4,11 +4,12 @@
   --color-primary: #4F46E5;
   --color-primary-dark: #4338CA;
   --color-primary-soft: #EEF2FF;
-  --color-sea: #0EA5E9;
-  --color-sea-dark: #0284C7;
-  --color-sea-blue: #2563EB;
-  --color-sky-light: #E0F2FE;
-  --color-sky-pale: #F0F9FF;
+  /* AI accent tokens (names kept from the sea-blue era; values are the Indigo brand palette) */
+  --color-sea: #4F46E5;
+  --color-sea-dark: #4338CA;
+  --color-sea-blue: #7C3AED;
+  --color-sky-light: #E0E7FF;
+  --color-sky-pale: #EEF2FF;
   --color-ink: #222222;
   --color-secondary: #484848;
   --color-muted: #6A6A6A;
@@ -18,11 +19,11 @@
 }
 
 :root {
-  --sea-gradient: linear-gradient(135deg, #0EA5E9, #2563EB);
+  --sea-gradient: linear-gradient(135deg, #4F46E5, #7C3AED);
 }
 
 .bg-sea-gradient {
-  background: linear-gradient(135deg, #0EA5E9, #2563EB);
+  background: linear-gradient(135deg, #4F46E5, #7C3AED);
 }
 
 html { scroll-behavior: smooth; }
