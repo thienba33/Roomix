@@ -8,6 +8,22 @@ const nextConfig = {
       },
     },
   },
+  // Run the same Tailwind loader before Next's CSS loaders in Webpack fallback builds.
+  webpack(config) {
+    const addTailwind = (rules) => {
+      for (const rule of rules) {
+        if (!rule || typeof rule !== 'object') continue;
+        if (Array.isArray(rule.use) && rule.use.some((entry) =>
+          typeof entry?.loader === 'string' && entry.loader.includes('/css-loader/'))) {
+          rule.use.push({ loader: '@tailwindcss/turbopack' });
+        }
+        if (rule.oneOf) addTailwind(rule.oneOf);
+        if (rule.rules) addTailwind(rule.rules);
+      }
+    };
+    addTailwind(config.module.rules);
+    return config;
+  },
   async redirects() {
     return [
       // Tenant (old Vietnamese slugs -> English)
