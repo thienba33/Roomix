@@ -17,7 +17,7 @@ import {
   type TenantProfile,
 } from '@/lib/tenant-store';
 import { useOnClickOutside } from '@/hooks/useOnClickOutside';
-import { BotAvatar } from 'bot-avatars';
+import { Mascot } from 'page-mascot';
 import AiPanel from './AiPanel';
 
 const NAV = [
@@ -129,7 +129,7 @@ export default function TenantHeader({ defaultAiOpen = false }: { defaultAiOpen?
               aria-label="Mở Roomix AI"
               className={cn('flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border bg-white transition hover:shadow', aiOpen ? 'border-sea shadow' : 'border-line')}
             >
-              <BotAvatar type="droid" color="#4F46E5" size={34} aria-hidden />
+              <Mascot directions="/mascots/fox-directions.webp" reactions="/mascots/fox-reactions.webp" size={36} label="Roomix AI" />
             </button>
 
             <div className="relative" ref={menuRef}>

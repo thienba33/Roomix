@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { rooms } from '@/lib/data';
 import { formatPriceShort } from '@/lib/utils';
 import { KEY_AI_CONTEXT } from '@/lib/tenant-store';
-import { BotAvatar } from 'bot-avatars';
+import { Mascot } from 'page-mascot';
 import type { Room } from '@/types';
 
 const QUICK = ['Phòng dưới 3 triệu gần Bách Khoa', 'Phòng trống ở Cầu Giấy?', 'So sánh phòng 302 và 405', 'Tư vấn phòng cho 2 người'];
@@ -30,26 +30,6 @@ const AREA_KEYWORDS = ['Cầu Giấy', 'Thanh Xuân', 'Đống Đa', 'Hà Đông
 
 let msgSeq = 0;
 const nextId = () => ++msgSeq;
-
-/** Initial exchange — same content the panel previously hard-coded, now held
- * in the conversation state so follow-ups build on it. */
-function initialMessages(): AiMessage[] {
-  const hits: RoomHit[] = [
-    { room: rooms[0], pct: 98 },
-    { room: rooms[5], pct: 92 },
-  ];
-  return [
-    { id: nextId(), role: 'user', text: 'Tìm phòng dưới 3 triệu, 2 người, có điều hòa' },
-    {
-      id: nextId(),
-      role: 'ai',
-      text: 'Có 2 phòng khớp nhất với bạn:',
-      hits,
-      criteria: ['≤ 3 triệu', '2 người', 'Điều hòa'],
-      followUps: CHIPS,
-    },
-  ];
-}
 
 interface Extracted {
   maxPrice?: number;
@@ -182,7 +162,7 @@ function buildReply(raw: string): AiMessage {
 }
 
 export default function AiPanel({ onClose }: { onClose: () => void }) {
-  const [messages, setMessages] = useState<AiMessage[]>(initialMessages);
+  const [messages, setMessages] = useState<AiMessage[]>([]);
   const [input, setInput] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -231,111 +211,86 @@ export default function AiPanel({ onClose }: { onClose: () => void }) {
     setMessages((m) => [...m, { id: nextId(), role: 'user', text }, reply]);
   };
 
-  const lastAi = [...messages].reverse().find((m) => m.role === 'ai');
-  const bottomChips = lastAi?.followUps ?? CHIPS;
-
   return (
     <aside className="fixed inset-y-0 right-0 z-[70] flex w-full max-w-[440px] flex-col border-l border-line bg-white shadow-2xl">
-      <div className="bg-sea-gradient flex items-center gap-3 px-5 py-4 text-white">
-        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white shadow-sm">
-          <BotAvatar type="droid" color="#4F46E5" size={36} />
-        </span>
-        <div className="flex-1">
-          <p className="font-bold leading-tight">Roomix AI</p>
-          <p className="text-[13px] text-white/85">Hỏi gì về phòng cũng được</p>
-        </div>
-        <button onClick={onClose} aria-label="Đóng panel AI" className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-white/20">
+      <div className="flex items-center justify-between border-b border-line px-5 py-3.5">
+        <p className="text-[15px] font-bold text-ink">Roomix AI</p>
+        <button onClick={onClose} aria-label="Đóng panel AI" className="flex h-8 w-8 items-center justify-center rounded-full text-muted transition hover:bg-page hover:text-ink">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12" /></svg>
         </button>
       </div>
 
-      <div ref={scrollRef} className="flex-1 overflow-y-auto px-5 py-5">
-        <div className="flex items-center gap-3">
-          <span className="flex h-11 w-11 shrink-0 items-center justify-center">
-            <BotAvatar type="droid" color="#4F46E5" size={44} />
-          </span>
+      <div ref={scrollRef} className="flex flex-1 flex-col overflow-y-auto px-5 py-5">
+        {messages.length === 0 ? (
+          <div className="flex flex-1 flex-col items-center justify-center text-center">
+            <Mascot directions="/mascots/fox-directions.webp" reactions="/mascots/fox-reactions.webp" size={128} label="Roomix AI" />
+            <p className="mt-4 text-base font-bold text-ink">Roomix AI</p>
+            <p className="mt-1 text-sm text-muted">Xin chào Minh Anh — hỏi gì về phòng cũng được.</p>
+            <div className="mt-6 flex max-w-[330px] flex-wrap justify-center gap-2">
+              {QUICK.map((q) => (
+                <button key={q} onClick={() => send(q)} className="rounded-full border border-line px-3.5 py-1.5 text-[13px] font-medium text-ink transition hover:border-primary hover:text-primary">
+                  {q}
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : (
           <div>
-            <p className="font-bold text-ink">Xin chào, Minh Anh</p>
-            <p className="text-sm text-muted">Mình giúp gì cho bạn hôm nay?</p>
-          </div>
-        </div>
-
-        <p className="mt-6 text-[11px] font-bold tracking-wider text-muted">GỢI Ý NHANH</p>
-        <div className="mt-2 grid grid-cols-2 gap-2">
-          {QUICK.map((q) => (
-            <button key={q} onClick={() => send(q)} className="flex items-start gap-2 rounded-xl border border-line bg-white px-3 py-2.5 text-left text-[13px] font-medium text-ink transition hover:border-sea hover:bg-sky-pale">
-              <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-sea" />
-              {q}
-            </button>
-          ))}
-        </div>
-
-        {messages.map((m, i) =>
-          m.role === 'user' ? (
-            <div key={m.id} className="mt-5 flex justify-end">
-              <p className="max-w-[85%] rounded-2xl bg-sky-light px-4 py-3 text-sm text-ink">{m.text}</p>
-            </div>
-          ) : (
-            <div key={m.id}>
-              <div className="mt-4 rounded-2xl border border-sky-light bg-sky-pale p-4">
-                <p className="text-sm font-semibold leading-relaxed text-ink">{m.text}</p>
-                {m.hits && m.hits.length > 0 && (
-                  <div className="mt-3 space-y-3">
-                    {m.hits.map(({ room, pct }) => (
-                      <Link key={room.id} href={`/rooms/${room.id}`} className="flex items-center gap-3 rounded-lg transition hover:bg-white/60">
-                        <Image src={room.image} alt={room.name} width={56} height={44} className="h-11 w-14 rounded-lg object-cover" />
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-semibold text-ink">{room.name}</p>
-                          <p className="text-[13px] text-muted">{formatPriceShort(room.price)}/tháng</p>
-                        </div>
-                        <span className="rounded-full bg-sky-light px-2 py-0.5 text-xs font-bold text-sea-dark">{pct}%</span>
-                      </Link>
-                    ))}
-                  </div>
-                )}
-                {m.criteria && m.criteria.length > 0 && (
-                  <div className="mt-3 flex flex-wrap gap-1.5">
-                    {m.criteria.map((chip) => (
-                      <span key={chip} className="rounded-full bg-sky-light px-2.5 py-1 text-xs font-medium text-sea-dark">{chip}</span>
-                    ))}
-                  </div>
-                )}
-                {m.followUps && m.followUps.length > 0 && (
-                  <div className="mt-3 flex flex-wrap gap-1.5">
-                    {m.followUps.map((f) => (
-                      <button key={f} onClick={() => send(f)} className="rounded-full border border-sea/40 bg-white px-2.5 py-1 text-xs font-medium text-sea-dark transition hover:bg-sky-light">
-                        {f}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-              {i === 1 && (
-                <div className="mt-4 rounded-2xl bg-sky-pale p-4 text-sm text-ink">
-                  <span className="mr-1 text-sea">✦</span>
-                  <span className="font-semibold">Mẹo:</span> hỏi giá điện nước từng phòng để so sánh chi phí thật.
+            {messages.map((m) =>
+              m.role === 'user' ? (
+                <div key={m.id} className="mt-5 flex justify-end first:mt-0">
+                  <p className="max-w-[85%] rounded-2xl bg-primary-soft px-4 py-3 text-sm text-ink">{m.text}</p>
                 </div>
-              )}
-            </div>
-          ),
-        )}
-
-        <div className="mt-6">
-          <div className="flex flex-wrap gap-2">
-            {bottomChips.map((chip) => (
-              <button key={chip} onClick={() => send(chip)} className="rounded-full border border-line px-3.5 py-1.5 text-[13px] font-medium text-ink transition hover:border-sea hover:text-sea-dark">{chip}</button>
-            ))}
+              ) : (
+                <div key={m.id} className="mt-4 rounded-2xl border border-line bg-white p-4 first:mt-0">
+                  <p className="text-sm font-semibold leading-relaxed text-ink">{m.text}</p>
+                  {m.hits && m.hits.length > 0 && (
+                    <div className="mt-3 space-y-3">
+                      {m.hits.map(({ room, pct }) => (
+                        <Link key={room.id} href={`/rooms/${room.id}`} className="flex items-center gap-3 rounded-lg transition hover:bg-page">
+                          <Image src={room.image} alt={room.name} width={56} height={44} className="h-11 w-14 rounded-lg object-cover" />
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-sm font-semibold text-ink">{room.name}</p>
+                            <p className="text-[13px] text-muted">{formatPriceShort(room.price)}/tháng</p>
+                          </div>
+                          <span className="rounded-full bg-primary-soft px-2 py-0.5 text-xs font-bold text-primary">{pct}%</span>
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                  {m.criteria && m.criteria.length > 0 && (
+                    <div className="mt-3 flex flex-wrap gap-1.5">
+                      {m.criteria.map((chip) => (
+                        <span key={chip} className="rounded-full bg-page px-2.5 py-1 text-xs font-medium text-secondary">{chip}</span>
+                      ))}
+                    </div>
+                  )}
+                  {m.followUps && m.followUps.length > 0 && (
+                    <div className="mt-3 flex flex-wrap gap-1.5">
+                      {m.followUps.map((f) => (
+                        <button key={f} onClick={() => send(f)} className="rounded-full border border-line bg-white px-2.5 py-1 text-xs font-medium text-secondary transition hover:border-primary hover:text-primary">
+                          {f}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ),
+            )}
           </div>
-          <form
-            className="mt-3 flex items-center gap-2 rounded-full border border-line bg-white py-1.5 pl-4 pr-1.5 focus-within:border-sea"
-            onSubmit={(e) => { e.preventDefault(); if (input.trim()) { send(input); setInput(''); } }}
-          >
-            <input value={input} onChange={(e) => setInput(e.target.value)} placeholder="Nhắn cho Roomix AI..." aria-label="Nhắn cho Roomix AI" className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-muted/70" />
-            <button type="submit" aria-label="Gửi" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-sea-dark text-white transition hover:bg-sea-blue">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 19V5M5 12l7-7 7 7" /></svg>
-            </button>
-          </form>
-        </div>
+        )}
+      </div>
+
+      <div className="border-t border-line px-5 py-4">
+        <form
+          className="flex items-center gap-2 rounded-full border border-line bg-white py-1.5 pl-4 pr-1.5 focus-within:border-primary"
+          onSubmit={(e) => { e.preventDefault(); if (input.trim()) { send(input); setInput(''); } }}
+        >
+          <input value={input} onChange={(e) => setInput(e.target.value)} placeholder="Nhắn cho Roomix AI..." aria-label="Nhắn cho Roomix AI" className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-muted/70" />
+          <button type="submit" aria-label="Gửi" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-white transition hover:bg-primary-dark">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 19V5M5 12l7-7 7 7" /></svg>
+          </button>
+        </form>
       </div>
     </aside>
   );

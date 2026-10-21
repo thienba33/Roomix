@@ -9,8 +9,8 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "bot-avatars": "^0.2.2",
     "next": "16.4.2",
+    "page-mascot": "^0.1.0",
     "react": "19.3.0",
     "react-dom": "19.3.0"
   },
