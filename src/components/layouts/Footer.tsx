@@ -1,20 +1,88 @@
+'use client';
+
+import { useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import Modal from '@/components/ui/Modal';
+
+// Replace null with Roomix's official profile URLs when they are available.
+const SOCIALS: { name: string; href: string | null; icon: ReactNode }[] = [
+  {
+    name: 'Facebook',
+    href: null,
+    icon: <path fill="currentColor" stroke="none" d="M22 12a10 10 0 1 0-11.56 9.88v-6.99H7.9V12h2.54V9.8c0-2.51 1.49-3.9 3.77-3.9 1.09 0 2.23.2 2.23.2v2.46h-1.26c-1.24 0-1.62.77-1.62 1.56V12h2.77l-.44 2.89h-2.33v6.99A10 10 0 0 0 22 12Z" />,
+  },
+  {
+    name: 'X',
+    href: null,
+    icon: <path fill="currentColor" stroke="none" d="M18.9 2H22l-6.77 7.74L23.2 22h-6.24l-4.89-7.4L5.6 22H2.47l7.85-8.97L2 2h6.4l4.42 6.75L18.9 2ZM17.8 20h1.73L7.46 3.88H5.6L17.8 20Z" />,
+  },
+  {
+    name: 'Instagram',
+    href: null,
+    icon: <><rect x="3" y="3" width="18" height="18" rx="5" /><circle cx="12" cy="12" r="4" /><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none" /></>,
+  },
+];
+
+const POLICIES = {
+  privacy: {
+    title: 'Quyền riêng tư',
+    content: <>
+      <p>Roomix hiện là phiên bản mô phỏng phục vụ trải nghiệm tìm và quản lý phòng trọ.</p>
+      <p>Một số thông tin và tùy chọn được lưu trong trình duyệt bằng localStorage để duy trì trải nghiệm khi tải lại trang, như hồ sơ, phòng yêu thích và cài đặt thông báo.</p>
+      <p>Bạn có thể xóa dữ liệu đã lưu trong phần cài đặt dữ liệu trang web của trình duyệt. Việc này sẽ đặt lại các tùy chọn trên thiết bị đó.</p>
+      <p>Thông tin về xử lý dữ liệu của dịch vụ chính thức sẽ được cập nhật khi Roomix kết nối hệ thống backend.</p>
+    </>,
+  },
+  terms: {
+    title: 'Điều khoản sử dụng',
+    content: <>
+      <p>Nội dung dưới đây giới thiệu phạm vi sử dụng phiên bản mô phỏng của Roomix.</p>
+      <p>Thông tin phòng, giá thuê và các thao tác đặt phòng, thanh toán hoặc quản lý hiện sử dụng dữ liệu mẫu để minh họa chức năng.</p>
+      <p>Đăng nhập và đăng ký hiện mô phỏng luồng giao diện. Các thao tác trên bản mô phỏng chưa tạo giao dịch thuê phòng hay thanh toán thực tế.</p>
+      <p>Điều khoản dành cho dịch vụ chính thức sẽ được cập nhật trước khi triển khai các chức năng giao dịch.</p>
+    </>,
+  },
+};
 
 export default function Footer() {
+  const [policy, setPolicy] = useState<keyof typeof POLICIES | null>(null);
+
   return (
-    <footer className="border-t border-line bg-white">
-      <div className="mx-auto flex max-w-7xl flex-col items-center gap-3 px-6 py-10 text-center sm:flex-row sm:justify-between sm:text-left">
-        <div className="flex items-center gap-2">
-          <Image src="/images/logo.png" alt="Roomix" width={1961} height={680} className="h-5 w-auto" />
-          <p className="text-sm text-muted">Roomix — Nền tảng cho thuê phòng trọ thông minh</p>
+    <footer className="border-t border-line bg-page/50">
+      <div className="w-full px-4 py-6 sm:px-6 lg:px-12">
+        <div className="flex flex-col items-center justify-start gap-3 pb-5 sm:flex-row">
+          <Link href="/" aria-label="Roomix — Trang chủ" className="rounded focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary">
+            <Image src="/images/logo.png" alt="Roomix" width={1970} height={680} className="h-7 w-auto" />
+          </Link>
+          <p className="text-center text-sm text-muted">Nền tảng thuê phòng trọ thông minh</p>
         </div>
-        <nav className="flex gap-5 text-[13px] text-muted">
-          <Link href="/" className="hover:text-ink">Tìm phòng</Link>
-          <Link href="/favorites" className="hover:text-ink">Phòng yêu thích</Link>
-          <Link href="/landlord" className="hover:text-ink">Dành cho chủ trọ</Link>
-        </nav>
+        <div className="flex flex-col items-center justify-between gap-4 pt-5 text-sm lg:flex-row">
+          <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-2 text-ink">
+            <span>© {new Date().getFullYear()} Roomix</span>
+            <span aria-hidden="true" className="text-muted">·</span>
+            <button type="button" onClick={() => setPolicy('privacy')} className="rounded hover:text-primary hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary">Quyền riêng tư</button>
+            <span aria-hidden="true" className="text-muted">·</span>
+            <button type="button" onClick={() => setPolicy('terms')} className="rounded hover:text-primary hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary">Điều khoản</button>
+          </div>
+          <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-3">
+            <div className="flex items-center gap-1" role="group" aria-label="Mạng xã hội Roomix">
+              {SOCIALS.map(({ name, href, icon }) => {
+                const className = 'inline-flex h-9 w-9 items-center justify-center rounded-full text-ink transition hover:bg-primary-soft hover:text-primary focus-visible:outline-2 focus-visible:outline-primary';
+                const svg = <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">{icon}</svg>;
+                return href ? (
+                  <a key={name} href={href} target="_blank" rel="noopener noreferrer" aria-label={`${name} của Roomix (mở tab mới)`} className={className}>{svg}</a>
+                ) : (
+                  <span key={name} aria-label={`${name}: sắp cập nhật`} title={`${name} của Roomix — Sắp cập nhật`} className="inline-flex h-9 w-9 items-center justify-center text-muted">{svg}</span>
+                );
+              })}
+            </div>
+          </div>
+        </div>
       </div>
+      <Modal open={policy !== null} onClose={() => setPolicy(null)} title={policy ? POLICIES[policy].title : undefined}>
+        {policy && <div className="space-y-4 text-sm leading-7 text-muted">{POLICIES[policy].content}</div>}
+      </Modal>
     </footer>
   );
 }
