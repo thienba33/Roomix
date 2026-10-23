@@ -24,7 +24,7 @@ const PLAIN_DURATION_MS = 3500;
 const ACTION_DURATION_MS = 6000;
 
 let seq = 0;
-export function ToastProvider({ children }: { children: ReactNode }) {
+export function ToastProvider({ children, bottomOffset = 20 }: { children: ReactNode; bottomOffset?: number }) {
   const [toasts, setToasts] = useState<ToastItem[]>([]);
   const timers = useRef(new Map<number, ReturnType<typeof setTimeout>>());
 
@@ -53,7 +53,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   return (
     <ToastCtx.Provider value={{ push }}>
       {children}
-      <div className="pointer-events-none fixed bottom-5 right-5 z-[100] flex w-[320px] flex-col gap-2">
+      <div style={{ bottom: `calc(${bottomOffset}px + env(safe-area-inset-bottom, 0px))` }} className="pointer-events-none fixed right-5 z-[100] flex w-[320px] flex-col gap-2">
         {toasts.map((t) => (
           <div key={t.id} className="pointer-events-auto rounded-[20px] border border-line bg-white p-4 shadow-xl">
             <p className="flex items-center gap-2 text-sm font-semibold text-ink">

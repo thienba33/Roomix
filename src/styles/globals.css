@@ -51,9 +51,8 @@ body {
 /* Keep empty columns so filtering never stretches the remaining cards. */
 .room-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr)); align-items: start; }
 .ai-panel { position: fixed; inset: 0; z-index: 70; height: 100dvh; animation: ai-enter 180ms ease-out; }
-.ai-composer { padding-bottom: env(safe-area-inset-bottom, 0px); }
+.ai-composer { padding-bottom: max(12px, env(safe-area-inset-bottom, 0px)); }
 @media (min-width: 1280px) {
-  .ai-is-open .tenant-content { margin-right: 400px; }
   .ai-panel { inset: 64px 0 0 auto; width: 400px; height: calc(100dvh - 64px); border-left: 1px solid var(--color-line); z-index: 40; }
 }
 @container tenant (max-width: 959px) {
