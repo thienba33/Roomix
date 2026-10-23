@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Plus_Jakarta_Sans } from 'next/font/google';
 import '@/styles/globals.css';
+import AuthProvider from '@/components/auth/AuthProvider';
 import AiProvider from '@/components/layouts/AiProvider';
 
 const jakarta = Plus_Jakarta_Sans({
@@ -10,7 +11,7 @@ const jakarta = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: 'Roomix — Cho thuê phòng trọ thông minh',
+  title: 'Roomix',
   description: 'Roomix — Nền tảng cho thuê phòng trọ thông minh: tìm phòng, quản lý nhà trọ, hóa đơn và chatbot AI.',
   icons: { icon: '/images/logo-mark.png' },
 };
@@ -18,7 +19,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="vi" data-scroll-behavior="smooth" className={`${jakarta.variable} h-full antialiased`}>
-      <body className="flex min-h-full flex-col bg-white font-sans text-ink"><AiProvider>{children}</AiProvider></body>
+      <body className="flex min-h-full flex-col bg-white font-sans text-ink"><AiProvider><AuthProvider>{children}</AuthProvider></AiProvider></body>
     </html>
   );
 }

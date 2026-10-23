@@ -42,7 +42,7 @@ const nextConfig = {
       { source: '/chu-tro/thong-ke', destination: '/landlord/statistics', permanent: false },
       { source: '/chu-tro/thong-bao', destination: '/landlord/notifications', permanent: false },
       { source: '/chu-tro/ho-so', destination: '/landlord/profile', permanent: false },
-      { source: '/chu-tro/dang-nhap', destination: '/landlord/login', permanent: false },
+      { source: '/chu-tro/dang-nhap', destination: '/login?role=landlord', permanent: false },
       // Admin
       { source: '/admin/dang-nhap', destination: '/admin/login', permanent: false },
       { source: '/admin/kiem-duyet', destination: '/admin/moderation', permanent: false },
