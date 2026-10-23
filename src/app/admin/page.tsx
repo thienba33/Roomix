@@ -1,14 +1,13 @@
 'use client';
 
 import Link from 'next/link';
+import { useCatalog } from '@/hooks/useCatalog';
 import Card from '@/components/ui/Card';
 import { LineChart } from '@/components/ui/Charts';
 import { adminStats, userGrowth, postDonut, adminLandlords } from '@/lib/data';
 import {
-  pendingModerationCount,
   useAdminReports,
   useAdminUsers,
-  useModerationDecisions,
 } from '@/lib/admin-store';
 import { cn } from '@/lib/utils';
 
@@ -70,11 +69,11 @@ function PostDonut() {
 // most urgent items (reports, then moderation) are visually prioritised.
 export default function AdminDashboardPage() {
   const maxBar = Math.max(...userGrowth.map((d) => d.value), 1);
-  const [decisions] = useModerationDecisions();
+  const { items } = useCatalog();
   const [reports] = useAdminReports();
   const [users] = useAdminUsers();
 
-  const pendingPosts = pendingModerationCount(decisions);
+  const pendingPosts = items.filter((r) => r.postStatus === 'PENDING').length;
   const pendingReports = reports.filter((r) => r.status === 'PENDING').length;
   const pendingVerifications = users.filter((u) => u.status === 'PENDING_VERIFICATION').length;
 

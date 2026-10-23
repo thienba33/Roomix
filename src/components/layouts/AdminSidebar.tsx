@@ -4,8 +4,9 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/components/auth/AuthProvider';
 import MobileNavigation from './MobileNavigation';
-import { pendingModerationCount, useModerationDecisions } from '@/lib/admin-store';
+import { useCatalog } from '@/hooks/useCatalog';
 
 function I({ children }: { children: ReactNode }) {
   return (
@@ -39,9 +40,10 @@ const GROUPS: { title: string; items: { label: string; href: string; icon: () =>
 const ALL_ITEMS = GROUPS.flatMap((g) => g.items);
 
 export default function AdminSidebar() {
+  const { logout } = useAuth();
   const pathname = usePathname();
-  const [decisions] = useModerationDecisions();
-  const pendingCount = pendingModerationCount(decisions);
+  const { items } = useCatalog();
+  const pendingCount = items.filter((r) => r.postStatus === 'PENDING').length;
   const isActive = (href: string) => (href === '/admin' ? pathname === '/admin' : pathname.startsWith(href));
 
   return (
@@ -50,7 +52,7 @@ export default function AdminSidebar() {
         <div className="flex h-16 items-center justify-between gap-3 px-4">
           <Link href="/admin" aria-label="Roomix"><Image src="/images/logo.png" alt="Roomix" width={1961} height={680} className="h-6 w-auto" priority /></Link>
           <p className="min-w-0 flex-1 truncate text-right text-sm font-semibold">{ALL_ITEMS.find((item) => isActive(item.href))?.label}</p>
-          <MobileNavigation title="Quản trị" groups={[...GROUPS.map((g) => ({ title: g.title, items: g.items.map((t) => ({ label: t.label, href: t.href, count: t.badge ? pendingCount : 0 })) })), { title: 'Tài khoản', items: [{ label: 'Đăng xuất', href: '/admin/login' }] }]} />
+          <MobileNavigation title="Quản trị" groups={[...GROUPS.map((g) => ({ title: g.title, items: g.items.map((t) => ({ label: t.label, href: t.href, count: t.badge ? pendingCount : 0 })) })), { title: 'Tài khoản', items: [{ label: 'Đăng xuất', href: '/admin/login', onClick: logout }] }]} />
         </div>
       </div>
 
@@ -85,7 +87,7 @@ export default function AdminSidebar() {
                 <span className="block text-xs text-muted">Quản trị viên</span>
               </span>
             </div>
-            <Link href="/admin/login" aria-label="Đăng xuất" title="Đăng xuất" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-[#484848] transition hover:bg-page hover:text-ink"><IconLogout /></Link>
+            <Link href="/admin/login" onClick={logout} aria-label="Đăng xuất" title="Đăng xuất" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-[#484848] transition hover:bg-page hover:text-ink"><IconLogout /></Link>
           </div>
         </div>
       </aside>
