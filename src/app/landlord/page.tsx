@@ -1,85 +1,31 @@
 'use client';
 import Link from 'next/link';
-import { activities, revenueBar, revenueLine, stats, posts as seedPosts } from '@/lib/data';
-import { useRequestsState, useInvoicesState, usePostsState, isOverdue } from '@/lib/landlord-store';
+import { useRental } from '@/hooks/useRental';
+import { useCatalog } from '@/hooks/useCatalog';
+import { useAuth } from '@/components/auth/AuthProvider';
+import { landlordOverview } from '@/lib/landlord-overview';
 import Card from '@/components/ui/Card';
-import { BarChart, LineChart } from '@/components/ui/Charts';
 
-function OccupancyDonut() {
-  const pct = stats.occupancy;
-  const r = 70;
-  const c = 2 * Math.PI * r;
-  return (
-    <div className="flex flex-col items-center">
-      <div className="relative h-[170px] w-[170px]">
-        <svg viewBox="0 0 180 180" className="h-full w-full -rotate-90">
-          <circle cx="90" cy="90" r={r} fill="none" stroke="#E5E7EB" strokeWidth="22" />
-          <circle cx="90" cy="90" r={r} fill="none" stroke="#4F46E5" strokeWidth="22" strokeDasharray={`${(pct / 100) * c} ${c}`} />
-        </svg>
-        <div className="absolute inset-0 flex items-center justify-center"><span className="text-[32px] font-extrabold text-ink">{pct}%</span></div>
-      </div>
-      <p className="mt-3 text-[13px] text-muted">{stats.rented} / {stats.totalRooms} phòng đang thuê</p>
-    </div>
-  );
-}
-
-const KPIS = [
-  { label: 'TỔNG PHÒNG', value: String(stats.totalRooms), sub: '+2 phòng mới' },
-  { label: 'ĐANG THUÊ', value: String(stats.rented), sub: `Lấp đầy ${stats.occupancy}%` },
-  { label: 'CÒN TRỐNG', value: String(stats.empty), sub: 'Sẵn sàng đăng bài' },
-  { label: 'DOANH THU THÁNG', value: '84,5 tr', sub: '+12% tháng trước' },
-];
-
-const toneText: Record<string, string> = { green: 'text-green-700', red: 'text-red-600', amber: 'text-amber-700', indigo: 'text-primary' };
-
-export default function ChuTroHomePage() {
-  const [reqs] = useRequestsState();
-  const [invs] = useInvoicesState();
-  const [posts] = usePostsState();
-  const pendingReq = reqs.filter((r) => r.status === 'PENDING').length;
-  const overdueInv = invs.filter((i) => isOverdue(i)).length;
-  const draftPosts = posts.filter((p) => p.status === 'DRAFT').length;
-  const seedDraft = seedPosts.filter((p) => p.status === 'DRAFT').length;
-  const TODO_ITEMS = [
-    { dot: 'bg-amber-600', text: `${pendingReq} yêu cầu quan tâm mới`, href: '/landlord/requests' },
-    { dot: 'bg-red-600', text: `${overdueInv} hóa đơn quá hạn`, href: '/landlord/invoices' },
-    { dot: 'bg-primary', text: `${draftPosts || seedDraft} bài đăng chờ gửi duyệt`, href: '/landlord/listings' },
-    { dot: 'bg-green-600', text: 'Ghi chỉ số điện tháng 10', href: '/landlord/invoices' },
+const labels = { PENDING: 'Chờ xử lý', ACCEPTED: 'Đã chấp nhận', REJECTED: 'Đã từ chối', CANCELLED: 'Đã hủy' };
+export default function LandlordHomePage() {
+  const rental = useRental();
+  const catalog = useCatalog();
+  const { user } = useAuth();
+  if (!rental.ready || !catalog.ready) return <p className="py-8 text-muted">Đang tải tổng quan…</p>;
+  if (!user || user.role !== 'LANDLORD') return null;
+  if (rental.error || catalog.error) return <p role="alert" className="py-8 text-red-600">{rental.error || catalog.error}</p>;
+  const summary = landlordOverview(user.id, catalog.items, rental);
+  const tasks = [
+    { count: summary.pendingRequests, text: 'yêu cầu chờ xử lý', href: '/landlord/requests' },
+    { count: summary.pendingDeposits, text: 'hợp đồng chờ cọc', href: '/landlord/tenants' },
+    { count: summary.drafts, text: 'bài nháp', href: '/landlord/listings' },
+    { count: summary.rejected, text: 'bài cần chỉnh sửa', href: '/landlord/listings' },
   ];
-  return (
-    <div className="space-y-6">
-      <div><h1 className="text-[28px] font-extrabold text-ink">Xin chào, Nguyễn Văn An</h1><p className="mt-1 text-sm text-muted">Tổng quan · Roomix Lê Văn Lương</p></div>
-      <Card className="px-5 py-5">
-        <h3 className="font-bold text-ink">Cần xử lý</h3>
-        <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {TODO_ITEMS.map((item, i) => (
-            <Link key={item.text} href={item.href} className={`flex items-center gap-2.5 text-sm font-medium text-ink hover:text-primary hover:underline ${i > 0 ? 'lg:border-l lg:border-line/70 lg:pl-5' : ''}`}>
-              <span className={`h-2 w-2 shrink-0 rounded-full ${item.dot}`} />{item.text}<span aria-hidden>→</span>
-            </Link>
-          ))}
-        </div>
-      </Card>
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {KPIS.map((k) => (<Card key={k.label} className="p-5"><p className="text-xs font-semibold uppercase tracking-wide text-muted">{k.label}</p><p className="mt-2 text-[32px] font-extrabold leading-none text-ink">{k.value}</p><p className="mt-2 text-[13px] font-medium text-green-600">{k.sub}</p></Card>))}
-      </div>
-      <div className="grid gap-4 lg:grid-cols-3">
-        <Card className="p-5"><h3 className="font-bold text-ink">Doanh thu 6 tháng</h3><p className="mt-0.5 text-[13px] text-muted">triệu đồng</p><div className="mt-3"><BarChart data={revenueBar} /></div></Card>
-        <Card className="p-5"><h3 className="font-bold text-ink">Xu hướng doanh thu</h3><p className="mt-0.5 text-[13px] text-muted">triệu đồng</p><div className="mt-3"><LineChart data={revenueLine} /></div></Card>
-        <Card className="p-5"><h3 className="font-bold text-ink">Tỷ lệ lấp đầy</h3><div className="mt-4"><OccupancyDonut /></div></Card>
-      </div>
-      <Card className="p-5">
-        <h3 className="font-bold text-ink">Hoạt động gần đây</h3>
-        <div className="mt-2 divide-y divide-line/70">
-          {activities.map((a) => (
-            <div key={a.id} className="flex flex-wrap items-center gap-x-4 gap-y-1 py-5">
-              <span className="w-28 shrink-0 font-semibold text-ink">{a.room}</span>
-              <span className="min-w-40 flex-1 text-sm text-muted">{a.text}</span>
-              <span className="w-28 text-sm text-muted">{a.date}</span>
-              <span className={`w-24 text-right text-sm font-semibold ${toneText[a.tone]}`}>{a.statusLabel}</span>
-            </div>
-          ))}
-        </div>
-      </Card>
-    </div>
-  );
+  return <div className="space-y-6">
+    <div><h1 className="break-words text-2xl font-bold">Xin chào, {user.fullName}</h1><p className="mt-1 text-sm text-muted">Tổng quan phòng và hợp đồng của bạn</p></div>
+    <Card className="p-5"><h2 className="font-bold">Cần xử lý</h2><div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">{tasks.map((task) => <Link key={task.text} href={task.href} className="rounded-xl bg-page p-4 text-sm hover:text-primary"><strong>{task.count}</strong> {task.text} →</Link>)}</div></Card>
+    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">{[['Tổng phòng', summary.total], ['Đang thuê', summary.rented], ['Còn trống, chưa giữ cọc', summary.available], ['Hợp đồng chờ cọc', summary.pendingDeposits]].map(([label, value]) => <Card key={label} className="p-5"><p className="text-sm text-muted">{label}</p><p className="mt-2 text-3xl font-bold">{value}</p></Card>)}</div>
+    <Card className="p-5"><h2 className="font-bold">Tỷ lệ lấp đầy</h2><p className="mt-3 text-sm text-muted">{summary.rented} / {summary.total} phòng đang thuê · {summary.occupancy}%</p><div role="meter" aria-label="Tỷ lệ lấp đầy" aria-valuemin={0} aria-valuemax={100} aria-valuenow={summary.occupancy} className="mt-3 h-3 overflow-hidden rounded-full bg-page"><div className="h-full rounded-full bg-primary transition-all" style={{ width: `${summary.occupancy}%` }} /></div></Card>
+    <Card className="p-5"><div className="flex flex-wrap justify-between gap-2"><h2 className="font-bold">Yêu cầu cập nhật gần đây</h2><Link className="text-sm text-primary" href="/landlord/requests">Xem tất cả</Link></div>{summary.recent.length === 0 ? <p className="mt-4 text-sm text-muted">Chưa có yêu cầu thuê phòng.</p> : <ul className="mt-3 divide-y divide-line">{summary.recent.map((r) => <li key={r.id} className="flex flex-wrap items-center justify-between gap-3 py-4"><div className="min-w-0"><p className="break-words font-medium">{r.title}</p><p className="mt-1 text-xs text-muted">{new Date(r.updatedAt).toLocaleString('vi-VN', { timeZone: 'Asia/Bangkok' })}</p></div><span className="text-sm text-primary">{labels[r.status]}</span></li>)}</ul>}</Card>
+  </div>;
 }

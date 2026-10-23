@@ -5,7 +5,7 @@ import { createPortal } from 'react-dom';
 import { usePathname } from 'next/navigation';
 import { useDialogFocus } from '@/hooks/useDialogFocus';
 
-interface Item { label: string; href: string; count?: number; }
+interface Item { label: string; href: string; count?: number; onClick?: () => void; }
 export default function MobileNavigation({ title, groups }: { title: string; groups: { title: string; items: Item[]; }[]; }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
@@ -28,7 +28,7 @@ export default function MobileNavigation({ title, groups }: { title: string; gro
         {groups.map((group) => <div key={group.title} className="mb-6">
           <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted">{group.title}</p>{group.items.map((item) => {
             const active = pathname === item.href || (item.href.split('/').length > 2 && pathname.startsWith(item.href));
-            return <Link key={item.href} href={item.href} onClick={close} aria-current={active ? 'page' : undefined} className={`mb-1 flex items-center justify-between rounded-xl px-3 py-3 text-sm ${active ? 'bg-primary-soft font-semibold text-primary' : 'text-secondary hover:bg-page'}`}>{item.label}{!!item.count && <span className="rounded-full bg-primary-soft px-2 py-0.5 text-xs text-primary">{item.count}</span>}</Link>;
+            return <Link key={item.href} href={item.href} onClick={() => { close(); item.onClick?.(); }} aria-current={active ? 'page' : undefined} className={`mb-1 flex items-center justify-between rounded-xl px-3 py-3 text-sm ${active ? 'bg-primary-soft font-semibold text-primary' : 'text-secondary hover:bg-page'}`}>{item.label}{!!item.count && <span className="rounded-full bg-primary-soft px-2 py-0.5 text-xs text-primary">{item.count}</span>}</Link>;
           })}</div>)}
       </div>
     </div>, document.body)}

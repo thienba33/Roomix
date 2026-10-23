@@ -4,9 +4,11 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/components/auth/AuthProvider';
+import { useRental } from '@/hooks/useRental';
 import MobileNavigation from './MobileNavigation';
-import { landlord, house } from '@/lib/data';
-import { pendingRequestCountFromStorage, unreadCountFromStorage } from '@/lib/landlord-store';
+import { profileInitials } from '@/lib/tenant-store';
+import { unreadCountFromStorage } from '@/lib/landlord-store';
 
 function I({ d, children }: { d?: string; children?: ReactNode }) {
   return (
@@ -34,7 +36,7 @@ const GROUPS: { title: string; items: { label: string; href: string; icon: () =>
       { label: 'Nhà & Phòng', href: '/landlord/rooms', icon: IconBuilding },
       { label: 'Bài đăng', href: '/landlord/listings', icon: IconFile },
       { label: 'Yêu cầu', href: '/landlord/requests', icon: IconInbox, badge: 'requests' },
-      { label: 'Khách thuê', href: '/landlord/tenants', icon: IconUsers },
+      { label: 'Hợp đồng', href: '/landlord/tenants', icon: IconUsers },
       { label: 'Hóa đơn', href: '/landlord/invoices', icon: IconReceipt },
       { label: 'Thống kê', href: '/landlord/statistics', icon: IconChart },
     ],
@@ -51,9 +53,11 @@ const ALL_ITEMS = GROUPS.flatMap((g) => g.items);
 
 export default function HostSidebar() {
   const pathname = usePathname();
-  const [pendingCount, setPendingCount] = useState(0);
+  const { logout, user } = useAuth();
+  const { requests } = useRental();
+  const pendingCount = requests.filter((r) => r.status === 'PENDING').length;
   const [unreadCount, setUnreadCount] = useState(0);
-  useEffect(() => { const refresh = () => { try { setPendingCount(pendingRequestCountFromStorage()); setUnreadCount(unreadCountFromStorage()); } catch {} }; refresh(); const id = setInterval(refresh, 1500); window.addEventListener('storage', refresh); window.addEventListener('focus', refresh); return () => { clearInterval(id); window.removeEventListener('storage', refresh); window.removeEventListener('focus', refresh); }; }, [pathname]);
+  useEffect(() => { const refresh = () => { try { setUnreadCount(unreadCountFromStorage()); } catch {} }; refresh(); const id = setInterval(refresh, 1500); window.addEventListener('storage', refresh); window.addEventListener('focus', refresh); return () => { clearInterval(id); window.removeEventListener('storage', refresh); window.removeEventListener('focus', refresh); }; }, [pathname]);
   const badgeFor = (kind?: 'requests' | 'notifications') => (kind === 'requests' ? pendingCount : kind === 'notifications' ? unreadCount : 0);
   const isActive = (href: string) => (href === '/landlord' ? pathname === '/landlord' : pathname.startsWith(href));
 
@@ -63,7 +67,7 @@ export default function HostSidebar() {
         <div className="flex h-16 items-center justify-between gap-3 px-4">
           <Link href="/landlord" aria-label="Roomix"><Image src="/images/logo.png" alt="Roomix" width={1961} height={680} className="h-6 w-auto" priority /></Link>
           <p className="min-w-0 flex-1 truncate text-right text-sm font-semibold">{ALL_ITEMS.find((item) => isActive(item.href))?.label}</p>
-          <MobileNavigation title="Chủ trọ" groups={[...GROUPS.map((g) => ({ title: g.title, items: g.items.map((t) => ({ label: t.label, href: t.href, count: badgeFor(t.badge) })) })), { title: 'Tài khoản', items: [{ label: 'Đăng xuất', href: '/landlord/login' }] }]} />
+          <MobileNavigation title="Chủ trọ" groups={[...GROUPS.map((g) => ({ title: g.title, items: g.items.map((t) => ({ label: t.label, href: t.href, count: badgeFor(t.badge) })) })), { title: 'Tài khoản', items: [{ label: 'Đăng xuất', href: '/login', onClick: logout }] }]} />
         </div>
       </div>
 
@@ -71,7 +75,7 @@ export default function HostSidebar() {
       <aside className="sticky top-0 hidden h-screen w-[264px] shrink-0 flex-col border-r border-line bg-white lg:flex">
         <div className="border-b border-line px-5 pb-4 pt-5">
           <Link href="/landlord" aria-label="Roomix" className="inline-flex"><Image src="/images/logo.png" alt="Roomix" width={1961} height={680} className="h-7 w-auto" priority /></Link>
-          <p className="mt-2 text-xs text-muted">{house.name}</p>
+          <p className="mt-2 text-xs text-muted">Quản lý phòng cho thuê</p>
         </div>
         <nav className="flex-1 space-y-7 overflow-y-auto px-3 py-5" aria-label="Điều hướng chủ trọ">
           {GROUPS.map((g) => (
@@ -95,13 +99,13 @@ export default function HostSidebar() {
         <div className="border-t border-line p-3">
           <div className="flex items-center gap-1">
             <Link href="/landlord/profile" className="flex min-w-0 flex-1 items-center gap-3 rounded-lg px-2 py-1.5 transition hover:bg-page">
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary-soft text-[13px] font-bold text-primary">{landlord.initials}</span>
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary-soft text-[13px] font-bold text-primary">{profileInitials(user?.fullName ?? '')}</span>
               <span className="min-w-0">
-                <span className="block truncate text-sm font-semibold text-ink">{landlord.name}</span>
+                <span className="block truncate text-sm font-semibold text-ink">{user?.fullName ?? ''}</span>
                 <span className="block text-xs text-muted">Chủ trọ</span>
               </span>
             </Link>
-            <Link href="/landlord/login" aria-label="Đăng xuất" title="Đăng xuất" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-[#484848] transition hover:bg-page hover:text-ink"><IconLogout /></Link>
+            <Link href="/login" onClick={logout} aria-label="Đăng xuất" title="Đăng xuất" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-[#484848] transition hover:bg-page hover:text-ink"><IconLogout /></Link>
           </div>
         </div>
       </aside>
