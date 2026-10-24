@@ -1,16 +1,17 @@
 'use client';
 import Link from 'next/link';
 import Image from 'next/image';
+import Button from '@/components/ui/Button';
 import TenantShell from '@/components/layouts/TenantShell';
 import { useCatalog } from '@/hooks/useCatalog';
 import { formatVND } from '@/lib/utils';
 import RoomDetailActions from './RoomDetailActions';
 
 export default function RoomDetailContent({ id }: { id: string }) {
-  const { items, ready, error } = useCatalog();
+  const { items, ready, error, retry } = useCatalog();
   if (!ready) return <TenantShell><p role="status" className="p-8">Đang tải thông tin phòng…</p></TenantShell>;
   const room = items.find((r) => r.detail.roomId === id && r.postStatus === 'APPROVED')?.detail;
-  if (error || !room) return <TenantShell><div className="p-10 text-center"><h1 className="text-2xl font-bold">{error || 'Tin đăng không còn khả dụng'}</h1><Link href="/" className="mt-5 inline-block text-primary">Về trang tìm phòng</Link></div></TenantShell>;
+  if (error || !room) return <TenantShell><div className="p-10 text-center"><h1 className="text-2xl font-bold">{error || 'Tin đăng không còn khả dụng'}</h1>{error && <Button onClick={retry} variant="outline" className="mx-auto mt-5">Thử lại</Button>}<Link href="/" className="mt-5 inline-block text-primary">Về trang tìm phòng</Link></div></TenantShell>;
   return <TenantShell><div className="mx-auto max-w-[1180px] px-4 py-6 sm:px-6">
     <Link href="/" className="text-sm font-semibold text-primary">← Quay lại tìm phòng</Link>
     <h1 className="mt-4 text-[28px] font-extrabold text-ink">{room.title}</h1>

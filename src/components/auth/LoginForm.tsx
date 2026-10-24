@@ -15,7 +15,7 @@ const LockIcon = (
   <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="4" y="11" width="16" height="10" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" /></svg>
 );
 
-export default function LoginForm({ initialRole, onSuccess, onRegister, showDemoAccounts = true }: { initialRole: 'tenant' | 'landlord'; onSuccess: (response: AuthResponse) => void; onRegister?: (role: 'tenant' | 'landlord') => void; showDemoAccounts?: boolean }) {
+export default function LoginForm({ initialRole, onSuccess, onRegister }: { initialRole: 'tenant' | 'landlord'; onSuccess: (response: AuthResponse) => void; onRegister?: (role: 'tenant' | 'landlord') => void }) {
   const [busy, setBusy] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -116,10 +116,7 @@ export default function LoginForm({ initialRole, onSuccess, onRegister, showDemo
         <p role="alert" className="min-h-10 text-sm text-red-600">{submitError}</p>
         <Button type="submit" disabled={busy} size="lg" className="h-[44px] w-full">{busy ? 'Đang đăng nhập…' : 'Đăng nhập'}</Button>
       </form>
-      {showDemoAccounts && <details className="mt-3 rounded-xl bg-page p-3 text-xs text-muted">
-        <summary className="cursor-pointer font-semibold">Tài khoản trải nghiệm</summary>
-        <p className="mt-2 leading-6">Khách thuê: tenant_demo · Chủ trọ: landlord_demo<br />Chờ duyệt: pending_demo · Bị khóa: locked_demo<br />Mật khẩu chung: Roomix123!</p>
-      </details>}
+
 
       {onRegister && <p className="mt-4 text-center text-sm text-muted">
         Chưa có tài khoản?{' '}

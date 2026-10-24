@@ -29,7 +29,7 @@ const NAV = [
 export default function TenantHeader() {
   const pathname = usePathname();
   const { signedIn, user, openAuth, logout } = useAuth();
-  const navigation = NAV.filter((item) => !['/requests', '/contracts'].includes(item.href) || signedIn);
+  const navigation = signedIn ? NAV : [];
   const { update, reset } = useAi();
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const notificationTriggerRef = useRef<HTMLButtonElement>(null);
@@ -87,7 +87,7 @@ export default function TenantHeader() {
             <Image src="/images/logo.png" alt="Roomix" width={1961} height={680} className="h-9 w-auto" priority />
           </Link>
 
-          <div className="md:hidden"><MobileNavigation title="Khách thuê" groups={[{ title: 'Khám phá', items: navigation }]} /></div>
+          <div className="md:hidden">{signedIn && <MobileNavigation title="Khách thuê" groups={[{ title: 'Khám phá', items: navigation }]} />}</div>
           <nav className="hidden items-center gap-7 md:flex">
             {navigation.map((n) => {
               const active = n.href === '/' ? pathname === '/' : pathname.startsWith(n.href);
@@ -101,7 +101,7 @@ export default function TenantHeader() {
 
           <div className="ml-auto flex items-center gap-4">
             <AiLauncher />
-            <button
+            {signedIn && <button
               ref={notificationTriggerRef}
               type="button"
               onClick={() => {
@@ -124,13 +124,13 @@ export default function TenantHeader() {
                   {unread > 99 ? '99+' : unread}
                 </span>
               )}
-            </button>
+            </button>}
 
 
             {!signedIn ? (
-              <button type="button" onClick={() => { closeNotifications(); update({ open: false }); openAuth(); }} className="rounded-full bg-primary px-4 py-2.5 text-sm font-semibold text-white transition hover:opacity-90" aria-haspopup="dialog">
+              <div className="flex items-center gap-2"><button type="button" onClick={() => { closeNotifications(); update({ open: false }); openAuth('register'); }} className="hidden px-3 py-2 text-sm font-semibold text-primary sm:block">Đăng ký</button><button type="button" onClick={() => { closeNotifications(); update({ open: false }); openAuth(); }} className="rounded-full bg-primary px-4 py-2.5 text-sm font-semibold text-white transition hover:opacity-90" aria-haspopup="dialog">
                 Đăng nhập
-              </button>
+              </button></div>
             ) : <div className="relative" ref={menuRef}>
               <button
                 onClick={() => { closeNotifications(); setMenuOpen((o) => !o); }}
@@ -177,7 +177,7 @@ export default function TenantHeader() {
           </div>
         </div>
       </header>
-      {notificationsOpen && <NotificationPopover triggerRef={notificationTriggerRef} onClose={closeNotifications} />}
+      {signedIn && notificationsOpen && <NotificationPopover triggerRef={notificationTriggerRef} onClose={closeNotifications} />}
     </>
   );
 }

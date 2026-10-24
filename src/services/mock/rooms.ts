@@ -22,7 +22,7 @@ export { AUTH_EVENT };
 export const roomUuid = (id: number) => `20000000-0000-4000-8000-${String(id).padStart(12, '0')}`;
 const postUuid = (id: number) => `30000000-0000-4000-8000-${String(id).padStart(12, '0')}`;
 const houses = [...new Set(rooms.map((room) => room.house))];
-export const roomFixtures = rooms.map((room) => {
+const baseRoomFixtures = rooms.map((room) => {
   const post = posts.find((p) => p.roomId === room.id);
   const detail: RoomDetail = {
     roomId: roomUuid(room.id), postId: postUuid(post?.id ?? room.id), title: post?.title ?? room.name,
@@ -41,6 +41,36 @@ export const roomFixtures = rooms.map((room) => {
   };
   return { legacyId: room.id, postStatus: post?.status ?? 'DRAFT', roomStatus: room.status, detail };
 });
+// Additional public fixtures share existing property/image assets and use stable, unique IDs.
+const publicTemplates = baseRoomFixtures.filter((room) => room.postStatus === 'APPROVED' && room.roomStatus === 'AVAILABLE' && !room.detail.rented);
+const additionalRoomFixtures = Array.from({ length: 45 }, (_, index) => {
+  const template = publicTemplates[index % publicTemplates.length];
+  const number = String(501 + index);
+  const price = 2200000 + (index % 17) * 200000;
+  const area = 20 + (index % 11) * 2;
+  return {
+    ...template,
+    legacyId: 1001 + index,
+    postStatus: 'APPROVED' as const,
+    roomStatus: 'AVAILABLE' as const,
+    detail: {
+      ...template.detail,
+      roomId: roomUuid(1001 + index),
+      postId: postUuid(1001 + index),
+      roomNumber: number,
+      title: `Phòng ${number} — ${template.detail.district}`,
+      rentalPrice: price,
+      depositAmount: price,
+      area,
+      maxTenants: area >= 32 ? 3 : 2,
+      description: `Phòng ${number} tại ${template.detail.houseName}, diện tích ${area} m². Không gian thoáng, thuận tiện sinh hoạt. Tiện ích: ${template.detail.amenitiesDescription}.`,
+      createdAt: new Date(Date.UTC(2026, 9, 22, 12, 0) - index * 3600000).toISOString(),
+      rented: false,
+      available: true,
+    },
+  };
+});
+export const roomFixtures = [...baseRoomFixtures, ...additionalRoomFixtures];
 function summary(detail: RoomDetail): RoomSummary {
   const { postId, roomId, title, rentalPrice, area, maxTenants, addressStreet, ward, district, city, hasPrivateBathroom, hasAirConditioner, hasWaterHeater, hasBalcony, amenitiesDescription, primaryImageUrl, rented, available, createdAt } = detail;
   return { postId, roomId, title, rentalPrice, area, maxTenants, addressStreet, ward, district, city, hasPrivateBathroom, hasAirConditioner, hasWaterHeater, hasBalcony, amenitiesDescription, primaryImageUrl, rented, available, createdAt };
@@ -69,38 +99,15 @@ export function searchRooms(query: RoomSearch = {}): PageResponse<RoomSummary> {
 export function getRoomDetail(id: string): RoomDetail | null {
   return catalogWithRental().find((r) => r.detail.roomId === id && r.postStatus === 'APPROVED')?.detail ?? null;
 }
-export const GUEST_FAVORITES_KEY = 'roomix_guest_favorites_v1';
 function tenantKey() {
   const session = readMockSession();
-  if (!session) return GUEST_FAVORITES_KEY;
-  if (session.user.role !== 'TENANT') throw new Error('Vui lòng đăng nhập bằng tài khoản khách thuê.');
+  if (!session || session.user.role !== 'TENANT') throw new Error('Vui lòng đăng nhập bằng tài khoản khách thuê.');
   return `roomix_mock_favorites_v1:${session.user.id}`;
 }
 type Saved = { favoriteId: string; postId: string; createdAt: string };
 function read(key: string): Saved[] {
   try { const values = JSON.parse(localStorage.getItem(key) || '[]'); if (!Array.isArray(values)) throw new Error(); return values; }
   catch { throw new Error('Không thể đọc danh sách yêu thích đã lưu.'); }
-}
-// Merge only into the currently authenticated tenant. Write before clearing the guest list.
-export function mergeGuestFavorites() {
-  const session = readMockSession();
-  if (session?.user.role !== 'TENANT') return;
-  const guest = read(GUEST_FAVORITES_KEY);
-  if (!guest.length) return;
-  const key = tenantKey();
-  const existing = read(key);
-  const ids = new Set(existing.map((entry) => entry.postId));
-  const approved = new Set(readCatalog().filter((r) => r.postStatus === 'APPROVED').map((r) => r.detail.postId));
-  const merged = [...existing];
-  for (const entry of guest) {
-    if (approved.has(entry.postId) && !ids.has(entry.postId)) {
-      merged.push(entry);
-      ids.add(entry.postId);
-    }
-  }
-  localStorage.setItem(key, JSON.stringify(merged));
-  localStorage.removeItem(GUEST_FAVORITES_KEY);
-  window.dispatchEvent(new Event(FAVORITES_EVENT));
 }
 export function listFavorites(): FavoriteResponse[] {
   return read(tenantKey()).flatMap((saved) => {
@@ -137,7 +144,8 @@ export function readCatalog(): CatalogRoom[] {
   if (!raw) return roomFixtures.map((r) => ({ ...r, landlordId: LANDLORD_ID }));
   const parsed = JSON.parse(raw);
   if (!Array.isArray(parsed)) throw new Error('Không thể đọc dữ liệu phòng.');
-  return parsed;
+  const existing = new Set(parsed.map((room: CatalogRoom) => room.detail.roomId));
+  return [...parsed, ...additionalRoomFixtures.filter((room) => !existing.has(room.detail.roomId)).map((room) => ({ ...room, landlordId: LANDLORD_ID }))];
 }
 function writeCatalog(list: CatalogRoom[]) {
   try { localStorage.setItem(CATALOG_KEY, JSON.stringify(list)); }

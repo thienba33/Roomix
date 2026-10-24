@@ -52,9 +52,7 @@ export async function mockLogin(username: string, password: string): Promise<Aut
   const hash = await digest(password);
   const stored = accounts().find((a) => a.user.username.toLowerCase() === name);
   const user = seed && password === 'Roomix123!' ? seed : stored?.digest === hash ? stored.user : null;
-  if (!user) throw new Error('Tên đăng nhập hoặc mật khẩu không đúng.');
-  if (user.status === 'LOCKED') throw new Error('Tài khoản đã bị khóa. Vui lòng liên hệ quản trị viên.');
-  if (user.status === 'PENDING_VERIFICATION') throw new Error('Tài khoản chủ trọ đang chờ quản trị viên phê duyệt.');
+  if (!user || user.status !== 'ACTIVE') throw new Error('Không thể đăng nhập. Vui lòng kiểm tra thông tin hoặc liên hệ quản trị viên nếu tài khoản chưa được kích hoạt hay đã bị khóa.');
   return response(user);
 }
 export async function mockRegister(request: RegisterRequest): Promise<AuthResponse> {

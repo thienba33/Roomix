@@ -28,19 +28,17 @@ const POLICIES = {
   privacy: {
     title: 'Quyền riêng tư',
     content: <>
-      <p>Roomix hiện là phiên bản mô phỏng phục vụ trải nghiệm tìm và quản lý phòng trọ.</p>
-      <p>Một số thông tin và tùy chọn được lưu trong trình duyệt bằng localStorage để duy trì trải nghiệm khi tải lại trang, như hồ sơ, phòng yêu thích và cài đặt thông báo.</p>
+      <p>Roomix giúp bạn tìm phòng và quản lý thông tin thuê trọ.</p>
+      <p>Thông tin tài khoản, phòng yêu thích và tùy chọn hiển thị hiện được lưu trên trình duyệt để bạn tiếp tục sử dụng khi tải lại trang.</p>
       <p>Bạn có thể xóa dữ liệu đã lưu trong phần cài đặt dữ liệu trang web của trình duyệt. Việc này sẽ đặt lại các tùy chọn trên thiết bị đó.</p>
-      <p>Thông tin về xử lý dữ liệu của dịch vụ chính thức sẽ được cập nhật khi Roomix kết nối hệ thống backend.</p>
     </>,
   },
   terms: {
     title: 'Điều khoản sử dụng',
     content: <>
-      <p>Nội dung dưới đây giới thiệu phạm vi sử dụng phiên bản mô phỏng của Roomix.</p>
-      <p>Thông tin phòng, giá thuê và các thao tác đặt phòng, thanh toán hoặc quản lý hiện sử dụng dữ liệu mẫu để minh họa chức năng.</p>
-      <p>Đăng nhập và đăng ký hiện mô phỏng luồng giao diện. Các thao tác trên bản mô phỏng chưa tạo giao dịch thuê phòng hay thanh toán thực tế.</p>
-      <p>Điều khoản dành cho dịch vụ chính thức sẽ được cập nhật trước khi triển khai các chức năng giao dịch.</p>
+      <p>Bạn có thể xem và tìm kiếm phòng mà không cần đăng nhập.</p>
+      <p>Lưu phòng yêu thích và gửi yêu cầu thuê cần tài khoản khách thuê.</p>
+      <p>Gửi yêu cầu thuê là bước bày tỏ nhu cầu. Bạn cần chờ chủ trọ phản hồi trước khi tiếp tục thỏa thuận thuê.</p>
     </>,
   },
 };

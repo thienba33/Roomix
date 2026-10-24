@@ -1,0 +1,149 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<mxfile host="app.diagrams.net">
+  <diagram id="MmTDzR3YEtgwsM-U5D1p" name="Guest-Flow">
+    <mxGraphModel dx="1414" dy="793" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="2200" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="rLUdExOyJ9c7-mWMOeYP-1" parent="1" style="ellipse;aspect=fixed;whiteSpace=wrap;html=1;" value="Truy cập Roomix" vertex="1">
+          <mxGeometry x="640" y="30" width="100" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="rLUdExOyJ9c7-mWMOeYP-19" edge="1" parent="1" source="rLUdExOyJ9c7-mWMOeYP-2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;labelBackgroundColor=#ffffff;" target="rLUdExOyJ9c7-mWMOeYP-search" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rLUdExOyJ9c7-mWMOeYP-2" parent="1" style="rounded=1;roundedPerimeter=1;whiteSpace=wrap;html=1;" value="Khách chưa đăng nhập&lt;br&gt;Xem danh sách phòng được công khai" vertex="1">
+          <mxGeometry x="570" y="190" width="240" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="rLUdExOyJ9c7-mWMOeYP-5" edge="1" parent="1" source="rLUdExOyJ9c7-mWMOeYP-1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;labelBackgroundColor=#ffffff;" target="rLUdExOyJ9c7-mWMOeYP-2" value="Khách">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rLUdExOyJ9c7-mWMOeYP-21" edge="1" parent="1" source="rLUdExOyJ9c7-mWMOeYP-18" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;labelBackgroundColor=#ffffff;" target="rLUdExOyJ9c7-mWMOeYP-favorite" value="Yêu thích">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rLUdExOyJ9c7-mWMOeYP-27" edge="1" parent="1" source="rLUdExOyJ9c7-mWMOeYP-18" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;labelBackgroundColor=#ffffff;" target="rLUdExOyJ9c7-mWMOeYP-26" value="Muốn thuê">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rLUdExOyJ9c7-mWMOeYP-18" parent="1" style="rhombus;shapeInside=1;whiteSpace=wrap;html=1;" value="Khách muốn làm gì?" vertex="1">
+          <mxGeometry x="570" y="1440" width="240" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="rLUdExOyJ9c7-mWMOeYP-20" parent="1" style="rounded=1;roundedPerimeter=1;whiteSpace=wrap;html=1;" value="Thông báo cần tài khoản khách thuê&lt;br&gt;Đăng nhập hoặc đăng ký để sử dụng" vertex="1">
+          <mxGeometry x="570" y="1800" width="260" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="rLUdExOyJ9c7-mWMOeYP-29" edge="1" parent="1" source="rLUdExOyJ9c7-mWMOeYP-26" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;labelBackgroundColor=#ffffff;" target="rLUdExOyJ9c7-mWMOeYP-20" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rLUdExOyJ9c7-mWMOeYP-26" parent="1" style="rounded=1;roundedPerimeter=1;whiteSpace=wrap;html=1;" value="Gửi yêu cầu thuê phòng" vertex="1">
+          <mxGeometry x="940" y="1640" width="260" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="rLUdExOyJ9c7-mWMOeYP-search" parent="1" vertex="1" value="Tìm kiếm / lọc phòng theo nhu cầu&lt;br&gt;Khu vực, khoảng giá, diện tích, tiện ích&lt;br&gt;Sắp xếp mới nhất hoặc theo giá" style="rounded=1;roundedPerimeter=1;whiteSpace=wrap;html=1;">
+          <mxGeometry x="570" y="350" width="240" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="rLUdExOyJ9c7-mWMOeYP-results" parent="1" vertex="1" value="Có phòng phù hợp?" style="rhombus;shapeInside=1;whiteSpace=wrap;html=1;">
+          <mxGeometry x="570" y="540" width="240" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="rLUdExOyJ9c7-mWMOeYP-empty" parent="1" vertex="1" value="Thông báo không có phòng phù hợp&lt;br&gt;Cho thay đổi hoặc bỏ bộ lọc" style="rounded=1;roundedPerimeter=1;whiteSpace=wrap;html=1;">
+          <mxGeometry x="100" y="550" width="260" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="rLUdExOyJ9c7-mWMOeYP-list" parent="1" vertex="1" value="Xem kết quả tìm kiếm&lt;br&gt;Chuyển trang để xem thêm phòng" style="rounded=1;roundedPerimeter=1;whiteSpace=wrap;html=1;">
+          <mxGeometry x="570" y="740" width="240" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="rLUdExOyJ9c7-mWMOeYP-select" parent="1" vertex="1" value="Chọn phòng muốn xem" style="rounded=1;roundedPerimeter=1;whiteSpace=wrap;html=1;">
+          <mxGeometry x="570" y="900" width="240" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="rLUdExOyJ9c7-mWMOeYP-public" parent="1" vertex="1" value="Còn xem được&lt;br&gt;thông tin phòng?" style="rhombus;shapeInside=1;whiteSpace=wrap;html=1;">
+          <mxGeometry x="570" y="1050" width="240" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="rLUdExOyJ9c7-mWMOeYP-unavailable" parent="1" vertex="1" value="Phòng không còn được hiển thị&lt;br&gt;Quay lại danh sách chọn phòng khác" style="rounded=1;roundedPerimeter=1;whiteSpace=wrap;html=1;">
+          <mxGeometry x="100" y="1060" width="260" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="rLUdExOyJ9c7-mWMOeYP-detail" parent="1" vertex="1" value="Xem chi tiết phòng&lt;br&gt;Hình ảnh, giá thuê, tiền cọc, địa chỉ,&lt;br&gt;diện tích, tiện ích, tình trạng phòng" style="rounded=1;roundedPerimeter=1;whiteSpace=wrap;html=1;">
+          <mxGeometry x="570" y="1250" width="240" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="rLUdExOyJ9c7-mWMOeYP-favorite" parent="1" vertex="1" value="Lưu phòng yêu thích&lt;br&gt;hoặc mở danh sách yêu thích" style="rounded=1;roundedPerimeter=1;whiteSpace=wrap;html=1;">
+          <mxGeometry x="180" y="1640" width="260" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="rLUdExOyJ9c7-mWMOeYP-continue" parent="1" vertex="1" value="Tiếp tục đăng nhập&lt;br&gt;hoặc đăng ký?" style="rhombus;shapeInside=1;whiteSpace=wrap;html=1;">
+          <mxGeometry x="1040" y="1790" width="250" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="rLUdExOyJ9c7-mWMOeYP-auth" parent="1" vertex="1" value="Chuyển sang luồng Authentication&lt;br&gt;Sau khi đăng nhập / đăng ký thành công&lt;br&gt;bằng tài khoản khách thuê:&lt;br&gt;tiếp tục luồng dành cho khách thuê" style="rounded=1;roundedPerimeter=1;whiteSpace=wrap;html=1;">
+          <mxGeometry x="1040" y="2000" width="300" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="rLUdExOyJ9c7-mWMOeYP-notes" parent="1" vertex="1" value="Lưu ý cho thiết kế giao diện&lt;br&gt;• Khách được xem danh sách, tìm kiếm, lọc và xem chi tiết phòng mà không cần đăng nhập.&lt;br&gt;• Có thể lưu yêu thích ngay từ danh sách hoặc trang chi tiết; cả hai đều cần tài khoản khách thuê.&lt;br&gt;• Phòng đã được thuê có thể vẫn xem được thông tin; không hiển thị như phòng còn trống để gửi yêu cầu thuê.&lt;br&gt;• Mời đăng nhập không đồng nghĩa đã lưu yêu thích hoặc gửi yêu cầu thuê. Sau khi trở lại, người dùng tiếp tục thao tác trong luồng khách thuê.&lt;br&gt;• Khi chưa tải được dữ liệu: thông báo và cho thử lại; khi nhập bộ lọc không hợp lệ: hướng dẫn sửa." style="shape=note;align=left;spacing=15;fillColor=#fff2cc;strokeColor=#d6b656;whiteSpace=wrap;html=1;">
+          <mxGeometry x="40" y="1960" width="900" height="210" as="geometry" />
+        </mxCell>
+        <mxCell id="rLUdExOyJ9c7-mWMOeYP-run-search" parent="1" edge="1" source="rLUdExOyJ9c7-mWMOeYP-search" target="rLUdExOyJ9c7-mWMOeYP-results" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;labelBackgroundColor=#ffffff;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rLUdExOyJ9c7-mWMOeYP-none" parent="1" edge="1" source="rLUdExOyJ9c7-mWMOeYP-results" target="rLUdExOyJ9c7-mWMOeYP-empty" value="Không" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;labelBackgroundColor=#ffffff;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rLUdExOyJ9c7-mWMOeYP-change" parent="1" edge="1" source="rLUdExOyJ9c7-mWMOeYP-empty" target="rLUdExOyJ9c7-mWMOeYP-search" value="Sửa bộ lọc" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;labelBackgroundColor=#ffffff;">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="230" y="405" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="rLUdExOyJ9c7-mWMOeYP-found" parent="1" edge="1" source="rLUdExOyJ9c7-mWMOeYP-results" target="rLUdExOyJ9c7-mWMOeYP-list" value="Có" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;labelBackgroundColor=#ffffff;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rLUdExOyJ9c7-mWMOeYP-pick" parent="1" edge="1" source="rLUdExOyJ9c7-mWMOeYP-list" target="rLUdExOyJ9c7-mWMOeYP-select" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;labelBackgroundColor=#ffffff;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rLUdExOyJ9c7-mWMOeYP-open" parent="1" edge="1" source="rLUdExOyJ9c7-mWMOeYP-select" target="rLUdExOyJ9c7-mWMOeYP-public" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;labelBackgroundColor=#ffffff;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rLUdExOyJ9c7-mWMOeYP-gone" parent="1" edge="1" source="rLUdExOyJ9c7-mWMOeYP-public" target="rLUdExOyJ9c7-mWMOeYP-unavailable" value="Không" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;labelBackgroundColor=#ffffff;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rLUdExOyJ9c7-mWMOeYP-other" parent="1" edge="1" source="rLUdExOyJ9c7-mWMOeYP-unavailable" target="rLUdExOyJ9c7-mWMOeYP-list" value="Chọn phòng khác" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;labelBackgroundColor=#ffffff;">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="400" y="1110" />
+              <mxPoint x="400" y="785" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="rLUdExOyJ9c7-mWMOeYP-view" parent="1" edge="1" source="rLUdExOyJ9c7-mWMOeYP-public" target="rLUdExOyJ9c7-mWMOeYP-detail" value="Có" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;labelBackgroundColor=#ffffff;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rLUdExOyJ9c7-mWMOeYP-actions" parent="1" edge="1" source="rLUdExOyJ9c7-mWMOeYP-detail" target="rLUdExOyJ9c7-mWMOeYP-18" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;labelBackgroundColor=#ffffff;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rLUdExOyJ9c7-mWMOeYP-fav-auth" parent="1" edge="1" source="rLUdExOyJ9c7-mWMOeYP-favorite" target="rLUdExOyJ9c7-mWMOeYP-20" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;labelBackgroundColor=#ffffff;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rLUdExOyJ9c7-mWMOeYP-ask" parent="1" edge="1" source="rLUdExOyJ9c7-mWMOeYP-20" target="rLUdExOyJ9c7-mWMOeYP-continue" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;labelBackgroundColor=#ffffff;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rLUdExOyJ9c7-mWMOeYP-accept" parent="1" edge="1" source="rLUdExOyJ9c7-mWMOeYP-continue" target="rLUdExOyJ9c7-mWMOeYP-auth" value="Có" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;labelBackgroundColor=#ffffff;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rLUdExOyJ9c7-mWMOeYP-dismiss" parent="1" edge="1" source="rLUdExOyJ9c7-mWMOeYP-continue" target="rLUdExOyJ9c7-mWMOeYP-detail" value="Chưa muốn đăng nhập" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;labelBackgroundColor=#ffffff;">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1450" y="1850" />
+              <mxPoint x="1450" y="1305" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="rLUdExOyJ9c7-mWMOeYP-browse-more" parent="1" edge="1" source="rLUdExOyJ9c7-mWMOeYP-18" target="rLUdExOyJ9c7-mWMOeYP-list" value="Tiếp tục xem phòng" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;labelBackgroundColor=#ffffff;">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="490" y="1500" />
+              <mxPoint x="490" y="785" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="rLUdExOyJ9c7-mWMOeYP-direct-login" parent="1" edge="1" source="rLUdExOyJ9c7-mWMOeYP-2" target="rLUdExOyJ9c7-mWMOeYP-auth" value="Chủ động đăng nhập / đăng ký" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;labelBackgroundColor=#ffffff;">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1530" y="235" />
+              <mxPoint x="1530" y="2065" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

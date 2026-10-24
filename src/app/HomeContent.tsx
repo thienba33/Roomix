@@ -9,7 +9,8 @@ import { searchRooms, CATALOG_EVENT, type RoomSearch } from '@/services/mock/roo
 
 const AMENITIES = [{ value: 'private_bathroom', label: 'WC riêng' }, { value: 'air_conditioner', label: 'Điều hòa' }, { value: 'water_heater', label: 'Nóng lạnh' }, { value: 'balcony', label: 'Ban công' }];
 const SEARCH_KEY = 'roomix_mock_room_search_v1';
-const INITIAL: RoomSearch = { location: '', sort: 'newest', page: 0, size: 2, amenities: [] };
+const PAGE_SIZE = 16;
+const INITIAL: RoomSearch = { location: '', sort: 'newest', page: 0, size: PAGE_SIZE, amenities: [] };
 
 export default function HomeContent() {
   const catalog = useCatalog();
@@ -23,7 +24,11 @@ export default function HomeContent() {
     const restore = () => {
       try {
         const saved = JSON.parse(localStorage.getItem(SEARCH_KEY) || 'null');
-        if (saved) { searchRooms(saved); setQuery(saved); }
+        if (saved) {
+          const restored = { ...saved, size: PAGE_SIZE, page: saved.size === PAGE_SIZE ? saved.page ?? 0 : 0 };
+          const result = searchRooms(restored);
+          setQuery({ ...restored, page: Math.max(0, Math.min(restored.page, result.totalPages - 1)) });
+        }
       } catch { /* Invalid preferences use the default search. */ }
       try { const notes = JSON.parse(sessionStorage.getItem('roomix:tenant:ai-search-notes') || '[]'); setAiNotes(Array.isArray(notes) ? notes.filter((n): n is string => typeof n === 'string') : []); } catch { setAiNotes([]); }
       setReady(true);
@@ -68,14 +73,17 @@ export default function HomeContent() {
       {(count > 0 || query.location) && <button className="text-sm font-semibold text-primary" onClick={reset}>Xóa bộ lọc</button>}
     </div>
     {aiNotes.length > 0 && <p className="mt-3 text-sm text-muted">Cần xác nhận thêm: {aiNotes.join(' · ')}</p>}
-    {error && <p role="alert" className="mt-6 text-red-600">{error}</p>}
-    {ready && result && (result.content.length ? <>
+    {error && <div role="alert" className="mt-6 rounded-xl border border-line p-5"><p className="text-red-600">{error}</p><Button className="mt-3" variant="outline" onClick={() => { catalog.retry(); reset(); }}>Thử lại</Button></div>}
+    {ready && !error && result && (result.content.length ? <>
       <div className="room-grid mt-7 gap-x-5 gap-y-8">{result.content.map((room) => <RoomListingCard key={room.postId} room={room} />)}</div>
-      <nav aria-label="Phân trang phòng" className="mt-8 flex flex-wrap items-center justify-center gap-4">
-        <Button variant="outline" disabled={result.first} onClick={() => setQuery((q) => ({ ...q, page: result.page - 1 }))}>Trước</Button>
-        <span className="text-sm">Trang {result.page + 1} / {result.totalPages}</span>
-        <Button variant="outline" disabled={result.last} onClick={() => setQuery((q) => ({ ...q, page: result.page + 1 }))}>Sau</Button>
-        <label className="text-sm">Mỗi trang <select className="rounded-lg border border-line p-2" value={query.size} onChange={(e) => update({ size: Number(e.target.value) })}>{[1, 2, 4, 8, 20].map((n) => <option key={n} value={n}>{n} phòng</option>)}</select></label>
+      <nav aria-label="Phân trang phòng" className="mt-8 flex items-center justify-center gap-3">
+        <button type="button" aria-label="Trang trước" title="Trang trước" disabled={result.first} onClick={() => setQuery((q) => ({ ...q, page: result.page - 1 }))} className="flex h-10 w-10 items-center justify-center rounded-full border border-line text-ink transition hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-35">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>
+        </button>
+        <span role="status" aria-live="polite" aria-label={`Trang ${result.page + 1} trên ${result.totalPages}`} className="min-w-12 text-center text-sm tabular-nums text-muted"><span className="font-semibold text-ink">{result.page + 1}</span><span aria-hidden="true" className="px-1.5">/</span>{result.totalPages}</span>
+        <button type="button" aria-label="Trang sau" title="Trang sau" disabled={result.last} onClick={() => setQuery((q) => ({ ...q, page: result.page + 1 }))} className="flex h-10 w-10 items-center justify-center rounded-full border border-line text-ink transition hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-35">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6" /></svg>
+        </button>
       </nav>
     </> : <div className="py-20 text-center"><h2 className="font-bold">Không tìm thấy phòng phù hợp</h2><p className="mt-2 text-sm text-muted">Thử thay đổi khu vực hoặc bỏ bớt bộ lọc.</p><Button className="mt-5" variant="outline" onClick={reset}>Xóa bộ lọc</Button></div>)}
     <Modal open={open} onClose={() => setOpen(false)} title="Bộ lọc phòng">

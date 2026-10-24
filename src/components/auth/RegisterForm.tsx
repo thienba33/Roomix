@@ -45,7 +45,7 @@ const ERROR_SPACE: Record<Field, string> = {
 const EMPTY: Values = { fullName: '', username: '', email: '', phone: '', password: '' };
 const NO_ERRORS: Errors = { fullName: '', username: '', email: '', phone: '', password: '' };
 
-export default function RegisterForm({ initialRole, onLogin, onSuccess }: { initialRole: 'tenant' | 'landlord'; onLogin: (role: 'tenant' | 'landlord') => void; onSuccess: (response: AuthResponse) => void }) {
+export default function RegisterForm({ initialRole, onLogin, onSuccess, onBrowse }: { initialRole: 'tenant' | 'landlord'; onBrowse: () => void; onLogin: (role: 'tenant' | 'landlord') => void; onSuccess: (response: AuthResponse) => void }) {
   const [busy, setBusy] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const [pending, setPending] = useState(false);
@@ -101,9 +101,10 @@ export default function RegisterForm({ initialRole, onLogin, onSuccess }: { init
 
   if (pending) return (
     <div className="space-y-5 py-4 text-center">
-      <h2 className="text-2xl font-extrabold text-ink">Đang chờ phê duyệt</h2>
+      <h2 className="text-2xl font-extrabold text-ink">Đăng ký thành công</h2>
       <p role="status" className="text-sm leading-6 text-muted">Yêu cầu đăng ký chủ trọ đã được ghi nhận. Bạn có thể đăng nhập sau khi quản trị viên phê duyệt tài khoản.</p>
       <Button onClick={() => onLogin('landlord')} className="w-full">Quay lại đăng nhập</Button>
+      <button type="button" onClick={onBrowse} className="text-sm font-semibold text-primary">Tiếp tục xem phòng</button>
     </div>
   );
 
@@ -115,6 +116,23 @@ export default function RegisterForm({ initialRole, onLogin, onSuccess }: { init
       <h2 className="text-center text-2xl font-extrabold text-ink">Tạo tài khoản</h2>
 
       <form onSubmit={onSubmit} noValidate className="mt-4 space-y-2">
+        <div>
+          <p className="mb-1.5 text-sm font-medium text-ink">Bạn là</p>
+          <div className="flex rounded-xl bg-page p-1">
+            {ROLES.map((r) => (
+              <button
+                key={r}
+                type="button"
+                disabled={busy}
+                onClick={() => setRole(r)}
+                aria-pressed={role === r}
+                className={cn('flex-1 rounded-lg px-3 py-2.5 text-sm transition', role === r ? 'bg-white font-bold text-ink shadow-sm' : 'font-medium text-muted hover:text-ink')}
+              >
+                {r}
+              </button>
+            ))}
+          </div>
+        </div>
         <div>
           <Input name="fullName" type="text" placeholder="Họ tên *" aria-label="Họ tên" autoComplete="name" icon={UserIcon} className={cn('h-[44px] rounded-xl text-[15px]', errCls('fullName'))} {...bind('fullName')} />
           {errMsg('fullName')}
@@ -154,22 +172,7 @@ export default function RegisterForm({ initialRole, onLogin, onSuccess }: { init
           {errMsg('password')}
         </div>
 
-        <div>
-          <p className="mb-1.5 text-sm font-medium text-ink">Bạn là</p>
-          <div className="flex rounded-xl bg-page p-1">
-            {ROLES.map((r) => (
-              <button
-                key={r}
-                type="button"
-                onClick={() => setRole(r)}
-                aria-pressed={role === r}
-                className={cn('flex-1 rounded-lg px-3 py-2.5 text-sm transition', role === r ? 'bg-white font-bold text-ink shadow-sm' : 'font-medium text-muted hover:text-ink')}
-              >
-                {r}
-              </button>
-            ))}
-          </div>
-        </div>
+
 
         <p role="alert" className="min-h-10 text-sm text-red-600">{submitError}</p>
         <Button type="submit" disabled={busy} size="lg" className="h-[44px] w-full">{busy ? 'Đang đăng ký…' : 'Đăng ký'}</Button>
