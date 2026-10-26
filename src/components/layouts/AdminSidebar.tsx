@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/components/auth/AuthProvider';
 import MobileNavigation from './MobileNavigation';
-import { useCatalog } from '@/hooks/useCatalog';
+import { useAdminPosts } from '@/hooks/useAdminPosts';
 
 function I({ children }: { children: ReactNode }) {
   return (
@@ -34,7 +34,7 @@ const GROUPS: { title: string; items: { label: string; href: string; icon: () =>
   },
   {
     title: 'Vận hành',
-    items: [{ label: 'Thông báo & Log', href: '/admin/notifications', icon: IconList }],
+    items: [{ label: 'Thông báo', href: '/admin/notifications', icon: IconList }],
   },
 ];
 const ALL_ITEMS = GROUPS.flatMap((g) => g.items);
@@ -42,8 +42,8 @@ const ALL_ITEMS = GROUPS.flatMap((g) => g.items);
 export default function AdminSidebar() {
   const { logout } = useAuth();
   const pathname = usePathname();
-  const { items } = useCatalog();
-  const pendingCount = items.filter((r) => r.postStatus === 'PENDING').length;
+  const { items } = useAdminPosts();
+  const pendingCount = items.filter((r) => r.status === 'PENDING').length;
   const isActive = (href: string) => (href === '/admin' ? pathname === '/admin' : pathname.startsWith(href));
 
   return (
