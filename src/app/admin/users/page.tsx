@@ -9,6 +9,7 @@ import Modal from '@/components/ui/Modal';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import { useToast } from '@/components/ui/Toast';
 import { appendAudit, useAdminUsers, useAuditExtra, type AdminUser } from '@/lib/admin-store';
+import { AUTH_EVENT, listMockAccounts, setMockAccountStatusByEmail, type MockUser } from '@/services/mock/auth';
 import { cn } from '@/lib/utils';
 
 type RoleFilter = 'all' | 'LANDLORD' | 'TENANT';
@@ -33,6 +34,42 @@ export default function UsersPage() {
   const { push } = useToast();
   const [users, setUsers] = useAdminUsers();
   const [, setAuditExtra] = useAuditExtra();
+  const [mockAccounts, setMockAccounts] = useState<MockUser[]>([]);
+
+  // Mock-account bridge (UC07.2): registered landlords live in the mock auth
+  // store, not in the admin seed list — without this merge they never appear
+  // here, so approving them was impossible and a registered landlord stayed
+  // PENDING_VERIFICATION forever. Synthetic ids are negative so they never
+  // collide with the admin seed ids; status changes write back to mock auth.
+  // Read in an effect (not during render) so the server-rendered list and
+  // the hydrated list match until the browser store is available.
+  useEffect(() => {
+    const sync = () => {
+      setMockAccounts(listMockAccounts());
+    };
+    sync();
+    window.addEventListener(AUTH_EVENT, sync);
+    window.addEventListener('storage', sync);
+    return () => {
+      window.removeEventListener(AUTH_EVENT, sync);
+      window.removeEventListener('storage', sync);
+    };
+  }, []);
+  const displayUsers: AdminUser[] = useMemo(() => {
+    const known = new Set(users.map((u) => u.email.toLowerCase()));
+    const extra = mockAccounts
+      .filter((account): account is MockUser & { role: 'LANDLORD' | 'TENANT' } => account.role !== 'ADMIN' && !known.has(account.email.toLowerCase()))
+      .map((account, index) => ({
+        id: -(1000 + index),
+        name: account.fullName,
+        email: account.email,
+        phone: account.phoneNumber,
+        role: account.role,
+        status: account.status,
+        joinedAt: '—',
+      } satisfies AdminUser));
+    return [...users, ...extra];
+  }, [users, mockAccounts]);
   const [query, setQuery] = useState('');
   const [role, setRole] = useState<RoleFilter>('all');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
@@ -54,21 +91,30 @@ export default function UsersPage() {
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return users.filter((u) => {
+    return displayUsers.filter((u) => {
       if (role !== 'all' && u.role !== role) return false;
       if (statusFilter !== 'all' && u.status !== statusFilter) return false;
       if (q && !`${u.name} ${u.email} ${u.phone} ${u.house ?? ''}`.toLowerCase().includes(q)) return false;
       return true;
     });
-  }, [users, query, role, statusFilter]);
+  }, [displayUsers, query, role, statusFilter]);
 
-  const selected = filtered.find((u) => u.id === selectedId) ?? users.find((u) => u.id === selectedId) ?? filtered[0];
-  const pendingCount = users.filter((u) => u.status === 'PENDING_VERIFICATION').length;
-  const landlordCount = users.filter((u) => u.role === 'LANDLORD').length;
-  const tenantCount = users.filter((u) => u.role === 'TENANT').length;
+  const selected = filtered.find((u) => u.id === selectedId) ?? displayUsers.find((u) => u.id === selectedId) ?? filtered[0];
+  const pendingCount = displayUsers.filter((u) => u.status === 'PENDING_VERIFICATION').length;
+  const landlordCount = displayUsers.filter((u) => u.role === 'LANDLORD').length;
+  const tenantCount = displayUsers.filter((u) => u.role === 'TENANT').length;
 
-  const updateUser = (id: number, patch: Partial<AdminUser>) =>
-    setUsers((prev) => prev.map((u) => (u.id === id ? { ...u, ...patch } : u)));
+  const updateUser = (id: number, patch: Partial<AdminUser>) => {
+    const target = displayUsers.find((u) => u.id === id);
+    if (patch.status && target) {
+      // Synthetic (mock-auth) accounts: the mock store is the source of truth.
+      // Seed accounts: also mirror to mock auth when the same email exists
+      // there, so a lock/verification is not undone by the other store.
+      setMockAccountStatusByEmail(target.email, patch.status);
+      setMockAccounts(listMockAccounts());
+    }
+    if (id >= 0) setUsers((prev) => prev.map((u) => (u.id === id ? { ...u, ...patch } : u)));
+  };
 
   const confirmLockToggle = () => {
     if (!lockTarget) return;
@@ -121,8 +167,9 @@ export default function UsersPage() {
     <div>
       <h1 className="text-2xl font-semibold text-ink">Quản lý người dùng</h1>
       <p className="mt-1 text-sm text-muted">
-        {users.length} tài khoản{pendingCount > 0 ? ` · ${pendingCount} chủ trọ chờ xác minh` : ''}
+        {displayUsers.length} tài khoản{pendingCount > 0 ? ` · ${pendingCount} chủ trọ chờ xác minh` : ''}
       </p>
+      <p className="mt-1 text-[13px] text-muted">Danh sách gộp tài khoản mẫu của Admin và tài khoản đã đăng ký trên bản mock — duyệt chủ trọ tại đây sẽ kích hoạt luôn tài khoản đăng ký đó.</p>
 
       {/* Search + filters */}
       <div className="mt-5 space-y-3">
@@ -135,7 +182,7 @@ export default function UsersPage() {
           icon={<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" /></svg>}
         />
         <div className="flex flex-wrap items-center gap-2">
-          <button type="button" onClick={() => setRole('all')} className={chip(role === 'all')}>Tất cả · {users.length}</button>
+          <button type="button" onClick={() => setRole('all')} className={chip(role === 'all')}>Tất cả · {displayUsers.length}</button>
           <button type="button" onClick={() => setRole('LANDLORD')} className={chip(role === 'LANDLORD')}>Chủ trọ · {landlordCount}</button>
           <button type="button" onClick={() => setRole('TENANT')} className={chip(role === 'TENANT')}>Khách thuê · {tenantCount}</button>
           <span className="mx-1 h-5 w-px bg-line" aria-hidden />
@@ -144,7 +191,7 @@ export default function UsersPage() {
           <button type="button" onClick={() => setStatusFilter('LOCKED')} className={chip(statusFilter === 'LOCKED')}>Đã khóa</button>
           <button type="button" onClick={() => setStatusFilter('PENDING_VERIFICATION')} className={chip(statusFilter === 'PENDING_VERIFICATION')}>Chờ xác minh · {pendingCount}</button>
         </div>
-        <p className="text-[13px] text-muted" aria-live="polite">Hiển thị {filtered.length} / {users.length}</p>
+        <p className="text-[13px] text-muted" aria-live="polite">Hiển thị {filtered.length} / {displayUsers.length}</p>
       </div>
 
       <Card className="mt-4 overflow-hidden p-0">

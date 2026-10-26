@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { useCatalog } from '@/hooks/useCatalog';
 import { formatVND, roomStatusLabel } from '@/lib/utils';
-import { moderatePost, type CatalogRoom } from '@/services/mock/rooms';
+import { adminRemovePost, adminRestorePost, moderatePost, type CatalogRoom } from '@/services/mock/rooms';
 import Button from '@/components/ui/Button';
 import Modal from '@/components/ui/Modal';
 import { ListingPhoto, ListingStatus } from './ListingVisuals';
@@ -23,11 +23,12 @@ export default function AdminModeration({ postId }: { postId?: string }) {
   if (catalog.error) return <div role="alert" className="rounded-2xl border border-red-200 bg-red-50 p-6"><h1 className="text-lg font-bold">Chưa thể tải hàng chờ</h1><p className="mt-2 text-sm">{catalog.error}</p><Button variant="outline" className="mt-4" onClick={catalog.retry}>Thử lại</Button></div>;
 
   const pending = catalog.items.filter((item) => item.postStatus === 'PENDING').sort((a, b) => b.detail.createdAt.localeCompare(a.detail.createdAt));
+  const live = catalog.items.filter((item) => item.postStatus === 'APPROVED' || (item.postStatus === 'HIDDEN' && !!item.adminRemoveReason)).sort((a, b) => b.detail.createdAt.localeCompare(a.detail.createdAt));
   if (postId) return <ModerationDetail key={postId} postId={postId} item={catalog.items.find((item) => item.detail.postId === postId)} pendingCount={pending.length} />;
-  return <ModerationQueue pending={pending} />;
+  return <ModerationQueue pending={pending} live={live} />;
 }
 
-function ModerationQueue({ pending }: { pending: CatalogRoom[] }) {
+function ModerationQueue({ pending, live }: { pending: CatalogRoom[]; live: CatalogRoom[] }) {
   return <div className="space-y-7 pb-6">
     <header className="border-b border-line pb-6">
       <h1 className="text-[28px] font-extrabold tracking-tight text-ink sm:text-[32px]">Kiểm duyệt tin đăng</h1>
@@ -48,23 +49,43 @@ function ModerationQueue({ pending }: { pending: CatalogRoom[] }) {
         </article>)}
       </div> : <div className="rounded-2xl border border-line bg-white px-6 py-14 text-center"><h3 className="text-lg font-bold">Không có tin chờ duyệt</h3><p className="mt-2 text-sm text-muted">Tin mới do chủ trọ gửi sẽ xuất hiện tại đây.</p></div>}
     </section>
+    <section aria-label="Tin đang hiển thị và tin đã gỡ" className="space-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-2"><h2 className="text-lg font-bold">Tin đang hiển thị / đã gỡ</h2><span role="status" className="rounded-lg bg-page px-3 py-1.5 text-sm font-semibold text-muted">{live.length} tin</span></div>
+      <p className="text-sm text-muted">Admin có thể gỡ tin đang hiển thị khi vi phạm, kèm lý do — tin bị gỡ chuyển sang ẩn và chủ trọ nhận thông báo. Bản mock: backend chưa có endpoint gỡ bài.</p>
+      {live.length ? <div className="divide-y divide-line overflow-hidden rounded-2xl border border-line bg-white">
+        {live.map((item) => <article key={item.detail.postId} className="grid gap-4 p-4 sm:grid-cols-[112px_minmax(0,1fr)_auto] sm:items-center sm:p-5">
+          <ListingPhoto src={item.detail.primaryImageUrl} alt={`Ảnh ${item.detail.title}`} className="h-28 rounded-xl sm:h-24" />
+          <div className="min-w-0 space-y-2">
+            <div className="flex flex-wrap items-center gap-2"><ListingStatus status={item.postStatus} /><span className="text-xs text-muted">{item.detail.houseName} · Phòng {item.detail.roomNumber}</span></div>
+            <h3 className="truncate text-base font-bold text-ink">{item.detail.title}</h3>
+            {item.adminRemoveReason && <p className="truncate text-sm text-red-700">Lý do gỡ: {item.adminRemoveReason}</p>}
+          </div>
+          <Link href={`/admin/moderation/${item.detail.postId}`} className="inline-flex min-h-10 items-center justify-center rounded-xl border border-primary px-4 py-2 text-sm font-semibold text-primary hover:bg-primary-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">{item.postStatus === 'APPROVED' ? 'Gỡ tin' : 'Khôi phục tin'}</Link>
+        </article>)}
+      </div> : <p className="rounded-2xl border border-line bg-white px-6 py-10 text-center text-sm text-muted">Chưa có tin đang hiển thị.</p>}
+    </section>
   </div>;
 }
 
 function ModerationDetail({ postId, item, pendingCount }: { postId: string; item?: CatalogRoom; pendingCount: number }) {
-  const [dialog, setDialog] = useState<'approve' | 'reject' | null>(null);
+  const [dialog, setDialog] = useState<'approve' | 'reject' | 'remove' | 'restore' | null>(null);
   const [reason, setReason] = useState('');
   const [failure, setFailure] = useState('');
-  const [outcome, setOutcome] = useState<'approve' | 'reject' | null>(null);
+  const [outcome, setOutcome] = useState<'approve' | 'reject' | 'remove' | 'restore' | null>(null);
   const confirming = useRef(false);
   const pending = item?.postStatus === 'PENDING';
-  const open = (action: 'approve' | 'reject') => { setDialog(action); setFailure(''); setReason(''); confirming.current = false; };
+  const canRemove = item?.postStatus === 'APPROVED';
+  const canRestore = item?.postStatus === 'HIDDEN' && !!item.adminRemoveReason;
+  const actionable = pending || canRemove || canRestore;
+  const open = (action: 'approve' | 'reject' | 'remove' | 'restore') => { setDialog(action); setFailure(''); setReason(''); confirming.current = false; };
   const confirm = () => {
-    if (!dialog || confirming.current) return;
-    if (dialog === 'reject' && !reason.trim()) { setFailure('Vui lòng nhập lý do từ chối.'); return; }
+    if (!dialog || !item || confirming.current) return;
+    if ((dialog === 'reject' || dialog === 'remove') && !reason.trim()) { setFailure(dialog === 'reject' ? 'Vui lòng nhập lý do từ chối.' : 'Vui lòng nhập lý do gỡ bài.'); return; }
     confirming.current = true;
     try {
-      moderatePost(postId, dialog, reason);
+      if (dialog === 'remove') adminRemovePost(item.detail.roomId, reason);
+      else if (dialog === 'restore') adminRestorePost(item.detail.roomId);
+      else moderatePost(postId, dialog, reason);
       setOutcome(dialog);
       setDialog(null);
     } catch (cause) {
@@ -72,11 +93,13 @@ function ModerationDetail({ postId, item, pendingCount }: { postId: string; item
       confirming.current = false;
     }
   };
+  const outcomeTitle = outcome === 'approve' ? 'Tin đã được duyệt' : outcome === 'reject' ? 'Đã từ chối tin đăng' : outcome === 'remove' ? 'Đã gỡ tin đăng' : outcome === 'restore' ? 'Đã khôi phục tin đăng' : '';
+  const outcomeBody = outcome === 'approve' ? 'Tin đủ điều kiện sẽ xuất hiện trong tìm kiếm công khai. Chủ trọ có thể xem kết quả trong Tin đăng và Thông báo.' : outcome === 'reject' ? 'Lý do từ chối đã được lưu để chủ trọ xem và chỉnh sửa tin.' : outcome === 'remove' ? 'Tin đã chuyển sang ẩn, chủ trọ nhận được thông báo kèm lý do gỡ.' : 'Tin đã hiển thị trở lại trong tìm kiếm công khai.';
   return <div className="space-y-6 pb-8">
     <Link href="/admin/moderation" className="inline-flex items-center gap-2 text-sm font-semibold text-primary hover:underline">← Hàng chờ kiểm duyệt ({pendingCount})</Link>
-    {outcome ? <div role="status" className="rounded-2xl border border-green-200 bg-green-50 p-6"><h1 className="text-xl font-bold text-green-900">{outcome === 'approve' ? 'Tin đã được duyệt' : 'Đã từ chối tin đăng'}</h1><p className="mt-2 text-sm text-green-900">{outcome === 'approve' ? 'Tin đủ điều kiện sẽ xuất hiện trong tìm kiếm công khai. Chủ trọ có thể xem kết quả trong Tin đăng và Thông báo.' : 'Lý do từ chối đã được lưu để chủ trọ xem và chỉnh sửa tin.'}</p>{outcome === 'approve' && item && <Link href={`/rooms/${item.detail.roomId}`} className="mt-4 inline-block text-sm font-semibold text-primary hover:underline">Xem phòng công khai</Link>}</div> : null}
+    {outcome ? <div role="status" className="rounded-2xl border border-green-200 bg-green-50 p-6"><h1 className="text-xl font-bold text-green-900">{outcomeTitle}</h1><p className="mt-2 text-sm text-green-900">{outcomeBody}</p>{outcome === 'approve' && item && <Link href={`/rooms/${item.detail.roomId}`} className="mt-4 inline-block text-sm font-semibold text-primary hover:underline">Xem phòng công khai</Link>}</div> : null}
     {!item ? <div role="alert" className="rounded-2xl border border-line p-8"><h1 className="text-xl font-bold">Không tìm thấy tin đăng</h1><p className="mt-2 text-sm text-muted">Tin có thể đã bị xóa khỏi dữ liệu mô phỏng.</p></div>
-      : !pending && !outcome ? <div role="status" className="rounded-2xl border border-line p-8"><h1 className="text-xl font-bold">Tin không còn chờ kiểm duyệt</h1><p className="mt-2 text-sm text-muted">Trạng thái hiện tại: {item.postStatus}. Quay lại hàng chờ để chọn tin khác.</p></div>
+      : !actionable && !outcome ? <div role="status" className="rounded-2xl border border-line p-8"><h1 className="text-xl font-bold">Tin không còn chờ kiểm duyệt</h1><p className="mt-2 text-sm text-muted">Trạng thái hiện tại: {item.postStatus}. Quay lại hàng chờ để chọn tin khác.</p></div>
         : <>
           <header className="border-b border-line pb-5"><div className="flex flex-wrap items-center gap-3"><h1 className="text-[27px] font-extrabold tracking-tight text-ink sm:text-[32px]">{item.detail.title}</h1><ListingStatus status={item.postStatus} /></div><p className="mt-2 text-sm text-muted">{item.detail.houseName} · {item.detail.floorName} · Phòng {item.detail.roomNumber}</p></header>
           <div className="grid items-start gap-7 lg:grid-cols-[minmax(0,1fr)_290px]">
@@ -93,16 +116,19 @@ function ModerationDetail({ postId, item, pendingCount }: { postId: string; item
                 <div className="flex justify-between gap-4"><dt className="text-muted">Phòng</dt><dd className="font-semibold">{roomStatusLabel[item.roomStatus]}</dd></div>
                 <div className="flex justify-between gap-4"><dt className="text-muted">Có thể thuê</dt><dd className="font-semibold">{dateLabel(item.detail.availableFrom)}</dd></div>
               </dl>
-              <p className="text-xs leading-5 text-muted">Chỉ tin chờ duyệt mới có thể xử lý. Duyệt tin không thay đổi tình trạng thuê của phòng.</p>
+              {item.adminRemoveReason && <p className="rounded-lg bg-red-50 px-3 py-2 text-xs leading-5 text-red-800">Tin đã bị gỡ: {item.adminRemoveReason}</p>}
+              <p className="text-xs leading-5 text-muted">{pending ? 'Chỉ tin chờ duyệt mới có thể xử lý. Duyệt tin không thay đổi tình trạng thuê của phòng.' : canRemove ? 'Tin đang hiển thị — gỡ tin khi vi phạm, kèm lý do để chủ trọ biết.' : 'Tin đã bị Admin gỡ — khôi phục để hiển thị lại trong tìm kiếm.'}</p>
               {pending && <div className="grid gap-2"><Button className="w-full" onClick={() => open('approve')}>Duyệt tin</Button><Button className="w-full" variant="outline" onClick={() => open('reject')}>Từ chối và ghi lý do</Button></div>}
+              {canRemove && <div className="grid gap-2"><Button className="w-full" variant="danger" onClick={() => open('remove')}>Gỡ tin đăng</Button></div>}
+              {canRestore && <div className="grid gap-2"><Button className="w-full" onClick={() => open('restore')}>Khôi phục tin đăng</Button></div>}
             </aside>
           </div>
         </>}
-    <Modal open={!!dialog} onClose={() => setDialog(null)} title={dialog === 'approve' ? 'Duyệt tin đăng?' : 'Từ chối tin đăng?'}>
-      <p className="text-sm leading-6 text-muted">{dialog === 'approve' ? 'Tin đủ điều kiện sẽ xuất hiện trong tìm kiếm công khai và chủ trọ nhận thông báo kết quả.' : 'Chủ trọ sẽ thấy lý do để sửa tin và gửi duyệt lại.'}</p>
-      {dialog === 'reject' && <div className="mt-5"><label htmlFor="moderation-reason" className="block text-sm font-semibold">Lý do từ chối <span className="text-red-600">*</span></label><textarea id="moderation-reason" value={reason} onChange={(event) => { setReason(event.target.value); setFailure(''); }} maxLength={1000} rows={4} aria-invalid={!!failure} aria-describedby={failure ? 'moderation-error' : undefined} className="mt-2 w-full rounded-xl border border-line p-3 text-sm focus:border-primary focus:outline-2 focus:outline-primary/20" placeholder="Nêu rõ phần cần điều chỉnh…" /><p className="mt-1 text-right text-xs text-muted">{reason.length}/1000 ký tự</p></div>}
+    <Modal open={!!dialog} onClose={() => setDialog(null)} title={dialog === 'approve' ? 'Duyệt tin đăng?' : dialog === 'reject' ? 'Từ chối tin đăng?' : dialog === 'remove' ? 'Gỡ tin đăng?' : 'Khôi phục tin đăng?'}>
+      <p className="text-sm leading-6 text-muted">{dialog === 'approve' ? 'Tin đủ điều kiện sẽ xuất hiện trong tìm kiếm công khai và chủ trọ nhận thông báo kết quả.' : dialog === 'remove' ? 'Tin sẽ chuyển sang ẩn và không còn xuất hiện trong tìm kiếm. Chủ trọ nhận thông báo kèm lý do gỡ.' : dialog === 'restore' ? 'Tin sẽ hiển thị trở lại trong tìm kiếm công khai.' : 'Chủ trọ sẽ thấy lý do để sửa tin và gửi duyệt lại.'}</p>
+      {(dialog === 'reject' || dialog === 'remove') && <div className="mt-5"><label htmlFor="moderation-reason" className="block text-sm font-semibold">{dialog === 'remove' ? 'Lý do gỡ bài' : 'Lý do từ chối'} <span className="text-red-600">*</span></label><textarea id="moderation-reason" value={reason} onChange={(event) => { setReason(event.target.value); setFailure(''); }} maxLength={1000} rows={4} aria-invalid={!!failure} aria-describedby={failure ? 'moderation-error' : undefined} className="mt-2 w-full rounded-xl border border-line p-3 text-sm focus:border-primary focus:outline-2 focus:outline-primary/20" placeholder="Nêu rõ phần cần điều chỉnh…" /><p className="mt-1 text-right text-xs text-muted">{reason.length}/1000 ký tự</p></div>}
       {failure && <p id="moderation-error" role="alert" className="mt-3 text-sm text-red-700">{failure}</p>}
-      <div className="mt-5 flex justify-end gap-2"><Button variant="outline" onClick={() => setDialog(null)}>Hủy</Button><Button variant={dialog === 'reject' ? 'danger' : 'primary'} onClick={confirm}>{dialog === 'approve' ? 'Duyệt tin' : 'Từ chối tin'}</Button></div>
+      <div className="mt-5 flex justify-end gap-2"><Button variant="outline" onClick={() => setDialog(null)}>Hủy</Button><Button variant={dialog === 'reject' || dialog === 'remove' ? 'danger' : 'primary'} onClick={confirm}>{dialog === 'approve' ? 'Duyệt tin' : dialog === 'reject' ? 'Từ chối tin' : dialog === 'remove' ? 'Gỡ tin' : 'Khôi phục tin'}</Button></div>
     </Modal>
   </div>;
 }

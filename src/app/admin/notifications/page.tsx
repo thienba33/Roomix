@@ -16,6 +16,8 @@ import {
   useBroadcasts,
   type Broadcast,
 } from '@/lib/admin-store';
+import { pushTenantNotification } from '@/lib/tenant-store';
+import { pushLandlordNotification } from '@/lib/landlord-store';
 import { cn } from '@/lib/utils';
 
 type Audience = 'all' | 'landlords' | 'tenants';
@@ -88,10 +90,15 @@ export default function NotificationsPage() {
       time: nowStamp(),
     };
     setBroadcasts((prev) => [item, ...prev]);
+    // UC07.7 (mock): a broadcast now lands in the recipients' mock inboxes,
+    // not just in this history list. The backend has no notification POST,
+    // so delivery is browser-local until the team adds it.
+    if (audience === 'all' || audience === 'tenants') pushTenantNotification({ type: 'SYSTEM', title: t, body: b });
+    if (audience === 'all' || audience === 'landlords') pushLandlordNotification({ type: 'SYSTEM', title: t, body: b });
     appendAudit(setAuditExtra, 'Gửi thông báo', `${t} → ${label}`);
     setTitle('');
     setBody('');
-    push('Đã ghi nhận thông báo (mô phỏng)', `Gửi tới: ${label} · Dữ liệu minh họa.`);
+    push('Đã gửi thông báo', `Gửi tới: ${label} · Hộp thư mô phỏng của nhóm đã chọn.`);
   };
 
   const markRead = (id: number) =>
@@ -111,7 +118,7 @@ export default function NotificationsPage() {
         <div className="space-y-6">
           <Card className="p-6">
             <h2 className="text-[17px] font-semibold text-ink">Tạo thông báo</h2>
-            <p className="mt-1 text-[13px] font-medium text-amber-700">Chế độ minh họa · Thông báo được lưu trong trình duyệt.</p>
+            <p className="mt-1 text-[13px] font-medium text-amber-700">Bản mock · Thông báo được gửi vào hộp thư mô phỏng của nhóm đã chọn.</p>
 
             <form onSubmit={handleSubmit} noValidate className="mt-5 space-y-4">
               <div>
