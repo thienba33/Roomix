@@ -16,7 +16,7 @@ export default function TenantShell({ children, defaultAiOpen = false }: { child
     <div className="flex min-h-screen flex-col bg-white">
       <TenantHeader />
       <div className={`tenant-workspace flex flex-1 ${state.open ? 'ai-is-open' : ''}`}>
-        <div className="tenant-content flex min-w-0 flex-1 flex-col" style={{ marginRight: desktop && state.open ? width : 0 }}>
+        <div className="tenant-content flex min-w-0 flex-1 flex-col" style={{ marginRight: desktop && state.open ? width + 24 : 0 }}>
           <main className="flex-1">{children}</main>
           <Footer />
         </div>
