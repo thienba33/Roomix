@@ -42,4 +42,9 @@ next-env.d.ts
 
 # Local UI review screenshots
 /docs/ui-review/
+.agents/
+
 AGENTS.md
+docs/
+scripts/
+skills-lock.json
