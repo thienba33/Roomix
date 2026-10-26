@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState, type ReactNode } from 'react';
+import { type ReactNode } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
@@ -8,7 +8,7 @@ import { useAuth } from '@/components/auth/AuthProvider';
 import { useRental } from '@/hooks/useRental';
 import MobileNavigation from './MobileNavigation';
 import { profileInitials } from '@/lib/tenant-store';
-import { unreadCountFromStorage } from '@/lib/landlord-store';
+import { useNotifications } from '@/hooks/useNotifications';
 
 function I({ d, children }: { d?: string; children?: ReactNode }) {
   return (
@@ -56,8 +56,7 @@ export default function HostSidebar() {
   const { logout, user } = useAuth();
   const { requests } = useRental();
   const pendingCount = requests.filter((r) => r.status === 'PENDING').length;
-  const [unreadCount, setUnreadCount] = useState(0);
-  useEffect(() => { const refresh = () => { try { setUnreadCount(unreadCountFromStorage()); } catch {} }; refresh(); const id = setInterval(refresh, 1500); window.addEventListener('storage', refresh); window.addEventListener('focus', refresh); return () => { clearInterval(id); window.removeEventListener('storage', refresh); window.removeEventListener('focus', refresh); }; }, [pathname]);
+  const { unread: unreadCount } = useNotifications();
   const badgeFor = (kind?: 'requests' | 'notifications') => (kind === 'requests' ? pendingCount : kind === 'notifications' ? unreadCount : 0);
   const isActive = (href: string) => (href === '/landlord' ? pathname === '/landlord' : pathname.startsWith(href));
 
