@@ -24,6 +24,7 @@ const NAV = [
   { label: 'Phòng yêu thích', href: '/favorites' },
   { label: 'Yêu cầu của tôi', href: '/requests' },
   { label: 'Hợp đồng của tôi', href: '/contracts' },
+  { label: 'Hóa đơn', href: '/invoices' },
 ];
 
 export default function TenantHeader() {
