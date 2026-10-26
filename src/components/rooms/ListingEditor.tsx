@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useAuth } from '@/components/auth/AuthProvider';
 import Button from '@/components/ui/Button';
 import { useCatalog } from '@/hooks/useCatalog';
-import { propertyFixtures } from '@/services/mock/rooms';
+import { readProperties } from '@/services/mock/rooms';
 import ListingForm from './ListingForm';
 
 export default function ListingEditor({ roomId }: { roomId?: string }) {
@@ -15,7 +15,7 @@ export default function ListingEditor({ roomId }: { roomId?: string }) {
   if (error) return <div role="alert" className="space-y-4 rounded-2xl border border-line p-6"><h1 className="text-xl font-bold">Chưa thể tải thông tin phòng</h1><p>{error}</p><Button variant="outline" onClick={retry}>Thử lại</Button></div>;
 
   const current = items.find((room) => room.detail.roomId === roomId && room.landlordId === user.id);
-  const floors = propertyFixtures.filter((floor) => floor.landlordId === user.id);
+  const floors = readProperties().filter((floor) => floor.landlordId === user.id);
   const unavailable = roomId && (!current || !['DRAFT', 'REJECTED'].includes(current.postStatus));
   if (unavailable || !floors.length) return (
     <div className="space-y-4 rounded-2xl border border-line p-8">

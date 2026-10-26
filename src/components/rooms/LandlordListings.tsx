@@ -9,16 +9,17 @@ import Modal from '@/components/ui/Modal';
 import { useCatalog } from '@/hooks/useCatalog';
 import { cn, formatVND, postStatusLabel, roomStatusLabel } from '@/lib/utils';
 import { getSubmissionRequirements } from '@/lib/listing-validation';
-import { changePostStatus, type CatalogRoom } from '@/services/mock/rooms';
+import { changePostStatus, deleteListing, type CatalogRoom } from '@/services/mock/rooms';
 import type { PostStatus } from '@/types';
 import { ListingPhoto, ListingStatus, SubmissionChecklist } from './ListingVisuals';
 
-type Action = 'submit' | 'hide' | 'unhide';
+type Action = 'submit' | 'hide' | 'unhide' | 'delete';
 const statuses: PostStatus[] = ['DRAFT', 'PENDING', 'APPROVED', 'REJECTED', 'HIDDEN'];
 const actions = {
   submit: { title: 'Gửi tin để xét duyệt', button: 'Gửi duyệt', success: 'Đã gửi tin để xét duyệt.', description: 'Tin sẽ chuyển sang chờ duyệt. Bạn có thể theo dõi kết quả ngay tại đây.' },
   hide: { title: 'Ẩn tin đăng này?', button: 'Ẩn tin', success: 'Đã ẩn tin khỏi trang tìm phòng.', description: 'Tin sẽ tạm ngừng hiển thị trên trang tìm phòng. Việc này không thay đổi tình trạng thuê của phòng.' },
   unhide: { title: 'Hiện lại tin đăng?', button: 'Hiện lại', success: 'Tin đã hiển thị trở lại.', description: 'Tin đã được duyệt sẽ xuất hiện trở lại trên trang tìm phòng.' },
+  delete: { title: 'Xóa tin đăng và phòng này?', button: 'Xóa tin', success: 'Đã xóa tin đăng và phòng khỏi dữ liệu mô phỏng.', description: 'Phòng và tin đăng sẽ biến mất khỏi danh sách. Không xóa được phòng đang có yêu cầu chờ xử lý hoặc hợp đồng chờ cọc/đang thuê.' },
 };
 const hints: Record<PostStatus, string> = {
   DRAFT: 'Hoàn thiện nội dung rồi gửi xét duyệt.',
@@ -56,7 +57,8 @@ function Listings({ items, error, retry }: { items: CatalogRoom[]; error: string
     if (!target || confirming.current) return;
     confirming.current = true;
     try {
-      changePostStatus(target.roomId, target.action);
+      if (target.action === 'delete') deleteListing(target.roomId);
+      else changePostStatus(target.roomId, target.action);
       setNotice(actions[target.action].success);
       setTarget(null);
     } catch (cause) {
@@ -114,7 +116,7 @@ function Listings({ items, error, retry }: { items: CatalogRoom[]; error: string
           {target.action === 'submit' && <div className="rounded-xl bg-page p-4"><SubmissionChecklist requirements={requirements} /></div>}
           {target.action === 'submit' && requirements.some((item) => !item.met) && <p className="text-sm text-amber-800">Hoàn thiện các mục còn thiếu trong phần chỉnh sửa trước khi gửi duyệt.</p>}
           {failure && <p role="alert" className="text-sm text-red-600">{failure}</p>}
-          <div className="flex flex-wrap justify-end gap-3"><Button variant="outline" onClick={() => setTarget(null)}>Quay lại</Button><Button onClick={confirm} disabled={!!error || !selected || (target.action === 'submit' && requirements.some((item) => !item.met))}>{actions[target.action].button}</Button></div>
+          <div className="flex flex-wrap justify-end gap-3"><Button variant="outline" onClick={() => setTarget(null)}>Quay lại</Button><Button variant={target.action === 'delete' ? 'danger' : 'primary'} onClick={confirm} disabled={!!error || !selected || (target.action === 'submit' && requirements.some((item) => !item.met))}>{actions[target.action].button}</Button></div>
         </div>}
       </Modal>
     </div>
@@ -138,10 +140,11 @@ function ListingRow({ room, onAction }: { room: CatalogRoom; onAction: (id: stri
           {editable && <><Link href={`/landlord/listings/create?roomId=${detail.roomId}`} className="rounded-xl border border-line px-3 py-2 text-[13px] font-semibold hover:border-ink">Chỉnh sửa</Link><Button size="sm" className="py-2" onClick={() => onAction(detail.roomId, 'submit')}>Gửi duyệt</Button></>}
           {postStatus === 'APPROVED' && <><Link href={`/rooms/${detail.roomId}`} className="rounded-xl border border-line px-3 py-2 text-[13px] font-semibold hover:border-ink">Xem tin</Link><Button size="sm" variant="ghost" className="py-2" onClick={() => onAction(detail.roomId, 'hide')}>Ẩn tin</Button></>}
           {postStatus === 'HIDDEN' && <Button size="sm" className="py-2" onClick={() => onAction(detail.roomId, 'unhide')}>Hiện lại</Button>}
+          <Button size="sm" variant="ghost" className="py-2 text-red-600 hover:text-red-700" onClick={() => onAction(detail.roomId, 'delete')}>Xóa</Button>
         </div>
       </div>
       <p className={cn('mt-3 break-words rounded-lg px-3 py-2 text-xs leading-5 sm:ml-[136px]', postStatus === 'REJECTED' ? 'bg-red-50 text-red-800' : 'bg-page text-muted')}>
-        {postStatus === 'REJECTED' && room.rejectReason ? `Lý do từ chối: ${room.rejectReason}` : hints[postStatus]}
+        {postStatus === 'REJECTED' && room.rejectReason ? `Lý do từ chối: ${room.rejectReason}` : postStatus === 'HIDDEN' && room.adminRemoveReason ? `Tin bị Admin gỡ: ${room.adminRemoveReason}` : hints[postStatus]}
       </p>
     </article>
   );
