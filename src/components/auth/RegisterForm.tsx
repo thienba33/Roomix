@@ -100,7 +100,8 @@ export default function RegisterForm({ initialRole, onLogin, onSuccess, onBrowse
   );
 
   if (pending) return (
-    <div className="space-y-5 py-4 text-center">
+    <div className="auth-form space-y-5 py-4">
+      <span className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-primary-soft text-primary" aria-hidden="true"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="12" r="9" /><path d="m8 12 3 3 5-6" /></svg></span>
       <h2 className="text-2xl font-extrabold text-ink">Đăng ký thành công</h2>
       <p role="status" className="text-sm leading-6 text-muted">Yêu cầu đăng ký chủ trọ đã được ghi nhận. Bạn có thể đăng nhập sau khi quản trị viên phê duyệt tài khoản.</p>
       <Button onClick={() => onLogin('landlord')} className="w-full">Quay lại đăng nhập</Button>
@@ -109,16 +110,17 @@ export default function RegisterForm({ initialRole, onLogin, onSuccess, onBrowse
   );
 
   return (
-    <div>
-      <div className="mb-3 flex justify-center">
+    <div className="auth-form">
+      <div className="mb-6 flex justify-start">
         <Image src="/images/logo.png" alt="Roomix" width={1961} height={680} className="h-8 w-auto" priority />
       </div>
-      <h2 className="text-center text-2xl font-extrabold text-ink">Tạo tài khoản</h2>
+      <h2 className="auth-heading">Bắt đầu với Roomix</h2>
+      <p className="auth-description">Chọn tài khoản phù hợp với bạn.</p>
 
-      <form onSubmit={onSubmit} noValidate className="mt-4 space-y-2">
+      <form onSubmit={onSubmit} noValidate className="mt-5 space-y-2">
         <div>
           <p className="mb-1.5 text-sm font-medium text-ink">Bạn là</p>
-          <div className="flex rounded-xl bg-page p-1">
+          <div className="auth-roles">
             {ROLES.map((r) => (
               <button
                 key={r}
@@ -126,32 +128,34 @@ export default function RegisterForm({ initialRole, onLogin, onSuccess, onBrowse
                 disabled={busy}
                 onClick={() => setRole(r)}
                 aria-pressed={role === r}
-                className={cn('flex-1 rounded-lg px-3 py-2.5 text-sm transition', role === r ? 'bg-white font-bold text-ink shadow-sm' : 'font-medium text-muted hover:text-ink')}
+                className={cn('auth-role', role === r ? 'auth-role-selected' : '')}
               >
-                {r}
+                <span className="block font-bold">{r}</span>
+                <span className="mt-1 block text-xs font-normal">{r === 'Khách thuê' ? 'Tìm nơi ở phù hợp' : 'Quản lý phòng cho thuê'}</span>
               </button>
             ))}
           </div>
         </div>
         <div>
-          <Input name="fullName" type="text" placeholder="Họ tên *" aria-label="Họ tên" autoComplete="name" icon={UserIcon} className={cn('h-[44px] rounded-xl text-[15px]', errCls('fullName'))} {...bind('fullName')} />
+          <Input label="Họ tên" name="fullName" type="text" placeholder="Họ tên *" aria-label="Họ tên" autoComplete="name" icon={UserIcon} className={cn('h-[44px] rounded-xl text-[15px]', errCls('fullName'))} {...bind('fullName')} />
           {errMsg('fullName')}
         </div>
         <div>
-          <Input name="username" type="text" placeholder="Tên đăng nhập *" aria-label="Tên đăng nhập" autoComplete="username" icon={AtIcon} className={cn('h-[44px] rounded-xl text-[15px]', errCls('username'))} {...bind('username')} />
+          <Input label="Tên đăng nhập" name="username" type="text" placeholder="Tên đăng nhập *" aria-label="Tên đăng nhập" autoComplete="username" icon={AtIcon} className={cn('h-[44px] rounded-xl text-[15px]', errCls('username'))} {...bind('username')} />
           {errMsg('username')}
         </div>
         <div>
-          <Input name="email" type="email" placeholder="Email *" aria-label="Email" autoComplete="email" inputMode="email" icon={MailIcon} className={cn('h-[44px] rounded-xl text-[15px]', errCls('email'))} {...bind('email')} />
+          <Input label="Email" name="email" type="email" placeholder="Email *" aria-label="Email" autoComplete="email" inputMode="email" icon={MailIcon} className={cn('h-[44px] rounded-xl text-[15px]', errCls('email'))} {...bind('email')} />
           {errMsg('email')}
         </div>
         <div>
-          <Input name="phoneNumber" type="tel" placeholder="Số điện thoại *" aria-label="Số điện thoại" autoComplete="tel" inputMode="tel" icon={PhoneIcon} className={cn('h-[44px] rounded-xl text-[15px]', errCls('phone'))} {...bind('phone')} />
+          <Input label="Số điện thoại" name="phoneNumber" type="tel" placeholder="Số điện thoại *" aria-label="Số điện thoại" autoComplete="tel" inputMode="tel" icon={PhoneIcon} className={cn('h-[44px] rounded-xl text-[15px]', errCls('phone'))} {...bind('phone')} />
           {errMsg('phone')}
         </div>
         <div>
           <div className="relative">
             <Input
+              label="Mật khẩu"
               name="password"
               type={showPassword ? 'text' : 'password'}
               placeholder="Mật khẩu *" aria-label="Mật khẩu"
@@ -164,7 +168,7 @@ export default function RegisterForm({ initialRole, onLogin, onSuccess, onBrowse
               type="button"
               onClick={() => setShowPassword((s) => !s)}
               aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
-              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted transition hover:text-ink"
+              className="absolute right-3.5 bottom-3 text-muted transition hover:text-ink"
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z" /><circle cx="12" cy="12" r="3" /></svg>
             </button>
@@ -174,7 +178,7 @@ export default function RegisterForm({ initialRole, onLogin, onSuccess, onBrowse
 
 
 
-        <p role="alert" className="min-h-10 text-sm text-red-600">{submitError}</p>
+        {submitError && <p role="alert" className="rounded-lg bg-red-50 p-3 text-sm text-red-700">{submitError}</p>}
         <Button type="submit" disabled={busy} size="lg" className="h-[44px] w-full">{busy ? 'Đang đăng ký…' : 'Đăng ký'}</Button>
       </form>
 

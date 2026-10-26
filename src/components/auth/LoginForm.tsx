@@ -47,15 +47,17 @@ export default function LoginForm({ initialRole, onSuccess, onRegister }: { init
   const errCls = (has: boolean) => (has ? 'border-red-400 focus:border-red-500 focus:ring-red-200' : '');
 
   return (
-    <div>
-      <div className="mb-3 flex justify-center">
+    <div className="auth-form">
+      <div className="mb-7 flex justify-start">
         <Image src="/images/logo.png" alt="Roomix" width={1961} height={680} className="h-8 w-auto" priority />
       </div>
-      <h2 className="text-center text-2xl font-extrabold text-ink">Chào mừng đến Roomix</h2>
+      <h2 className="auth-heading">Chào mừng trở lại</h2>
+      <p className="auth-description">Đăng nhập để tiếp tục với tài khoản Roomix của bạn.</p>
 
-      <form onSubmit={onSubmit} noValidate className="mt-4 space-y-4">
+      <form onSubmit={onSubmit} noValidate className="mt-7 space-y-3">
         <div>
           <Input
+            label="Tên đăng nhập"
             name="account"
             type="text"
             value={account}
@@ -82,6 +84,7 @@ export default function LoginForm({ initialRole, onSuccess, onRegister }: { init
         <div>
           <div className="relative">
             <Input
+              label="Mật khẩu"
               name="password"
               type={showPassword ? 'text' : 'password'}
               value={password}
@@ -105,7 +108,7 @@ export default function LoginForm({ initialRole, onSuccess, onRegister }: { init
               type="button"
               onClick={() => setShowPassword((s) => !s)}
               aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
-              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted transition hover:text-ink"
+              className="absolute right-3.5 bottom-3 text-muted transition hover:text-ink"
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z" /><circle cx="12" cy="12" r="3" /></svg>
             </button>
@@ -113,7 +116,7 @@ export default function LoginForm({ initialRole, onSuccess, onRegister }: { init
           <ValidationMessage id="login-password-error" message={touched.password ? errors.password : ''} reserveMessage="Mật khẩu tối đa 72 ký tự." />
         </div>
 
-        <p role="alert" className="min-h-10 text-sm text-red-600">{submitError}</p>
+        {submitError && <p role="alert" className="rounded-lg bg-red-50 p-3 text-sm text-red-700">{submitError}</p>}
         <Button type="submit" disabled={busy} size="lg" className="h-[44px] w-full">{busy ? 'Đang đăng nhập…' : 'Đăng nhập'}</Button>
       </form>
 

@@ -4,6 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useState, type React
 import { usePathname, useRouter } from 'next/navigation';
 import Modal from '@/components/ui/Modal';
 import LoginForm from './LoginForm';
+import AuthScene from './AuthScene';
 import RegisterForm from './RegisterForm';
 import { AUTH_EVENT, readMockSession, saveMockSession, clearMockSession, type AuthResponse, type MockUser } from '@/services/mock/auth';
 
@@ -87,9 +88,11 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
   return (
     <AuthContext.Provider value={{ signedIn, ready, user, openAuth, logout, requireTenant }}>
       {children}
-      <Modal open={!!dialog} onClose={close} title={dialog?.mode === 'register' ? 'Đăng ký' : 'Đăng nhập'} hideTitle widthClass="max-w-[480px]">
+      <Modal open={!!dialog} onClose={close} title={dialog?.mode === 'register' ? 'Đăng ký' : 'Đăng nhập'} hideTitle widthClass="max-w-[480px] md:max-w-[960px]" contentClassName="auth-dialog">
+        <AuthScene>
         {dialog?.mode === 'login' && <LoginForm key={`login-${dialog.role}`} initialRole={dialog.role} onSuccess={login} onRegister={(role) => openAuth('register', role)} />}
         {dialog?.mode === 'register' && <RegisterForm onBrowse={close} onSuccess={login} initialRole={dialog.role} onLogin={(role) => openAuth('login', role)} />}
+        </AuthScene>
       </Modal>
     </AuthContext.Provider>
   );
