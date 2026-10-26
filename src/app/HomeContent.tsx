@@ -1,24 +1,21 @@
 'use client';
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
-import { useCatalog } from '@/hooks/useCatalog';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Modal from '@/components/ui/Modal';
 import RoomListingCard from '@/components/rooms/RoomListingCard';
-import { searchRooms, CATALOG_EVENT, type RoomSearch } from '@/services/mock/rooms';
+import { searchRooms, validateSearch, CATALOG_EVENT, type RoomSearch, type PageResponse, type RoomSummary } from '@/services/backend/rooms';
 
 const AMENITIES = [{ value: 'private_bathroom', label: 'WC riêng' }, { value: 'air_conditioner', label: 'Điều hòa' }, { value: 'water_heater', label: 'Nóng lạnh' }, { value: 'balcony', label: 'Ban công' }];
-const SEARCH_KEY = 'roomix_mock_room_search_v1';
+const SEARCH_KEY = 'roomix_api_room_search_v1';
 const PAGE_SIZE = 16;
 const INITIAL: RoomSearch = { location: '', sort: 'newest', page: 0, size: PAGE_SIZE, amenities: [] };
 
 export default function HomeContent() {
-  const catalog = useCatalog();
   const [query, setQuery] = useState<RoomSearch>(INITIAL);
   const [draft, setDraft] = useState<RoomSearch>(INITIAL);
   const [open, setOpen] = useState(false);
-  const [aiNotes, setAiNotes] = useState<string[]>([]);
   const [ready, setReady] = useState(false);
   const [filterError, setFilterError] = useState('');
   useEffect(() => {
@@ -27,11 +24,10 @@ export default function HomeContent() {
         const saved = JSON.parse(localStorage.getItem(SEARCH_KEY) || 'null');
         if (saved) {
           const restored = { ...saved, size: PAGE_SIZE, page: saved.size === PAGE_SIZE ? saved.page ?? 0 : 0 };
-          const result = searchRooms(restored);
-          setQuery({ ...restored, page: Math.max(0, Math.min(restored.page, result.totalPages - 1)) });
+          validateSearch(restored);
+          setQuery(restored);
         }
       } catch { /* Invalid preferences use the default search. */ }
-      try { const notes = JSON.parse(sessionStorage.getItem('roomix:tenant:ai-search-notes') || '[]'); setAiNotes(Array.isArray(notes) ? notes.filter((n): n is string => typeof n === 'string') : []); } catch { setAiNotes([]); }
       setReady(true);
     };
     restore();
@@ -48,16 +44,29 @@ export default function HomeContent() {
     return () => { window.removeEventListener(CATALOG_EVENT, resetPage); window.removeEventListener('storage', resetPage); };
   }, []);
   const update = (value: Partial<RoomSearch>) => setQuery((q) => ({ ...q, ...value, page: 0 }));
-  let result; let error = catalog.error;
-  try { result = searchRooms(query); } catch (e) { error = e instanceof Error ? e.message : 'Không thể tìm phòng.'; }
+  const [result, setResult] = useState<PageResponse<RoomSummary> | null>(null);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [retry, setRetry] = useState(0);
+  useEffect(() => {
+    if (!ready) return;
+    const controller = new AbortController();
+    const timer = window.setTimeout(() => {
+      setLoading(true); setError('');
+      searchRooms(query, controller.signal).then((page) => {
+        if (!controller.signal.aborted) { setResult(page); setLoading(false); }
+      }).catch((cause) => {
+        if (!controller.signal.aborted) { setResult(null); setError(cause instanceof Error ? cause.message : 'Không thể tìm phòng.'); setLoading(false); }
+      });
+    }, 250);
+    return () => { window.clearTimeout(timer); controller.abort(); };
+  }, [query, ready, retry]);
   const count = [query.minPrice, query.maxPrice, query.minArea].filter((v) => v !== undefined).length + (query.amenities?.length ?? 0);
   const reset = () => {
     setQuery(INITIAL);
-    setAiNotes([]);
-    try { sessionStorage.removeItem('roomix:tenant:ai-search-notes'); } catch { /* Optional persistence. */ }
   };
   const apply = () => {
-    try { searchRooms(draft); setQuery({ ...draft, page: 0 }); setOpen(false); setFilterError(''); }
+    try { validateSearch(draft); setQuery({ ...draft, page: 0 }); setOpen(false); setFilterError(''); }
     catch (e) { setFilterError(e instanceof Error ? e.message : 'Bộ lọc không hợp lệ.'); }
   };
   return <div className="mx-auto w-full max-w-[1440px] px-4 py-6 sm:px-6 lg:px-8 discovery-page">
@@ -82,7 +91,7 @@ export default function HomeContent() {
     </section>
     <h2 className="mt-9 text-xl font-bold tracking-tight">Phòng dành cho bạn</h2>
     <div className="mt-4 flex flex-wrap items-center gap-3">
-      <p role="status" className="mr-auto text-sm text-muted">{ready ? `${result?.totalElements ?? 0} phòng phù hợp` : 'Đang tải phòng…'}</p>
+      <p role="status" className="mr-auto text-sm text-muted">{ready && !loading ? `${result?.totalElements ?? 0} phòng phù hợp` : 'Đang tải phòng…'}</p>
       <label className="flex items-center gap-2 text-sm">Sắp xếp
         <select className="rounded-full border border-line bg-white px-3 py-2" value={query.sort} onChange={(e) => update({ sort: e.target.value as RoomSearch['sort'] })}>
           <option value="newest">Mới nhất</option><option value="price_asc">Giá tăng dần</option><option value="price_desc">Giá giảm dần</option>
@@ -91,9 +100,8 @@ export default function HomeContent() {
       <Button variant="outline" onClick={() => { setDraft(query); setFilterError(''); setOpen(true); }}><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><path d="M4 7h16M4 17h16" /><circle cx="9" cy="7" r="3" fill="white" /><circle cx="15" cy="17" r="3" fill="white" /></svg>Bộ lọc{count ? ` · ${count}` : ''}</Button>
       {(count > 0 || query.location) && <button className="text-sm font-semibold text-primary" onClick={reset}>Xóa bộ lọc</button>}
     </div>
-    {aiNotes.length > 0 && <p className="mt-3 text-sm text-muted">Cần xác nhận thêm: {aiNotes.join(' · ')}</p>}
-    {error && <div role="alert" className="mt-6 rounded-xl border border-line p-5"><p className="text-red-600">{error}</p><Button className="mt-3" variant="outline" onClick={() => { catalog.retry(); reset(); }}>Thử lại</Button></div>}
-    {ready && !error && result && (result.content.length ? <>
+    {error && <div role="alert" className="mt-6 rounded-xl border border-line p-5"><p className="text-red-600">{error}</p><Button className="mt-3" variant="outline" onClick={() => { setRetry((value) => value + 1); }}>Thử lại</Button></div>}
+    {ready && !loading && !error && result && (result.content.length ? <>
       <div className="room-grid mt-7 gap-x-5 gap-y-8">{result.content.map((room) => <RoomListingCard key={room.postId} room={room} />)}</div>
       <nav aria-label="Phân trang phòng" className="mt-8 flex items-center justify-center gap-3">
         <button type="button" aria-label="Trang trước" title="Trang trước" disabled={result.first} onClick={() => setQuery((q) => ({ ...q, page: result.page - 1 }))} className="flex h-10 w-10 items-center justify-center rounded-full border border-line text-ink transition hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-35">

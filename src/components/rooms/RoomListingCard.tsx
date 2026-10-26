@@ -3,7 +3,7 @@
 import { useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { type RoomSummary } from '@/services/mock/rooms';
+import { type RoomSummary } from '@/services/backend/rooms';
 import { formatVND } from '@/lib/utils';
 import FavoriteButton from './FavoriteButton';
 
@@ -31,7 +31,7 @@ export default function RoomListingCard({ room }: { room: RoomSummary }) {
       <div className="relative">
         <Link href={`/rooms/${room.roomId}`} aria-label={`Xem phòng: ${room.title}`} className="relative block aspect-[4/3] overflow-hidden rounded-[18px] bg-page">
           {hasImage ? (
-            <Image
+            <Image unoptimized
               src={room.primaryImageUrl}
               alt={room.title}
               fill

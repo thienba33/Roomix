@@ -73,7 +73,7 @@ export default function RoomGallery({ images, title }: { images: string[]; title
       >
         {total ? photos.map((src, photoIndex) => (
           <div key={`${src}-${photoIndex}`} className="relative h-full w-full min-w-full snap-center snap-always" aria-hidden={photoIndex !== index}>
-            {failed.includes(src) ? <div className="flex h-full items-center justify-center text-sm text-muted">Không tải được ảnh này. Hãy chuyển sang ảnh khác.</div> : <Image
+            {failed.includes(src) ? <div className="flex h-full items-center justify-center text-sm text-muted">Không tải được ảnh này. Hãy chuyển sang ảnh khác.</div> : <Image unoptimized
               src={src}
               alt={`${title} — ảnh ${photoIndex + 1}`}
               fill
