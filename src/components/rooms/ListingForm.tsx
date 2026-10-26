@@ -8,7 +8,7 @@ import Input from '@/components/ui/Input';
 import { useToast } from '@/components/ui/Toast';
 import { cn } from '@/lib/utils';
 import { ListingValidationError, validateListingInput, type ListingFieldErrors } from '@/lib/listing-validation';
-import { saveListing, type CatalogRoom, type ListingInput, type propertyFixtures } from '@/services/mock/rooms';
+import { changePostStatus, saveListing, type CatalogRoom, type LandlordRoomResponse, type ListingInput, type PropertyFloor } from '@/services/backend/rooms';
 import ListingPreview from './ListingPreview';
 import { ListingPhoto, ListingStatus } from './ListingVisuals';
 
@@ -24,7 +24,7 @@ function toInput(value: FormValues): ListingInput {
   return { ...value, area: numberValue(value.area), basePrice: numberValue(value.basePrice), depositAmount: numberValue(value.depositAmount), maxTenants: numberValue(value.maxTenants) };
 }
 
-export default function ListingForm({ current, floors }: { current?: CatalogRoom; floors: typeof propertyFixtures }) {
+export default function ListingForm({ current, floors }: { current?: CatalogRoom; floors: PropertyFloor[] }) {
   const router = useRouter();
   const toast = useToast();
   const detail = current?.detail;
@@ -43,6 +43,10 @@ export default function ListingForm({ current, floors }: { current?: CatalogRoom
   const [fields, setFields] = useState<ListingFieldErrors>({});
   const [error, setError] = useState('');
   const [imageError, setImageError] = useState('');
+  const [created, setCreated] = useState<LandlordRoomResponse | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [submitError, setSubmitError] = useState('');
   const savingRef = useRef(false);
   const input = toInput(value);
   const selectedFloor = floors.find((floor) => floor.floorId === value.floorId);
@@ -62,7 +66,7 @@ export default function ListingForm({ current, floors }: { current?: CatalogRoom
     const first = Object.keys(errors)[0];
     if (first) document.getElementById(`listing-${first}`)?.focus();
   };
-  const submit = (event: FormEvent<HTMLFormElement>) => {
+  const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (readingImages || savingRef.current) return;
     const errors = validateListingInput(input);
@@ -71,9 +75,11 @@ export default function ListingForm({ current, floors }: { current?: CatalogRoom
     setSaving(true);
     setError('');
     try {
-      saveListing(input, newImages, detail?.roomId);
-      toast.push('Đã lưu tin nháp', 'Tin chưa công khai. Bạn có thể gửi duyệt khi đã sẵn sàng.');
-      router.push('/landlord/listings');
+      const saved = await saveListing(input, newImages, detail?.roomId);
+      if (detail) {
+        toast.push('Đã cập nhật tin nháp');
+        router.push('/landlord/rooms');
+      } else setCreated(saved);
     } catch (cause) {
       savingRef.current = false;
       setSaving(false);
@@ -102,6 +108,18 @@ export default function ListingForm({ current, floors }: { current?: CatalogRoom
       setReadingImages(false);
     }
   };
+
+  const submitCreated = async () => {
+    if (!created || submitting || submitted) return;
+    setSubmitting(true); setSubmitError('');
+    try {
+      await changePostStatus(created.roomId, 'submit');
+      setSubmitted(true);
+    } catch (cause) { setSubmitError(cause instanceof Error ? cause.message : 'Không thể gửi duyệt.'); }
+    finally { setSubmitting(false); }
+  };
+
+  if (created) return <div className="max-w-2xl space-y-5 rounded-2xl border border-line bg-white p-6"><h1 className="text-2xl font-bold">{submitted ? 'Đã gửi tin chờ duyệt' : 'Đã lưu phòng và tin nháp'}</h1><p className="text-sm leading-6 text-muted">Mã phòng: <span className="break-all font-semibold text-ink">{created.roomId}</span></p><p className="text-sm leading-6 text-muted">Danh sách tin nháp của chủ trọ đang chờ API đọc từ backend. Hãy lưu mã phòng này để đối chiếu khi cần.</p>{!submitted && <><p className="text-sm text-muted">Tin cần có ảnh và giá thuê lớn hơn 0 trước khi gửi duyệt.</p>{submitError && <p role="alert" className="text-sm text-red-700">{submitError}</p>}<Button disabled={submitting || !created.imageUrls.length || created.basePrice <= 0} onClick={() => void submitCreated()}>{submitting ? 'Đang gửi…' : 'Gửi duyệt'}</Button></>}<Link href="/landlord/rooms" className="block text-sm font-semibold text-primary">Về nhà và tầng</Link></div>;
 
   return (
     <div className="space-y-7 pb-6">

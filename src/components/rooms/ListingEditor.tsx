@@ -1,28 +1,26 @@
 'use client';
 
 import Link from 'next/link';
+import UnavailableFeature from '@/components/account/UnavailableFeature';
+import { useApiData } from '@/hooks/useApiData';
+import { listProperties, PROPERTIES_EVENT, type House } from '@/services/backend/properties';
+import type { PropertyFloor } from '@/services/backend/rooms';
 import { useAuth } from '@/components/auth/AuthProvider';
-import Button from '@/components/ui/Button';
-import { useCatalog } from '@/hooks/useCatalog';
-import { readProperties } from '@/services/mock/rooms';
 import ListingForm from './ListingForm';
 
-export default function ListingEditor({ roomId }: { roomId?: string }) {
-  const { user, ready: authReady } = useAuth();
-  const { items, ready, error, retry } = useCatalog();
-  if (!ready || !authReady) return <p role="status" className="py-10 text-muted">Đang tải thông tin phòng…</p>;
-  if (user?.role !== 'LANDLORD') return <p role="alert">Bạn cần đăng nhập bằng tài khoản chủ trọ để soạn tin.</p>;
-  if (error) return <div role="alert" className="space-y-4 rounded-2xl border border-line p-6"><h1 className="text-xl font-bold">Chưa thể tải thông tin phòng</h1><p>{error}</p><Button variant="outline" onClick={retry}>Thử lại</Button></div>;
+const EMPTY: House[] = [];
 
-  const current = items.find((room) => room.detail.roomId === roomId && room.landlordId === user.id);
-  const floors = readProperties().filter((floor) => floor.landlordId === user.id);
-  const unavailable = roomId && (!current || !['DRAFT', 'REJECTED'].includes(current.postStatus));
-  if (unavailable || !floors.length) return (
-    <div className="space-y-4 rounded-2xl border border-line p-8">
-      <h1 className="text-xl font-bold">{unavailable ? 'Tin này không thể chỉnh sửa' : 'Chưa có nhà và tầng để tạo phòng'}</h1>
-      <p className="max-w-lg text-sm leading-6 text-muted">{unavailable ? 'Chỉ có thể sửa tin nháp hoặc tin bị từ chối thuộc tài khoản của bạn.' : 'Liên hệ quản trị viên để kiểm tra thông tin nhà và tầng của tài khoản.'}</p>
-      <Link href="/landlord/listings" className="inline-block text-sm font-semibold text-primary">Về tin đăng của tôi</Link>
-    </div>
-  );
-  return <ListingForm key={`${user.id}:${roomId ?? 'new'}`} current={current} floors={floors} />;
+export default function ListingEditor({ roomId }: { roomId?: string }) {
+  const { user } = useAuth();
+  const { data: houses, ready, error, retry } = useApiData('listing-properties', listProperties, EMPTY, PROPERTIES_EVENT);
+  if (roomId) return <UnavailableFeature title="Chỉnh sửa phòng và tin" description="Backend chưa cung cấp API đọc phòng và tin nháp của chủ trọ để tải dữ liệu chỉnh sửa." href="/landlord/rooms" linkLabel="Về nhà và tầng" />;
+  if (!ready) return <p role="status" className="py-10 text-muted">Đang tải nhà và tầng…</p>;
+  if (error) return <div role="alert" className="space-y-3"><p>{error}</p><button type="button" onClick={retry} className="font-semibold text-primary underline">Thử lại</button></div>;
+  const floors: PropertyFloor[] = houses.flatMap((house) => house.floors.map((floor) => ({
+    houseId: house.id, floorId: floor.id, houseName: house.name, floorName: floor.name,
+    floorNumber: floor.floorNumber, landlordId: user?.id ?? '', addressStreet: house.addressStreet,
+    ward: house.ward, district: house.district, city: house.city,
+  })));
+  if (!floors.length) return <div className="space-y-4 rounded-2xl border border-line p-8"><h1 className="text-xl font-bold">Chưa có tầng để tạo phòng</h1><p className="text-sm text-muted">Thêm nhà và tầng trước khi tạo phòng và tin nháp.</p><Link href="/landlord/rooms" className="font-semibold text-primary">Quản lý nhà và tầng</Link></div>;
+  return <ListingForm floors={floors} />;
 }

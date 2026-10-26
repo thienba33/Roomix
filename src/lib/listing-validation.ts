@@ -1,8 +1,8 @@
-import type { ListingInput } from '@/services/mock/rooms';
+import type { ListingInput } from '@/services/backend/rooms';
 
 export type ListingFieldErrors = Partial<Record<keyof ListingInput, string>>;
 
-/** Shared by the form and mock mutation; saving a draft does not require photos or a positive rent. */
+/** Shared validation for the listing form; saving a draft does not require photos or a positive rent. */
 export function validateListingInput(input: ListingInput): ListingFieldErrors {
   const errors: ListingFieldErrors = {};
   if (!input.roomNumber.trim()) errors.roomNumber = 'Nhập số phòng.';

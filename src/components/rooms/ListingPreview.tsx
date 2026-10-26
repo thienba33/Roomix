@@ -1,12 +1,12 @@
 import { formatVND } from '@/lib/utils';
 import { getSubmissionRequirements } from '@/lib/listing-validation';
-import type { ListingInput, propertyFixtures } from '@/services/mock/rooms';
+import type { ListingInput, PropertyFloor } from '@/services/backend/rooms';
 import { ListingPhoto, SubmissionChecklist } from './ListingVisuals';
 
 export default function ListingPreview({ value, images, floor }: {
   value: ListingInput;
   images: string[];
-  floor?: (typeof propertyFixtures)[number];
+  floor?: PropertyFloor;
 }) {
   const hasPrice = Number.isFinite(value.basePrice) && value.basePrice >= 0;
   return (
