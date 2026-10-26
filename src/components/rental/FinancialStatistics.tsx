@@ -5,13 +5,13 @@ import Link from 'next/link';
 import { useAuth } from '@/components/auth/AuthProvider';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
-import { useCatalog } from '@/hooks/useCatalog';
+import { useRoomDetails } from '@/hooks/useRoomDetails';
 import { useInvoices } from '@/hooks/useInvoices';
 import { useRental } from '@/hooks/useRental';
 import { monthsForPeriod, summarizeFinances, UNKNOWN_HOUSE, type FinancePeriod, type FinanceSummary } from '@/lib/financial-statistics';
 import { formatVND } from '@/lib/utils';
-import { propertyFixtures, type CatalogRoom } from '@/services/mock/rooms';
-import { todayVN } from '@/services/mock/rental';
+import { type RoomDetail } from '@/services/backend/rooms';
+import { todayVN } from '@/services/backend/rental';
 
 const controlClass = 'h-11 w-full rounded-xl border border-line bg-white px-3 text-sm text-ink outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20';
 const periodLabels: Record<FinancePeriod, string> = { month: 'Tháng', quarter: 'Quý', year: 'Năm' };
@@ -24,20 +24,19 @@ function periodTitle(months: string[], period: FinancePeriod) {
   const [year, month] = months[0].split('-').map(Number);
   return period === 'year' ? `Năm ${year}` : period === 'quarter' ? `Quý ${Math.floor((month - 1) / 3) + 1}/${year}` : `Tháng ${String(month).padStart(2, '0')}/${year}`;
 }
-function houseOptions(landlordId: string, rooms: CatalogRoom[], tenancyRoomIds: string[]) {
+function houseOptions(rooms: RoomDetail[], tenancyRoomIds: string[]) {
   const options = new Map<string, string>();
-  propertyFixtures.filter((floor) => floor.landlordId === landlordId).forEach((floor) => options.set(floor.houseId, floor.houseName));
-  const owned = rooms.filter((room) => room.landlordId === landlordId);
-  owned.forEach((room) => options.set(room.detail.houseId, room.detail.houseName));
-  const knownRoomIds = new Set(owned.map((room) => room.detail.roomId));
+  const owned = rooms.filter((room) => tenancyRoomIds.includes(room.roomId));
+  owned.forEach((room) => options.set(room.houseId, room.houseName));
+  const knownRoomIds = new Set(owned.map((room) => room.roomId));
   if (tenancyRoomIds.some((id) => !knownRoomIds.has(id))) options.set(UNKNOWN_HOUSE, 'Chưa xác định nhà');
   return [...options].sort((a, b) => a[1].localeCompare(b[1], 'vi'));
 }
 
 export default function FinancialStatistics() {
   const { user, ready: authReady } = useAuth();
-  const catalog = useCatalog();
   const rental = useRental();
+  const catalog = useRoomDetails([...rental.requests.map((item) => item.roomId), ...rental.tenancies.map((item) => item.roomId)]);
   const invoices = useInvoices();
   if (!authReady || !catalog.ready || !rental.ready || !invoices.ready) return <div role="status" className="space-y-5"><h1 className="text-[28px] font-extrabold">Thống kê tài chính</h1><p className="text-muted">Đang tổng hợp hóa đơn…</p><div aria-hidden="true" className="h-52 animate-pulse rounded-2xl bg-page" /></div>;
   if (user?.role !== 'LANDLORD') return <p role="alert">Bạn cần đăng nhập bằng tài khoản chủ trọ để xem thống kê tài chính.</p>;
@@ -46,7 +45,7 @@ export default function FinancialStatistics() {
 
 function Dashboard({ landlordId, rooms, tenancies, invoices, error }: {
   landlordId: string;
-  rooms: CatalogRoom[];
+  rooms: RoomDetail[];
   tenancies: ReturnType<typeof useRental>['tenancies'];
   invoices: ReturnType<typeof useInvoices>['items'];
   error: string;
@@ -56,7 +55,7 @@ function Dashboard({ landlordId, rooms, tenancies, invoices, error }: {
   const [houseChoice, setHouseChoice] = useState('');
   const months = monthsForPeriod(anchor, period);
   const ownedTenancies = tenancies.filter((item) => item.landlordId === landlordId);
-  const houses = houseOptions(landlordId, rooms, ownedTenancies.map((item) => item.roomId));
+  const houses = houseOptions(rooms, ownedTenancies.map((item) => item.roomId));
   const selectedHouse = houses.some(([id]) => id === houseChoice) ? houseChoice : '';
   const summary = summarizeFinances({ invoices, tenancies: ownedTenancies, rooms, landlordId, months, houseId: selectedHouse, today: todayVN() });
   const title = periodTitle(months, period);
@@ -80,7 +79,7 @@ function Dashboard({ landlordId, rooms, tenancies, invoices, error }: {
           <Metric label="Thực thu trong kỳ" value={summary.revenue} detail="Theo ngày chủ trọ ghi nhận thanh toán" tone="indigo" />
         </section>
         {summary.invoiceCount === 0 && summary.revenue === 0 ? <Card className="px-6 py-12 text-center"><h2 className="text-lg font-bold">Chưa có dữ liệu tài chính trong khoảng này</h2><p className="mx-auto mt-2 max-w-md text-sm leading-6 text-muted">Chọn thời gian hoặc nhà khác. Khi có hóa đơn và thanh toán, số liệu sẽ xuất hiện ở đây.</p><Link href="/landlord/invoices" className="mt-5 inline-block text-sm font-semibold text-primary hover:underline">Xem hóa đơn của tôi</Link></Card> : <div className="grid gap-5 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]"><RevenueChart summary={summary} title={title} /><HouseBreakdown summary={summary} /></div>}
-        <p className="text-xs leading-5 text-muted">Khoản phải thu được nhóm theo kỳ hóa đơn. Thực thu được nhóm theo ngày ghi nhận thanh toán; vì vậy hai số có thể khác nhau trong cùng khoảng thời gian.</p>
+        <p className="text-xs leading-5 text-muted">Khoản phải thu được nhóm theo kỳ hóa đơn. Thực thu được nhóm theo ngày ghi nhận thanh toán trực tiếp (tiền mặt/chuyển khoản), chưa gồm bù trừ quyết toán; vì vậy hai số có thể khác nhau trong cùng khoảng thời gian.</p>
       </>}
     </>}
   </div>;

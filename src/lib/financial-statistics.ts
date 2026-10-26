@@ -1,6 +1,6 @@
-import type { CatalogRoom } from '@/services/mock/rooms';
-import type { MockInvoice } from '@/services/mock/invoices';
-import type { Tenancy } from '@/services/mock/rental';
+import type { RoomDetail } from '@/services/backend/rooms';
+import type { InvoiceRecord } from '@/services/backend/invoices';
+import type { Tenancy } from '@/services/backend/rental';
 
 export type FinancePeriod = 'month' | 'quarter' | 'year';
 export const UNKNOWN_HOUSE = 'unknown';
@@ -53,9 +53,9 @@ export function monthsForPeriod(anchor: string, period: FinancePeriod): string[]
 export function summarizeFinances({
   invoices, tenancies, rooms, landlordId, months, houseId = '', today,
 }: {
-  invoices: MockInvoice[];
+  invoices: InvoiceRecord[];
   tenancies: Tenancy[];
-  rooms: CatalogRoom[];
+  rooms: RoomDetail[];
   landlordId: string;
   months: string[];
   houseId?: string;
@@ -63,8 +63,8 @@ export function summarizeFinances({
 }): FinanceSummary {
   const monthSet = new Set(months);
   const ownTenancies = new Map(tenancies.filter((item) => item.landlordId === landlordId).map((item) => [item.id, item]));
-  const roomHouses = new Map(rooms.filter((item) => item.landlordId === landlordId).map((item) =>
-    [item.detail.roomId, { id: item.detail.houseId, name: item.detail.houseName }]));
+  const roomHouses = new Map(rooms.map((item) =>
+    [item.roomId, { id: item.houseId, name: item.houseName }]));
   const byHouse = new Map<string, FinanceHouse>();
   const monthlyRevenue = months.map((month) => ({ month, amount: 0 }));
   const monthRows = new Map(monthlyRevenue.map((row) => [row.month, row]));
@@ -105,7 +105,7 @@ export function summarizeFinances({
       byHouse.set(house.id, row);
     }
 
-    if (invoice.status === 'PAID' && paid > 0) {
+    if (invoice.status === 'PAID' && paid > 0 && invoice.paymentMethod !== 'SETTLEMENT') {
       const paidMonth = invoice.paymentDate ? paymentMonth(invoice.paymentDate) : '';
       if (!paidMonth) {
         if (monthSet.has(invoice.billingMonth)) missingPaymentDateCount += 1;
