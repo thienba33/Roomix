@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
 import { useCatalog } from '@/hooks/useCatalog';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
@@ -59,9 +60,27 @@ export default function HomeContent() {
     try { searchRooms(draft); setQuery({ ...draft, page: 0 }); setOpen(false); setFilterError(''); }
     catch (e) { setFilterError(e instanceof Error ? e.message : 'Bộ lọc không hợp lệ.'); }
   };
-  return <div className="mx-auto w-full max-w-[1440px] px-4 py-6 sm:px-6 lg:px-8">
-    <h1 className="text-[28px] font-extrabold text-ink">Tìm phòng</h1>
-    <Input value={query.location ?? ''} onChange={(e) => update({ location: e.target.value })} placeholder="Tìm theo đường, phường, quận hoặc thành phố…" aria-label="Tìm theo địa chỉ" className="mt-4 h-[52px]" />
+  return <div className="mx-auto w-full max-w-[1440px] px-4 py-6 sm:px-6 lg:px-8 discovery-page">
+    <section style={{ position: 'relative' }} className="isolate overflow-hidden rounded-3xl bg-[#edf2f8] px-5 py-6 sm:px-8 md:px-10 md:py-7" aria-labelledby="discovery-title">
+      <div
+        aria-hidden="true"
+        style={{ maskImage: 'linear-gradient(to right, transparent, rgba(0,0,0,0.3) 30%, black 85%)', WebkitMaskImage: 'linear-gradient(to right, transparent, rgba(0,0,0,0.3) 30%, black 85%)' }}
+        className="pointer-events-none absolute -right-12 -top-12 hidden h-[400px] w-[400px] select-none md:block lg:h-[440px] lg:w-[440px]"
+      >
+        <Image src="/images/logo-mark.png" alt="" fill sizes="440px" className="object-contain opacity-25" priority />
+      </div>
+      <div className="relative z-10">
+        <h1 id="discovery-title" className="text-[32px] font-extrabold leading-[1.18] tracking-[-1.2px] text-[#202b3c] sm:text-[38px] lg:text-[44px] lg:tracking-[-1.7px]">Tìm một nơi<br />để gọi là nhà.</h1>
+        <p className="mt-3 max-w-[48ch] text-sm leading-6 text-[#536175]">Tìm phòng theo khu vực, ngân sách và tiện ích bạn cần.</p>
+        <div role="search" aria-label="Tìm kiếm phòng" className="mt-5 max-w-[840px]">
+          <div className="discovery-search-field">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" /><path d="m16 16 5 5" /></svg>
+            <Input value={query.location ?? ''} onChange={(e) => update({ location: e.target.value })} placeholder="Tìm theo đường, phường, quận hoặc thành phố…" aria-label="Tìm theo địa chỉ" className="h-[56px]" />
+          </div>
+        </div>
+      </div>
+    </section>
+    <h2 className="mt-9 text-xl font-bold tracking-tight">Phòng dành cho bạn</h2>
     <div className="mt-4 flex flex-wrap items-center gap-3">
       <p role="status" className="mr-auto text-sm text-muted">{ready ? `${result?.totalElements ?? 0} phòng phù hợp` : 'Đang tải phòng…'}</p>
       <label className="flex items-center gap-2 text-sm">Sắp xếp
@@ -69,7 +88,7 @@ export default function HomeContent() {
           <option value="newest">Mới nhất</option><option value="price_asc">Giá tăng dần</option><option value="price_desc">Giá giảm dần</option>
         </select>
       </label>
-      <Button variant="outline" onClick={() => { setDraft(query); setFilterError(''); setOpen(true); }}>Bộ lọc{count ? ` · ${count}` : ''}</Button>
+      <Button variant="outline" onClick={() => { setDraft(query); setFilterError(''); setOpen(true); }}><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><path d="M4 7h16M4 17h16" /><circle cx="9" cy="7" r="3" fill="white" /><circle cx="15" cy="17" r="3" fill="white" /></svg>Bộ lọc{count ? ` · ${count}` : ''}</Button>
       {(count > 0 || query.location) && <button className="text-sm font-semibold text-primary" onClick={reset}>Xóa bộ lọc</button>}
     </div>
     {aiNotes.length > 0 && <p className="mt-3 text-sm text-muted">Cần xác nhận thêm: {aiNotes.join(' · ')}</p>}
