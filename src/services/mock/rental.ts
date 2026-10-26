@@ -1,5 +1,7 @@
 import { findMockUserById, readMockSession } from './auth';
 import { readCatalog, CATALOG_EVENT } from './rooms';
+import { pushTenantNotification } from '@/lib/tenant-store';
+import { pushLandlordNotification } from '@/lib/landlord-store';
 export const RENTAL_KEY = 'roomix_mock_rental_v1';
 export const RENTAL_EVENT = 'roomix:mock:rental';
 export interface RentalRequest {
@@ -55,7 +57,9 @@ export function sendRental(roomId: string, note: string) {
   if (state.requests.some((r) => r.roomId === roomId && r.tenantId === user.id && r.status === 'PENDING')) throw new Error('Bạn đã gửi yêu cầu cho phòng này.');
   const now = new Date().toISOString();
   const request: RentalRequest = { id: crypto.randomUUID(), roomId, postId: room.detail.postId, tenantId: user.id, landlordId: room.landlordId, note, status: 'PENDING', createdAt: now, updatedAt: now };
-  state.requests.push(request); save(state); return request;
+  state.requests.push(request); save(state);
+  pushLandlordNotification({ type: 'INTEREST_REQUEST', title: 'Yêu cầu quan tâm mới', body: `Khách thuê đã gửi yêu cầu cho Phòng ${room.detail.roomNumber} — ${room.detail.title}.` });
+  return request;
 }
 function reasonCheck(reason: string) { if (!reason.trim() || reason.length > 2000) throw new Error('Vui lòng nhập lý do, tối đa 2000 ký tự.'); }
 export function cancelRental(id: string) {
@@ -69,6 +73,8 @@ export function rejectRental(id: string, reason: string) {
   const user = actor('LANDLORD'); reasonCheck(reason); const state = readRental(); const request = state.requests.find((r) => r.id === id && r.landlordId === user.id);
   if (!request || request.status !== 'PENDING') throw new Error('Yêu cầu không còn ở trạng thái chờ.');
   request.status = 'REJECTED'; request.rejectReason = reason.trim(); request.updatedAt = new Date().toISOString(); save(state);
+  const room = readCatalog().find((r) => r.detail.roomId === request.roomId);
+  pushTenantNotification({ type: 'INTEREST_REQUEST', title: 'Yêu cầu đã bị từ chối', body: `Yêu cầu Phòng ${room?.detail.roomNumber ?? ''} đã bị từ chối. Lý do: ${reason.trim()}` });
 }
 function dateValid(s: string) { return /^\d{4}-\d{2}-\d{2}$/.test(s) && Number.isFinite(Date.parse(s)) && new Date(s).toISOString().slice(0, 10) === s; }
 export function acceptRental(id: string, terms: ContractTerms, now = Date.now()) {
@@ -93,7 +99,9 @@ export function acceptRental(id: string, terms: ContractTerms, now = Date.now())
   const tenancy: Tenancy = { ...terms, id: crypto.randomUUID(), contractCode: `HD-${crypto.randomUUID()}`, rentalRequestId: id, roomId: request.roomId, tenantId: request.tenantId, landlordId: user.id, status: 'PENDING', depositDeadline: new Date(deadline).toISOString(), createdAt: timestamp, updatedAt: timestamp };
   request.status = 'ACCEPTED'; request.updatedAt = timestamp;
   state.requests.forEach((r) => { if (r.id !== id && r.roomId === request.roomId && r.status === 'PENDING') { r.status = 'REJECTED'; r.rejectReason = 'Phòng đã được chấp nhận cho một yêu cầu thuê khác'; r.updatedAt = timestamp; } });
-  state.tenancies.push(tenancy); save(state); return tenancy;
+  state.tenancies.push(tenancy); save(state);
+  pushTenantNotification({ type: 'INTEREST_REQUEST', title: 'Yêu cầu được chấp nhận', body: `Chủ trọ đã chấp nhận yêu cầu Phòng ${room.detail.roomNumber} — Contact Card đã mở. Hợp đồng đang chờ xác nhận cọc.` });
+  return tenancy;
 }
 export function cancelTenancy(id: string, reason: string) {
   const user = actor(); reasonCheck(reason); const state = readRental(); const t = state.tenancies.find((t) => t.id === id && (t.tenantId === user.id || t.landlordId === user.id));
@@ -108,7 +116,9 @@ export function confirmDeposit(id: string, now = Date.now()) {
   if (t.status === 'ACTIVE') return t;
   if (t.status !== 'PENDING' || Date.parse(t.depositDeadline) <= now || t.endDate < todayVN(now)) throw new Error('Hợp đồng đã hủy, hết hạn cọc hoặc hết thời hạn thuê.');
   if (state.tenancies.some((other) => other.id !== t.id && other.roomId === t.roomId && other.status === 'ACTIVE')) throw new Error('Phòng đang có khách thuê.');
-  t.status = 'ACTIVE'; t.depositConfirmedAt = new Date(now).toISOString(); t.updatedAt = t.depositConfirmedAt; save(state); return t;
+  t.status = 'ACTIVE'; t.depositConfirmedAt = new Date(now).toISOString(); t.updatedAt = t.depositConfirmedAt; save(state);
+  pushTenantNotification({ type: 'INTEREST_REQUEST', title: 'Đã nhận tiền cọc', body: `Chủ trọ đã xác nhận tiền cọc cho hợp đồng ${t.contractCode}. Phòng bắt đầu được tính là đang thuê.` });
+  return t;
 }
 
 // UC02.8 mock extension: the rental backend currently returns no Contact Card payload.

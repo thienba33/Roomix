@@ -1,6 +1,40 @@
-import { rooms } from '@/lib/data';
+import { rooms as seedRooms } from '@/lib/data';
 import { formatPriceShort } from '@/lib/utils';
+import { catalogWithRental } from '@/services/mock/rooms';
 import type { Room } from '@/types';
+
+/**
+ * UC06 (mock): the AI answers on the SAME catalog the search and listings
+ * use — approved, available, not-rented rooms — mapped to the legacy Room
+ * shape AiPanel already renders (links resolve via the numeric → UUID
+ * redirect on /rooms/[id]). Previously it answered on the static data.ts
+ * list, which is a different dataset from the rooms actually for rent.
+ */
+function catalogRooms(): Room[] {
+  try {
+    const catalog = catalogWithRental().filter(
+      (r) => r.postStatus === 'APPROVED' && r.roomStatus === 'AVAILABLE' && !r.detail.rented,
+    );
+    if (!catalog.length) return seedRooms;
+    return catalog.map((r) => ({
+      id: r.legacyId,
+      code: r.detail.roomNumber,
+      name: r.detail.title,
+      house: r.detail.houseName,
+      area: r.detail.district,
+      price: r.detail.rentalPrice,
+      size: r.detail.area,
+      floor: r.detail.floorNumber,
+      status: 'AVAILABLE' as const,
+      rating: 0,
+      image: r.detail.primaryImageUrl,
+      gallery: r.detail.imageUrls,
+      amenities: r.detail.amenitiesDescription.split(',').map((a) => a.trim()).filter(Boolean),
+    }));
+  } catch {
+    return seedRooms;
+  }
+}
 
 export interface RoomHit { room: Room; reason: string; }
 export interface AiMessage { id: string; role: 'user' | 'ai'; text: string; hits?: RoomHit[]; criteria?: string[]; followUps?: string[]; sources?: string[]; search?: Extracted; }
@@ -64,6 +98,7 @@ function scoreHits(candidates: Room[], c: Extracted): RoomHit[] {
 }
 
 function buildReply(raw: string): AiMessage {
+  const rooms = catalogRooms();
   const text = raw.trim();
   const lower = text.toLowerCase();
   const c = extractCriteria(text);
@@ -140,7 +175,7 @@ function buildReply(raw: string): AiMessage {
 export async function sendAiMessage(text: string, history: AiMessage[], roomId?: number): Promise<AiMessage> {
   // Mock transport. A future adapter maps ChatResponse without inventing sources.
   await new Promise((resolve) => setTimeout(resolve, 250));
-  const room = rooms.find((item) => item.id === roomId);
+  const room = catalogRooms().find((item) => item.id === roomId);
   if (room && !/gợi ý|tìm phòng|so sánh/i.test(text)) {
     const response = buildReply(text);
     if (/gặp chủ trọ|liên hệ|số điện thoại/i.test(text)) return response;

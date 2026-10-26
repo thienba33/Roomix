@@ -170,6 +170,16 @@ export const useNotificationsState = () =>
 export const useRoomStatusesState = () =>
   useLandlordState<Record<string, RoomStatus>>(LS_KEYS.roomStatuses, () => ({}));
 
+/** Mock event inbox (UC07.7): rental/invoice/broadcast actions write here.
+ * The landlord notifications screen hydrates from this key on mount, so a
+ * notification sent from another screen appears when the landlord opens it. */
+export function pushLandlordNotification(item: Omit<NotificationItem, 'id' | 'time' | 'read'>): NotificationItem {
+  const list = read<NotificationItem[]>(LS_KEYS.notifications, () => seedNotifs.map((n) => ({ ...n })));
+  const entry: NotificationItem = { ...item, id: Math.max(0, ...list.map((n) => n.id)) + 1, time: 'Vừa xong', read: false };
+  write(LS_KEYS.notifications, [entry, ...list]);
+  return entry;
+}
+
 export function pendingRequestCountFromStorage(): number {
   const list = read<LRequest[]>(LS_KEYS.requests, () => seedRequests.map((r) => ({ ...r })));
   return list.filter((r) => r.status === 'PENDING').length;

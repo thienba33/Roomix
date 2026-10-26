@@ -331,6 +331,15 @@ export function getUnreadNotificationCount(): number {
   return getTenantNotifications().filter((n) => !n.read).length;
 }
 
+/** Mock event inbox: rental/invoice/broadcast actions prepend a real entry
+ * here instead of the list staying a static seed (UC07.7 receiver side).
+ * The backend has no notification POST, so this is the mock seam. */
+export function pushTenantNotification(item: Omit<NotificationItem, 'id' | 'time' | 'read'>): NotificationItem {
+  const entry: NotificationItem = { ...item, id: Date.now(), time: 'Vừa xong', read: false };
+  setTenantNotifications([entry, ...getTenantNotifications()]);
+  return entry;
+}
+
 /* ------------------------------------------------------- profile (UC01.4) */
 
 export interface TenantProfile {

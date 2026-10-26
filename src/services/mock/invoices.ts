@@ -1,5 +1,7 @@
 import { readMockSession } from './auth';
 import { readRental, todayVN, type Tenancy } from './rental';
+import { pushTenantNotification } from '@/lib/tenant-store';
+import { pushLandlordNotification } from '@/lib/landlord-store';
 
 export const INVOICE_KEY = 'roomix_mock_invoices_v1';
 export const INVOICE_EVENT = 'roomix:mock:invoices';
@@ -137,6 +139,7 @@ export function createInvoice(input: InvoiceInput) {
   const reading: MeterReading = { id: crypto.randomUUID(), tenancyId: tenancy.id, roomId: tenancy.roomId, billingMonth: input.billingMonth, oldElectricityVal: input.oldElectricityVal, newElectricityVal: input.newElectricityVal, electricityUsage, oldWaterVal: input.oldWaterVal, newWaterVal: input.newWaterVal, waterUsage, recordedBy: user.id, readingDate: input.readingDate };
   const invoice: MockInvoice = { id: crypto.randomUUID(), invoiceCode: `INV-${crypto.randomUUID()}`, tenancyId: tenancy.id, meterReadingId: reading.id, billingMonth: input.billingMonth, dueDate: input.dueDate, totalAmount, paidAmount: 0, status: 'PENDING', revision: 0, disputed: false, createdAt: timestamp, updatedAt: timestamp, reading, items, reminders: [], corrections: [] };
   save([...readInvoices(), invoice]);
+  pushTenantNotification({ type: 'INVOICE', title: 'Hóa đơn mới đã phát hành', body: `Hóa đơn kỳ ${input.billingMonth}: ${totalAmount.toLocaleString('vi-VN')}đ, hạn thanh toán ${input.dueDate.split('-').reverse().join('/')}.` });
   return invoice;
 }
 function mutate(id: string, role: 'TENANT' | 'LANDLORD', change: (invoice: MockInvoice, tenancy: Tenancy) => void) {
@@ -149,15 +152,17 @@ function mutate(id: string, role: 'TENANT' | 'LANDLORD', change: (invoice: MockI
   return next;
 }
 export function confirmInvoice(id: string) {
-  return mutate(id, 'TENANT', (invoice) => {
+  const next = mutate(id, 'TENANT', (invoice) => {
     if (invoice.disputed) throw new Error('Hóa đơn đang tranh chấp.');
     if (invoice.status === 'CONFIRMED') return;
     if (invoice.status !== 'PENDING') throw new Error('Chỉ xác nhận hóa đơn đang chờ.');
     invoice.status = 'CONFIRMED'; invoice.confirmedAt = new Date().toISOString();
   });
+  pushLandlordNotification({ type: 'INVOICE', title: 'Khách đã xác nhận hóa đơn', body: `Hóa đơn kỳ ${next.billingMonth} đã được khách thuê xác nhận, chờ ghi nhận đã thu.` });
+  return next;
 }
 export function payInvoice(id: string, method: PaymentMethod) {
-  return mutate(id, 'LANDLORD', (invoice) => {
+  const next = mutate(id, 'LANDLORD', (invoice) => {
     if (!['CASH', 'BANK_TRANSFER'].includes(method)) throw new Error('Phương thức thanh toán không hợp lệ.');
     if (invoice.disputed) throw new Error('Hóa đơn đang tranh chấp.');
     if (invoice.status === 'PAID') return;
@@ -165,30 +170,38 @@ export function payInvoice(id: string, method: PaymentMethod) {
     invoice.status = 'PAID'; invoice.paidAmount = invoice.totalAmount;
     invoice.paymentMethod = method; invoice.paymentDate = new Date().toISOString();
   });
+  pushTenantNotification({ type: 'INVOICE', title: 'Đã ghi nhận thanh toán', body: `Hóa đơn kỳ ${next.billingMonth} đã được chủ trọ ghi nhận đã thu ${next.totalAmount.toLocaleString('vi-VN')}đ.` });
+  return next;
 }
 export function disputeInvoice(id: string, reason: string) {
-  return mutate(id, 'TENANT', (invoice) => {
+  const next = mutate(id, 'TENANT', (invoice) => {
     reasonCheck(reason);
     if (invoice.status === 'PAID') throw new Error('Hóa đơn đã thanh toán không thể tranh chấp.');
     invoice.disputed = true; invoice.disputeReason = reason.trim(); invoice.disputeResolution = undefined;
     invoice.status = 'PENDING'; invoice.confirmedAt = undefined;
   });
+  pushLandlordNotification({ type: 'INVOICE', title: 'Hóa đơn bị khiếu nại', body: `Khách thuê khiếu nại hóa đơn kỳ ${next.billingMonth}. Lý do: ${reason.trim()}` });
+  return next;
 }
 export function resolveInvoiceDispute(id: string, reason: string) {
-  return mutate(id, 'LANDLORD', (invoice) => {
+  const next = mutate(id, 'LANDLORD', (invoice) => {
     reasonCheck(reason);
     if (!invoice.disputed || invoice.status === 'PAID') throw new Error('Hóa đơn không ở trạng thái tranh chấp.');
     invoice.disputed = false; invoice.disputeResolution = reason.trim();
     invoice.status = 'PENDING'; invoice.confirmedAt = undefined;
   });
+  pushTenantNotification({ type: 'INVOICE', title: 'Khiếu nại hóa đơn đã được xử lý', body: `Chủ trọ đã xử lý khiếu nại hóa đơn kỳ ${next.billingMonth}. Vui lòng kiểm tra và xác nhận lại.` });
+  return next;
 }
 export function remindInvoice(id: string) {
-  return mutate(id, 'LANDLORD', (invoice) => {
+  const next = mutate(id, 'LANDLORD', (invoice) => {
     const today = todayVN();
     if (!isInvoiceOverdue(invoice, today)) throw new Error('Chỉ nhắc hóa đơn quá hạn còn phải thu.');
     if (invoice.reminders.some((item) => item.reminderDate === today)) return;
     invoice.reminders.push({ id: crypto.randomUUID(), reminderDate: today, outstandingAmount: outstanding(invoice), content: `Hóa đơn ${invoice.invoiceCode} đã quá hạn. Vui lòng kiểm tra và thanh toán.` });
   });
+  pushTenantNotification({ type: 'INVOICE', title: 'Nhắc hóa đơn quá hạn', body: `Hóa đơn kỳ ${next.billingMonth} đã quá hạn, còn phải thu ${outstanding(next).toLocaleString('vi-VN')}đ.` });
+  return next;
 }
 export function correctInvoice(id: string, input: CorrectionInput) {
   return mutate(id, 'LANDLORD', (invoice, tenancy) => {

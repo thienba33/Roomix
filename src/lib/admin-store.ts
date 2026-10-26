@@ -238,3 +238,25 @@ export function nowStamp(): string {
 export function nextId(list: { id: number }[]): number {
   return list.length ? Math.max(...list.map((x) => x.id)) + 1 : 1;
 }
+
+/** UC07.6 tenant-side submission (mock): a tenant report lands in the same
+ * admin reports queue the admin screen already processes. The backend has
+ * no report module yet, so this is the mock seam — the admin actions
+ * (takedown/dismiss) already exist on the admin side. */
+export function submitTenantReport(input: { reporter: string; target: string; reason: string; detail?: string }): ReportItem {
+  const list = read<ReportItem[]>(ADMIN_KEYS.reports, () => seedReports.map((r) => ({ ...r })));
+  const item: ReportItem = {
+    id: nextId(list),
+    reporter: input.reporter,
+    target: input.target,
+    reason: input.reason,
+    date: todayVN(),
+    status: 'PENDING',
+    detail: input.detail,
+  };
+  writeRaw(ADMIN_KEYS.reports, [...list, item]);
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent(SYNC_EVENT, { detail: { key: ADMIN_KEYS.reports } }));
+  }
+  return item;
+}
