@@ -24,6 +24,10 @@ const nextConfig = {
     addTailwind(config.module.rules);
     return config;
   },
+  async rewrites() {
+    const backend = (process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:18080').replace(/\/$/, '');
+    return [{ source: '/backend/:path*', destination: `${backend}/:path*` }];
+  },
   async redirects() {
     return [
       // Tenant (old Vietnamese slugs -> English)

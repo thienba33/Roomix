@@ -5,7 +5,7 @@ import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import ValidationMessage from './ValidationMessage';
 import { validateLoginUsername as validateAccount, validateLoginPassword as validatePassword } from '@/lib/auth-validation';
-import { mockLogin, type AuthResponse } from '@/services/mock/auth';
+import { login, type AuthResponse } from '@/services/backend/auth';
 import { cn } from '@/lib/utils';
 
 const MailIcon = (
@@ -39,7 +39,7 @@ export default function LoginForm({ initialRole, onSuccess, onRegister }: { init
     if (busy) return;
     setBusy(true);
     setSubmitError('');
-    try { onSuccess(await mockLogin(account, password)); }
+    try { onSuccess(await login(account, password)); }
     catch (error) { setSubmitError(error instanceof Error ? error.message : 'Không thể đăng nhập.'); }
     finally { setBusy(false); }
   };

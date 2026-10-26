@@ -5,7 +5,7 @@ import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import ValidationMessage from './ValidationMessage';
 import { registerValidators } from '@/lib/auth-validation';
-import { mockRegister, type AuthResponse } from '@/services/mock/auth';
+import { register, type AuthResponse } from '@/services/backend/auth';
 import { cn } from '@/lib/utils';
 
 const UserIcon = (
@@ -87,7 +87,7 @@ export default function RegisterForm({ initialRole, onLogin, onSuccess, onBrowse
     setBusy(true);
     setSubmitError('');
     try {
-      const result = await mockRegister({ ...values, phoneNumber: values.phone, role: role === 'Chủ trọ' ? 'LANDLORD' : 'TENANT' });
+      const result = await register({ ...values, phoneNumber: values.phone, role: role === 'Chủ trọ' ? 'LANDLORD' : 'TENANT' });
       if (result.user.status === 'PENDING_VERIFICATION') setPending(true);
       else onSuccess(result);
     } catch (error) { setSubmitError(error instanceof Error ? error.message : 'Không thể đăng ký.'); }
