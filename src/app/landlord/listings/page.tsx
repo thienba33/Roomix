@@ -1,2 +1,5 @@
-import ListingManager from '@/components/rooms/ListingManager';
-export default function ListingsPage() { return <ListingManager />; }
+import LandlordListings from '@/components/rooms/LandlordListings';
+
+export default function ListingsPage() {
+  return <LandlordListings />;
+}

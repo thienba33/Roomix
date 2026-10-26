@@ -1,4 +1,5 @@
 import { rooms, posts } from '@/lib/data';
+import { ListingValidationError, validateListingInput } from '@/lib/listing-validation';
 import { readMockSession, AUTH_EVENT } from './auth';
 
 export interface RoomSummary {
@@ -137,7 +138,8 @@ export function removeFavorite(roomId: string) {
 export const CATALOG_EVENT = 'roomix:mock:catalog';
 const CATALOG_KEY = 'roomix_mock_catalog_v1';
 const LANDLORD_ID = '10000000-0000-4000-8000-000000000002';
-export type CatalogRoom = (typeof roomFixtures)[number] & { landlordId: string; rejectReason?: string };
+export type ModerationNotice = { id: string; action: 'approve' | 'reject'; reason?: string; createdAt: string; read: boolean };
+export type CatalogRoom = (typeof roomFixtures)[number] & { landlordId: string; rejectReason?: string; moderationNotices?: ModerationNotice[]; approvedBy?: string; approvedAt?: string };
 export function readCatalog(): CatalogRoom[] {
   if (typeof window === 'undefined') return roomFixtures.map((r) => ({ ...r, landlordId: LANDLORD_ID }));
   const raw = localStorage.getItem(CATALOG_KEY);
@@ -166,9 +168,44 @@ export function changePostStatus(roomId: string, action: 'submit' | 'hide' | 'un
   if (!allowed[action].includes(item.postStatus)) throw new Error('Trạng thái tin đã thay đổi. Vui lòng tải lại danh sách.');
   if (action === 'submit' && (item.detail.area <= 0 || item.detail.rentalPrice <= 0 || !item.detail.imageUrls.length)) throw new Error('Cần diện tích, giá thuê lớn hơn 0 và ít nhất một ảnh để gửi duyệt.');
   if (action === 'reject' && !reason.trim()) throw new Error('Vui lòng nhập lý do từ chối.');
+  if (action === 'reject' && reason.trim().length > 1000) throw new Error('Lý do từ chối không được vượt quá 1.000 ký tự.');
   item.postStatus = ({ submit: 'PENDING', hide: 'HIDDEN', unhide: 'APPROVED', approve: 'APPROVED', reject: 'REJECTED' } as const)[action];
   item.rejectReason = action === 'reject' ? reason.trim() : undefined;
+  if (admin) {
+    const now = new Date().toISOString();
+    item.moderationNotices = [...(item.moderationNotices ?? []), { id: crypto.randomUUID(), action: action === 'approve' ? 'approve' : 'reject', reason: action === 'reject' ? reason.trim() : undefined, createdAt: now, read: false }];
+    item.approvedBy = action === 'approve' ? user.id : undefined;
+    item.approvedAt = action === 'approve' ? now : undefined;
+  }
   writeCatalog(list);
+}
+export function moderatePost(postId: string, action: 'approve' | 'reject', reason = '') {
+  actor('ADMIN');
+  const post = readCatalog().find((item) => item.detail.postId === postId);
+  if (!post) throw new Error('Không tìm thấy tin đăng cần kiểm duyệt.');
+  changePostStatus(post.detail.roomId, action, reason);
+}
+export function markModerationNoticeRead(postId: string, noticeId: string) {
+  const user = actor('LANDLORD');
+  const list = readCatalog();
+  const post = list.find((item) => item.detail.postId === postId && item.landlordId === user.id);
+  const notice = post?.moderationNotices?.find((item) => item.id === noticeId);
+  if (!notice) throw new Error('Không tìm thấy thông báo về tin đăng.');
+  if (notice.read) return;
+  post!.moderationNotices = post!.moderationNotices!.map((item) => item.id === noticeId ? { ...item, read: true } : item);
+  writeCatalog(list);
+}
+export function markAllModerationNoticesRead() {
+  const user = actor('LANDLORD');
+  const list = readCatalog();
+  let changed = false;
+  for (const post of list) {
+    if (post.landlordId === user.id && post.moderationNotices?.some((notice) => !notice.read)) {
+      post.moderationNotices = post.moderationNotices.map((notice) => ({ ...notice, read: true }));
+      changed = true;
+    }
+  }
+  if (changed) writeCatalog(list);
 }
 export const propertyFixtures = [...new Map(roomFixtures.map((r) => [r.detail.floorId, {
   houseId: r.detail.houseId, floorId: r.detail.floorId, houseName: r.detail.houseName,
@@ -185,13 +222,12 @@ export function saveListing(input: ListingInput, images: string[], roomId?: stri
   const user = actor('LANDLORD');
   const floor = propertyFixtures.find((p) => p.floorId === input.floorId && p.houseId === input.houseId && p.landlordId === user.id);
   if (!floor) throw new Error('Nhà/tầng không thuộc tài khoản chủ trọ.');
-  if (!input.roomNumber.trim() || input.roomNumber.length > 50 || !input.title.trim() || input.title.length > 200 || !input.description.trim()) throw new Error('Vui lòng kiểm tra số phòng, tiêu đề và mô tả.');
-  if (![input.area, input.basePrice, input.depositAmount, input.maxTenants].every(Number.isFinite) || input.area < 0.01 || input.basePrice < 0 || input.depositAmount < 0 || !Number.isInteger(input.maxTenants) || input.maxTenants < 1) throw new Error('Diện tích, giá, tiền cọc hoặc sức chứa không hợp lệ.');
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(input.availableFrom) || Number.isNaN(Date.parse(input.availableFrom)) || new Date(input.availableFrom).toISOString().slice(0, 10) !== input.availableFrom || input.amenitiesDescription.length > 3000) throw new Error('Ngày có thể thuê hoặc mô tả tiện ích không hợp lệ.');
+  const errors = validateListingInput(input);
+  if (Object.keys(errors).length) throw new ListingValidationError(errors);
   const list = readCatalog(); const current = roomId ? list.find((r) => r.detail.roomId === roomId) : undefined;
   if (roomId && (!current || current.landlordId !== user.id)) throw new Error('Không tìm thấy phòng thuộc tài khoản.');
   if (current && !['DRAFT', 'REJECTED'].includes(current.postStatus)) throw new Error('Chỉ được sửa tin nháp hoặc bị từ chối.');
-  if (list.some((r) => r.detail.floorId === input.floorId && r.detail.roomNumber === input.roomNumber.trim() && r.detail.roomId !== roomId)) throw new Error('Số phòng đã tồn tại trên tầng này.');
+  if (list.some((r) => r.detail.floorId === input.floorId && r.detail.roomNumber === input.roomNumber.trim() && r.detail.roomId !== roomId)) throw new ListingValidationError({ roomNumber: 'Số phòng đã tồn tại trên tầng này.' });
   const imageUrls = [...(current?.detail.imageUrls ?? []), ...images];
   const detail: RoomDetail = {
     ...input, ...floor, roomNumber: input.roomNumber.trim(), title: input.title.trim(), description: input.description.trim(),
@@ -199,7 +235,7 @@ export function saveListing(input: ListingInput, images: string[], roomId?: stri
     rentalPrice: input.basePrice, rented: current?.detail.rented ?? false, available: !(current?.detail.rented ?? false),
     imageUrls, primaryImageUrl: imageUrls[0] ?? '', createdAt: current?.detail.createdAt ?? new Date().toISOString(),
   };
-  const next: CatalogRoom = { legacyId: current?.legacyId ?? 0, roomStatus: current?.roomStatus ?? 'AVAILABLE', postStatus: 'DRAFT', landlordId: user.id, detail };
+  const next: CatalogRoom = { legacyId: current?.legacyId ?? 0, roomStatus: current?.roomStatus ?? 'AVAILABLE', postStatus: 'DRAFT', landlordId: user.id, moderationNotices: current?.moderationNotices, detail };
   writeCatalog(current ? list.map((r) => r.detail.roomId === roomId ? next : r) : [...list, next]);
   return next;
 }
