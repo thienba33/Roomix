@@ -60,12 +60,10 @@ export function LineChart({ data, height = 180, color = '#4F46E5', area = false 
 export function DonutChart({ data, size = 170, centerLabel, centerSub, hideLegend = false }: { data: ChartDatum[]; size?: number; centerLabel?: string; centerSub?: string; hideLegend?: boolean }) {
   const total = data.reduce((s, d) => s + d.value, 0) || 1;
   const r = 70, c = 2 * Math.PI * r;
-  let offset = 0;
-  const arcs = data.map((d) => {
+  const arcs = data.map((d, index) => {
     const frac = d.value / total;
-    const arc = { d, dash: frac * c, offset: -offset * c, color: d.color ?? '#4F46E5' };
-    offset += frac;
-    return arc;
+    const previous = data.slice(0, index).reduce((sum, item) => sum + item.value, 0);
+    return { d, dash: frac * c, offset: -(previous / total) * c, color: d.color ?? '#4F46E5' };
   });
   return (
     <div className="flex flex-col items-center gap-3">
