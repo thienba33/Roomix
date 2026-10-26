@@ -1,2 +1,3 @@
-import ListingManager from '@/components/rooms/ListingManager';
-export default function ModerationPage() { return <ListingManager admin />; }
+import AdminModeration from '@/components/rooms/AdminModeration';
+
+export default function ModerationPage() { return <AdminModeration />; }

@@ -1,6 +1,9 @@
 'use client';
 import { useState, type FormEvent } from 'react';
 import { useNotificationsState } from '@/lib/landlord-store';
+import { useAuth } from '@/components/auth/AuthProvider';
+import { useCatalog } from '@/hooks/useCatalog';
+import { markAllModerationNoticesRead, markModerationNoticeRead } from '@/services/mock/rooms';
 import type { NotificationItem, NotificationType } from '@/types';
 import { cn } from '@/lib/utils';
 import Button from '@/components/ui/Button';
@@ -15,14 +18,20 @@ const FILTERS: { key: Filter; label: string }[] = [
 
 export default function ThongBaoPage() {
   const toast = useToast();
+  const { user } = useAuth();
+  const catalog = useCatalog();
   const [items, setItems] = useNotificationsState();
   const [text, setText] = useState('');
   const [filter, setFilter] = useState<Filter>('ALL');
-  const unread = items.filter((n) => !n.read).length;
+  const moderationNotices = catalog.items.filter((room) => room.landlordId === user?.id)
+    .flatMap((room) => (room.moderationNotices ?? []).map((notice) => ({ room, notice })))
+    .sort((a, b) => b.notice.createdAt.localeCompare(a.notice.createdAt));
+  const visibleModeration = (filter === 'ALL' || filter === 'UNREAD' || filter === 'POST_APPROVAL') ? moderationNotices.filter(({ notice }) => filter !== 'UNREAD' || !notice.read) : [];
+  const unread = items.filter((n) => !n.read).length + moderationNotices.filter(({ notice }) => !notice.read).length;
   const filtered = items.filter((n) => filter === 'ALL' ? true : filter === 'UNREAD' ? !n.read : n.type === filter);
 
   const markRead = (id: number) => setItems((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
-  const markAll = () => { const prev = items; setItems((p) => p.map((n) => ({ ...n, read: true }))); toast.push('Đã đánh dấu tất cả đã đọc', undefined, { label: 'Hoàn tác', onClick: () => setItems(prev) }); };
+  const markAll = () => { try { markAllModerationNoticesRead(); setItems((p) => p.map((n) => ({ ...n, read: true }))); toast.push('Đã đánh dấu tất cả đã đọc'); } catch (error) { toast.push(error instanceof Error ? error.message : 'Không thể cập nhật thông báo.'); } };
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault(); const trimmed = text.trim(); if (!trimmed) return;
@@ -40,8 +49,14 @@ export default function ThongBaoPage() {
       <div className="mt-4 flex flex-wrap gap-2">{FILTERS.map((f) => (<button key={f.key} onClick={() => setFilter(f.key)} className={cn('rounded-full px-3.5 py-1.5 text-[13px] transition', filter === f.key ? 'bg-primary-soft font-semibold text-primary' : 'bg-page font-medium text-muted hover:text-ink')}>{f.label}{f.key === 'UNREAD' && unread > 0 ? ` (${unread})` : ''}</button>))}</div>
       <div className="mt-5 grid items-start gap-6 lg:grid-cols-[1fr_356px]">
         <div className="rounded-2xl border border-line bg-white">
-          {filtered.length === 0 ? <p className="px-5 py-10 text-sm text-muted">Không có thông báo nào ở mục này.</p> : (
-            <div className="divide-y divide-line">{filtered.map((n) => (
+          {filtered.length === 0 && visibleModeration.length === 0 ? <p className="px-5 py-10 text-sm text-muted">Không có thông báo nào ở mục này.</p> : (
+            <div className="divide-y divide-line">
+              {visibleModeration.map(({ room, notice }) => <button key={notice.id} type="button" onClick={() => { try { markModerationNoticeRead(room.detail.postId, notice.id); } catch (error) { toast.push(error instanceof Error ? error.message : 'Không thể đánh dấu đã đọc.'); } }} className={cn('flex w-full gap-[26px] px-5 py-6 text-left hover:bg-page/50', !notice.read && 'bg-primary-soft/30')}>
+                <span className="mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full bg-green-600" />
+                <span className="min-w-0 flex-1"><span className="block text-[15px] font-semibold text-ink">{notice.action === 'approve' ? 'Bài đăng đã được duyệt' : 'Bài đăng chưa được duyệt'}</span><span className="mt-1 block break-words text-[13px] text-muted">{room.detail.title}{notice.action === 'reject' ? ` · Lý do: ${notice.reason ?? ''}` : ' · Tin đã xuất hiện trên trang tìm phòng.'}</span></span>
+                {!notice.read && <span className="shrink-0 text-xs font-medium text-primary">Mới</span>}
+              </button>)}
+              {filtered.map((n) => (
               <button key={n.id} type="button" onClick={() => markRead(n.id)} className={cn('flex w-full gap-[26px] px-5 py-6 text-left transition hover:bg-page/50', !n.read && 'bg-primary-soft/30')}>
                 <span className={cn('mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full', dotColor[n.type])} />
                 <div className="min-w-0 flex-1"><p className={cn('text-[15px] text-ink', !n.read ? 'font-bold' : 'font-semibold')}>{n.title}{!n.read && <span className="ml-2 rounded-full bg-primary px-2 py-0.5 text-[11px] font-bold text-white">Mới</span>}</p><p className="mt-1 text-[13px] text-muted">{n.body} · {n.time}</p></div>
