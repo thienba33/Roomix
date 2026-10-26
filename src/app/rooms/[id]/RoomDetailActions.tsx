@@ -26,10 +26,11 @@ export default function RoomDetailActions({ detail }: { detail: RoomDetail }) {
     <p className="text-xs leading-5 text-muted">Tiền điện, nước và các khoản phí được xác định trong thỏa thuận thuê.</p>
     {!detail.available && <p role="status" className="rounded-xl bg-page p-3 text-sm text-muted">Phòng đã được thuê và hiện không nhận yêu cầu mới. Bạn vẫn có thể xem thông tin hoặc tìm phòng khác.</p>}
     {user && user.role !== 'TENANT' && <p className="text-sm text-muted">Lưu yêu thích và gửi yêu cầu thuê dành cho tài khoản khách thuê.</p>}
-    {pending || contract ? <p className="text-sm text-muted">{contract ? 'Bạn đã có hợp đồng cho phòng này.' : 'Yêu cầu của bạn đang chờ phản hồi.'}</p> : <>
+    {pending || contract ? <p className="text-sm text-muted">{contract ? contract.status === 'PENDING' ? 'Hợp đồng đang chờ chủ trọ xác nhận cọc.' : 'Bạn đang thuê phòng này.' : 'Yêu cầu quan tâm của bạn đang chờ phản hồi.'}</p> : <>
       <label className="block text-sm font-semibold">Lời nhắn (không bắt buộc)<textarea rows={3} maxLength={2000} value={note} onChange={(e) => setNote(e.target.value)} className="mt-2 w-full rounded-xl border border-line p-3 text-sm" /></label>
-      <Button className="w-full" onClick={send} disabled={!rental.ready || !detail.available || (!!user && user.role !== 'TENANT')}>Gửi yêu cầu thuê</Button>
+      <Button className="w-full" onClick={send} disabled={!rental.ready || !!rental.error || !detail.available || (!!user && user.role !== 'TENANT')}>Gửi yêu cầu quan tâm</Button>
     </>}
+    {rental.error && <p role="alert" className="text-sm text-red-600">{rental.error}</p>}
     {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
     {user?.role === 'TENANT' && <Link href={contract ? '/contracts' : '/requests'} className="block text-center text-sm font-semibold text-primary">{contract ? 'Xem hợp đồng của tôi' : 'Xem yêu cầu của tôi'}</Link>}
   </Card>;

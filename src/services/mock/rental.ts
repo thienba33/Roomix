@@ -1,11 +1,11 @@
-import { readMockSession } from './auth';
+import { findMockUserById, readMockSession } from './auth';
 import { readCatalog, CATALOG_EVENT } from './rooms';
 export const RENTAL_KEY = 'roomix_mock_rental_v1';
 export const RENTAL_EVENT = 'roomix:mock:rental';
 export interface RentalRequest {
   id: string; roomId: string; postId: string; tenantId: string; landlordId: string;
   note: string; status: 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'CANCELLED'; rejectReason?: string;
-  createdAt: string; updatedAt: string;
+  createdAt: string; updatedAt: string; contactRequestedAt?: string;
 }
 export interface ContractTerms {
   startDate: string; endDate: string; monthlyRent: number; depositAmount: number;
@@ -109,4 +109,27 @@ export function confirmDeposit(id: string, now = Date.now()) {
   if (t.status !== 'PENDING' || Date.parse(t.depositDeadline) <= now || t.endDate < todayVN(now)) throw new Error('Hợp đồng đã hủy, hết hạn cọc hoặc hết thời hạn thuê.');
   if (state.tenancies.some((other) => other.id !== t.id && other.roomId === t.roomId && other.status === 'ACTIVE')) throw new Error('Phòng đang có khách thuê.');
   t.status = 'ACTIVE'; t.depositConfirmedAt = new Date(now).toISOString(); t.updatedAt = t.depositConfirmedAt; save(state); return t;
+}
+
+// UC02.8 mock extension: the rental backend currently returns no Contact Card payload.
+export function getAcceptedContact(requestId: string) {
+  const user = actor('TENANT');
+  const request = readRental().requests.find((item) => item.id === requestId && item.tenantId === user.id);
+  if (!request || request.status !== 'ACCEPTED') throw new Error('Danh thiếp chỉ mở sau khi yêu cầu của bạn được chấp nhận.');
+  const landlord = findMockUserById(request.landlordId);
+  if (!landlord || landlord.role !== 'LANDLORD' || !landlord.phoneNumber.trim()) return null;
+  return { fullName: landlord.fullName, phoneNumber: landlord.phoneNumber, email: landlord.email };
+}
+
+export function requestLandlordContact(requestId: string) {
+  const user = actor('TENANT');
+  const state = readRental();
+  const request = state.requests.find((item) => item.id === requestId && item.tenantId === user.id);
+  if (!request || request.status !== 'ACCEPTED') throw new Error('Chỉ yêu cầu bổ sung liên hệ sau khi được chấp nhận.');
+  if (getAcceptedContact(requestId)) throw new Error('Chủ trọ đã có thông tin liên hệ.');
+  if (request.contactRequestedAt) return request;
+  request.contactRequestedAt = new Date().toISOString();
+  request.updatedAt = request.contactRequestedAt;
+  save(state);
+  return request;
 }

@@ -39,6 +39,9 @@ function accounts(): Account[] {
   try { return JSON.parse(localStorage.getItem(ACCOUNTS_KEY) || '[]'); }
   catch { throw new Error('Không thể đọc dữ liệu tài khoản trên trình duyệt.'); }
 }
+export function findMockUserById(id: string): MockUser | null {
+  return seeds.find((user) => user.id === id) ?? accounts().find((account) => account.user.id === id)?.user ?? null;
+}
 function response(user: MockUser): AuthResponse {
   return user.status === 'ACTIVE'
     ? { user, accessToken: `mock-only-${crypto.randomUUID()}`, tokenType: 'Bearer', expiresIn: 3600 }
