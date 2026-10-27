@@ -85,7 +85,7 @@ export interface PricingPredictResponse {
 
 /**
  * Gửi tin nhắn tới Roomix AI RAG Service để tư vấn tìm phòng trọ,
- * giải đáp chính sách cọc, hợp đồng, chi phí điện nước (UC06.1 - UC06.6).
+ * giải đáp chính sách cọc, hợp đồng và chi phí điện nước.
  */
 export async function sendAiMessage(request: ChatRequest): Promise<ChatResponse> {
   return post<ChatResponse>('/api/ai/chat', request);

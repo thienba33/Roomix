@@ -20,7 +20,7 @@ function AdminAccess({ children }: { children: ReactNode }) {
     return <>{children}</>;
   }
 
-  // UC01.5: every admin screen (not just the login page) requires ADMIN.
+  // Every admin screen, not only the login page, requires the ADMIN role.
   // Previously the shell rendered for any visitor; the moderation/users
   // components checked role themselves, but dashboard/reports/notifications
   // did not, so a non-admin could open them directly by URL.

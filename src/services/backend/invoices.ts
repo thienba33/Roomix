@@ -77,13 +77,14 @@ export interface VnpayPaymentResponse {
   paymentUrl: string;
 }
 export interface VnpayReturnResponse {
-  invoiceId: string;
-  invoiceCode: string;
-  transactionStatus: string;
-  transactionReference: string;
-  amount: number;
-  paidAt: string;
+  invoiceId?: string;
+  txnRef?: string;
+  responseCode?: string;
+  paymentStatus: 'SUCCESS' | 'FAILED' | 'PENDING' | 'INVALID' | 'UNKNOWN';
+  message: string;
 }
 
 export const createVnpayPaymentUrl = (invoiceId: string) => mutate<VnpayPaymentResponse>(`/api/invoices/${invoiceId}/vnpay/payment-url`);
 export const devConfirmVnpay = (invoiceId: string) => mutate<VnpayReturnResponse>(`/api/invoices/${invoiceId}/vnpay/dev-confirm`);
+export const getVnpayReturnResult = (query: string) =>
+  api<VnpayReturnResponse>(`/api/invoices/vnpay/return?${query}`);

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState, type FormEvent } from 'react';
+import { useEffect, useId, useRef, useState, type FormEvent } from 'react';
 import Link from 'next/link';
 import { useDialogFocus } from '@/hooks/useDialogFocus';
 import ChatIcon from '@/components/ui/ChatIcon';
@@ -34,6 +34,7 @@ export default function AiPanel({
   maxWidth: number;
   onWidthChange: (width: number) => void;
 }) {
+  const panelInstanceId = useId();
   const ref = useRef<HTMLElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [mobile, setMobile] = useState(false);
@@ -85,7 +86,7 @@ export default function AiPanel({
     if (!text || busy) return;
 
     const userMessage: DisplayMessage = {
-      id: `user-${Date.now()}`,
+      id: `${panelInstanceId}-user-${messages.length}`,
       role: 'user',
       content: text,
       createdAt: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
@@ -110,7 +111,7 @@ export default function AiPanel({
       });
 
       const assistantMessage: DisplayMessage = {
-        id: `ai-${Date.now()}`,
+        id: `${panelInstanceId}-assistant-${messages.length + 1}`,
         role: 'assistant',
         content: response.answer,
         matchedRooms: response.matched_rooms,
@@ -123,7 +124,7 @@ export default function AiPanel({
       setMessages((prev) => [...prev, assistantMessage]);
     } catch (err) {
       const errorMessage: DisplayMessage = {
-        id: `err-${Date.now()}`,
+        id: `${panelInstanceId}-error-${messages.length + 1}`,
         role: 'assistant',
         content:
           err instanceof Error

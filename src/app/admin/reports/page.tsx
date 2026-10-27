@@ -54,7 +54,9 @@ export default function AdminReportsPage() {
   };
 
   useEffect(() => {
-    loadReports();
+    const loadTimer = window.setTimeout(loadReports, 0);
+
+    return () => window.clearTimeout(loadTimer);
   }, []);
 
   const handleStatusChange = (id: string, newStatus: ReportItem['status']) => {
@@ -67,7 +69,7 @@ export default function AdminReportsPage() {
   return (
     <div className="space-y-6 pb-8">
       <header className="border-b border-line pb-6">
-        <h1 className="text-[28px] font-extrabold tracking-tight sm:text-[32px]">Quản lý báo cáo vi phạm (UC07.6)</h1>
+        <h1 className="text-[28px] font-extrabold tracking-tight sm:text-[32px]">Quản lý báo cáo vi phạm</h1>
         <p className="mt-2 text-sm leading-6 text-muted">
           Tiếp nhận, xác minh và xử lý các phản ánh vi phạm về bài đăng và phòng trọ từ người dùng trên toàn hệ thống.
         </p>

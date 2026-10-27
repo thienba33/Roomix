@@ -6,7 +6,7 @@ import Modal from '@/components/ui/Modal';
 import LoginForm from './LoginForm';
 import AuthScene from './AuthScene';
 import RegisterForm from './RegisterForm';
-import { AUTH_EVENT, getProfile, logoutSession, readSession, saveSession, clearSession, type AuthResponse, type SessionUser } from '@/services/backend/auth';
+import { AUTH_EVENT, getProfile, logoutSession, readSession, saveSession, updateSessionUser, clearSession, type AuthResponse, type SessionUser } from '@/services/backend/auth';
 
 type Role = 'tenant' | 'landlord';
 type Mode = 'login' | 'register';
@@ -16,6 +16,7 @@ const AuthContext = createContext<{
   user: SessionUser | null;
   openAuth: (mode?: Mode, role?: Role) => void;
   logout: () => void;
+  updateUser: (user: SessionUser) => void;
   requireTenant: () => boolean;
 } | null>(null);
 
@@ -95,6 +96,10 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
     else if (pathname.startsWith('/landlord')) router.push('/login?role=landlord');
     else router.push('/');
   };
+  const updateUser = (updatedUser: SessionUser) => {
+    updateSessionUser(updatedUser);
+    setUser(updatedUser);
+  };
   const login = (response: AuthResponse) => {
     saveSession(response);
     setUser(response.user);
@@ -105,7 +110,7 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ signedIn, ready, user, openAuth, logout, requireTenant }}>
+    <AuthContext.Provider value={{ signedIn, ready, user, openAuth, logout, updateUser, requireTenant }}>
       {children}
       <Modal open={!!dialog} onClose={close} title={dialog?.mode === 'register' ? 'Đăng ký' : 'Đăng nhập'} hideTitle widthClass="max-w-[480px] md:max-w-[960px]" contentClassName="auth-dialog">
         <AuthScene>

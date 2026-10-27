@@ -37,7 +37,7 @@ const actionTitles: Record<Action['kind'], string> = {
   'cancel-request': 'Hủy yêu cầu quan tâm',
   'cancel-contract': 'Hủy hợp đồng chờ cọc',
   deposit: 'Xác nhận đã nhận cọc',
-  'end-tenancy': 'Trả phòng & Quyết toán cọc (UC05.4)',
+  'end-tenancy': 'Trả phòng & Quyết toán cọc',
   'view-settlement': 'Bảng quyết toán hợp đồng & cọc',
 };
 const dateTime = (s: string) => new Date(s).toLocaleString('vi-VN', { timeZone: 'Asia/Bangkok' });
@@ -202,7 +202,7 @@ export default function RentalWorkspace({ mode }: { mode: 'tenant' | 'tenant-con
         )}
         {t.status === 'ACTIVE' && !tenantView && (
           <Button size="sm" variant="outline" onClick={() => open('end-tenancy', t.id)}>
-            Trả phòng &amp; Quyết toán cọc (UC05.4)
+            Trả phòng &amp; Quyết toán cọc
           </Button>
         )}
         {t.status === 'ENDED' && (
@@ -260,7 +260,7 @@ export default function RentalWorkspace({ mode }: { mode: 'tenant' | 'tenant-con
             <label className="block text-sm font-semibold">Điều khoản bổ sung<textarea name="termsAndConditions" maxLength={5000} rows={3} className="mt-2 w-full rounded-xl border border-line p-3 text-sm focus-visible:outline-2 focus-visible:outline-primary" /></label>
           </> : action?.kind === 'end-tenancy' ? <>
             <p className="text-sm leading-6 text-muted">
-              Quy trình trả phòng và quyết toán hợp đồng (UC05.4). Nhập chỉ số điện nước cuối kỳ và chi phí phát sinh nếu có để tính toán hoàn/thu cọc. Sau khi hoàn tất, phòng sẽ được đưa về trạng thái <strong>Trống (AVAILABLE)</strong>.
+              Nhập chỉ số điện nước cuối kỳ và chi phí phát sinh nếu có để tính toán hoàn/thu cọc. Sau khi hoàn tất, phòng sẽ được đưa về trạng thái <strong>Trống (AVAILABLE)</strong>.
             </p>
             <div className="grid gap-3 sm:grid-cols-2">
               <Input name="actualReturnDate" label="Ngày trả phòng thực tế" type="date" required defaultValue={todayVN()} />

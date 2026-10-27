@@ -24,7 +24,7 @@ function RejectModalContent({ onClose, onConfirm, tenantName, roomLabel }: Omit<
   const [error, setError] = useState('');
 
   const handleConfirm = () => {
-    // Reason is REQUIRED (UC02.7 / POST /reject ReasonRequest). "Lý do khác" requires detail.
+    // The reject API always requires a reason; "Lý do khác" also requires details.
     if (!reason) { setError('Vui lòng chọn lý do từ chối'); return; }
     if (reason === 'Lý do khác' && !note.trim()) { setError('Vui lòng nhập lý do chi tiết khi chọn "Lý do khác"'); return; }
     const full = note.trim() ? `${reason}: ${note.trim()}` : reason;

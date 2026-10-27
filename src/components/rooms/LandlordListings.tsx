@@ -88,7 +88,7 @@ export default function LandlordListings() {
         <div>
           <h1 className="text-[28px] font-extrabold tracking-tight sm:text-[32px]">Tin đăng &amp; Phòng của tôi</h1>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-muted">
-            Theo dõi phòng trống, tỷ lệ lấp đầy, quản lý trạng thái và thao tác kiểm duyệt, ẩn/hiện tin đăng (UC03.4, UC03.6, UC04.2, UC04.5, UC04.6).
+            Theo dõi phòng trống, tỷ lệ lấp đầy, quản lý trạng thái và thao tác kiểm duyệt, ẩn/hiện tin đăng.
           </p>
         </div>
         <div className="flex gap-2">
@@ -110,7 +110,7 @@ export default function LandlordListings() {
       {notice && <p role="status" className="rounded-xl bg-green-50 p-3 text-sm text-green-800">{notice}</p>}
       {actionError && <p role="alert" className="rounded-xl bg-red-50 p-3 text-sm text-red-700">{actionError}</p>}
 
-      {/* KPI Stats (UC03.6 - Theo dõi phòng trống & tỷ lệ lấp đầy) */}
+      {/* KPI phòng trống và tỷ lệ lấp đầy */}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
         <div className="rounded-2xl border border-line bg-white p-4">
           <span className="text-xs font-semibold uppercase tracking-wider text-muted">Tổng số phòng</span>
@@ -216,7 +216,7 @@ export default function LandlordListings() {
                   </div>
                 </div>
 
-                {/* Operations: Submit, Hide, Unhide (UC04.5, UC04.6) */}
+                {/* Thao tác gửi duyệt, ẩn và hiện tin */}
                 <div className="mt-5 border-t border-line pt-3 flex flex-wrap gap-2 text-xs">
                   <Button
                     size="sm"
