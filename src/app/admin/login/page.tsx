@@ -3,18 +3,28 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import LoginForm from '@/components/auth/LoginForm';
-import { saveSession } from '@/services/backend/auth';
+import { useAdminAuth } from '@/components/auth/AdminAuthProvider';
+import AdminFaceLogin from '@/components/auth/AdminFaceLogin';
 export default function AdminLoginPage() {
   const router = useRouter();
-  const [error, setError] = useState('');
+  const { login } = useAdminAuth();
+  const [method, setMethod] = useState<'PASSWORD' | 'FACE'>('PASSWORD');
+  const [busy, setBusy] = useState(false);
   return <main className="mx-auto w-full max-w-[480px] px-6 py-12">
     <p className="mb-5 text-center font-semibold text-primary">Quản trị Roomix</p>
-    <LoginForm initialRole="tenant" onSuccess={(auth) => {
-      if (auth.user.role !== 'ADMIN') { setError('Tài khoản này không có quyền quản trị.'); return; }
-      saveSession(auth); router.push('/admin/moderation');
-    }} />
+    <div className="mb-5 flex gap-2" aria-label="Phương thức đăng nhập">
+      {(['PASSWORD', 'FACE'] as const).map((value) => <button key={value} type="button"
+        aria-pressed={method === value} disabled={busy} onClick={() => setMethod(value)}
+        className={`flex-1 rounded-xl border px-3 py-3 text-sm font-semibold disabled:opacity-50 ${method === value ? 'border-primary bg-primary-soft text-primary' : 'border-line text-muted'}`}>
+        {value === 'PASSWORD' ? 'Tài khoản / mật khẩu' : 'Khuôn mặt'}
+      </button>)}
+    </div>
+    {method === 'PASSWORD' ? <LoginForm initialRole="tenant" onLogin={async (username, password) => {
+      setBusy(true);
+      try { await login(username, password); router.push('/admin'); }
+      finally { setBusy(false); }
+    }} /> : <AdminFaceLogin onBusyChange={setBusy} />}
     <p className="mt-4 text-center text-sm text-muted">Chỉ dành cho tài khoản quản trị đã được cấp.</p>
-    <p role="alert" className="mt-4 text-sm text-red-600">{error}</p>
     <Link href="/" className="mt-5 block text-center text-sm text-primary">Về trang tìm phòng</Link>
   </main>;
 }

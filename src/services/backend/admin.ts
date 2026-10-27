@@ -73,4 +73,3 @@ export async function rejectPost(postId: string, reason: string) {
   emit(POSTS_EVENT);
   return res;
 }
-

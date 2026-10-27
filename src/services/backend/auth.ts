@@ -14,4 +14,3 @@ export const logoutSession = () => post<void>('/api/auth/logout');
 export const getProfile = () => api<SessionUser>('/api/users/me');
 export const forgotPassword = (email: string) => post<void>('/api/auth/forgot-password', { email });
 export const resetPassword = (request: ResetPasswordRequest) => post<void>('/api/auth/reset-password', request);
-

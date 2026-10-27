@@ -6,8 +6,13 @@ import AdminSidebar from '@/components/layouts/AdminSidebar';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { ToastProvider } from '@/components/ui/Toast';
 import type { ReactNode } from 'react';
+import AdminAuthProvider from '@/components/auth/AdminAuthProvider';
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
+  return <AdminAuthProvider><AdminAccess>{children}</AdminAccess></AdminAuthProvider>;
+}
+
+function AdminAccess({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const { user, ready } = useAuth();
 

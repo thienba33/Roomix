@@ -45,6 +45,18 @@ next-env.d.ts
 .agents/
 
 AGENTS.md
+
+# Private local review and biometric exports
+/.tmp/
+*.npy
+*.npz
+*.pkl
+*.pickle
+*.dump
+*.backup
+
+# Share the empty configuration template
+!.env.example
 docs/
 scripts/
 skills-lock.json

@@ -1,6 +1,7 @@
 'use client';
 import { useState, type FormEvent } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import ValidationMessage from './ValidationMessage';
@@ -15,7 +16,18 @@ const LockIcon = (
   <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="4" y="11" width="16" height="10" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" /></svg>
 );
 
-export default function LoginForm({ initialRole, onSuccess, onRegister }: { initialRole: 'tenant' | 'landlord'; onSuccess: (response: AuthResponse) => void; onRegister?: (role: 'tenant' | 'landlord') => void }) {
+type LoginFormProps = {
+  initialRole: 'tenant' | 'landlord';
+  onRegister?: (role: 'tenant' | 'landlord') => void;
+} & ({
+  onLogin: (username: string, password: string) => Promise<void>;
+  onSuccess?: never;
+} | {
+  onLogin?: never;
+  onSuccess: (response: AuthResponse) => void;
+});
+
+export default function LoginForm({ initialRole, onSuccess, onRegister, onLogin }: LoginFormProps) {
   const [busy, setBusy] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -39,7 +51,10 @@ export default function LoginForm({ initialRole, onSuccess, onRegister }: { init
     if (busy) return;
     setBusy(true);
     setSubmitError('');
-    try { onSuccess(await login(account, password)); }
+    try {
+      if (onLogin) await onLogin(account, password);
+      else onSuccess(await login(account, password));
+    }
     catch (error) { setSubmitError(error instanceof Error ? error.message : 'Không thể đăng nhập.'); }
     finally { setBusy(false); }
   };
@@ -125,6 +140,10 @@ export default function LoginForm({ initialRole, onSuccess, onRegister }: { init
         Chưa có tài khoản?{' '}
         <button type="button" onClick={() => onRegister(initialRole)} className="font-semibold text-primary hover:underline">Đăng ký</button>
       </p>}
+      {!onLogin && <Link href="/admin/login" prefetch={false}
+        className="mt-4 flex w-full items-center justify-center rounded-xl border border-line px-4 py-2.5 text-sm font-semibold text-primary transition hover:border-primary hover:bg-primary-soft">
+        Đăng nhập Admin
+      </Link>}
     </div>
   );
 }

@@ -1,29 +1,14 @@
+import { networkInterfaces } from 'node:os';
+
+// Cho phép đúng các địa chỉ IPv4 của máy chạy dev, kể cả khi đổi Wi-Fi.
+const devHosts = Object.values(networkInterfaces()).flatMap((addresses) =>
+  (addresses ?? []).filter((address) => address.family === 'IPv4' && !address.internal)
+    .map((address) => address.address),
+);
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  turbopack: {
-    rules: {
-      '*.css': {
-        loaders: ['@tailwindcss/turbopack'],
-        as: '*.css',
-      },
-    },
-  },
-  // Run the same Tailwind loader before Next's CSS loaders in Webpack fallback builds.
-  webpack(config) {
-    const addTailwind = (rules) => {
-      for (const rule of rules) {
-        if (!rule || typeof rule !== 'object') continue;
-        if (Array.isArray(rule.use) && rule.use.some((entry) =>
-          typeof entry?.loader === 'string' && entry.loader.includes('/css-loader/'))) {
-          rule.use.push({ loader: '@tailwindcss/turbopack' });
-        }
-        if (rule.oneOf) addTailwind(rule.oneOf);
-        if (rule.rules) addTailwind(rule.rules);
-      }
-    };
-    addTailwind(config.module.rules);
-    return config;
-  },
+  allowedDevOrigins: [...new Set(devHosts)],
   async rewrites() {
     const backend = (process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:18080').replace(/\/$/, '');
     return [{ source: '/backend/:path*', destination: `${backend}/:path*` }];

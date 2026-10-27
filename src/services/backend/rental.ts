@@ -91,4 +91,3 @@ export const completeSettlement = (tenancyId: string, request: CompleteSettlemen
 
 export const getSettlement = (tenancyId: string) =>
   api<TenancySettlement>(`/api/tenancies/${tenancyId}/settlement`);
-

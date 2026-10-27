@@ -87,5 +87,3 @@ export interface VnpayReturnResponse {
 
 export const createVnpayPaymentUrl = (invoiceId: string) => mutate<VnpayPaymentResponse>(`/api/invoices/${invoiceId}/vnpay/payment-url`);
 export const devConfirmVnpay = (invoiceId: string) => mutate<VnpayReturnResponse>(`/api/invoices/${invoiceId}/vnpay/dev-confirm`);
-
-
