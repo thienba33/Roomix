@@ -6,7 +6,7 @@ import Modal from '@/components/ui/Modal';
 import LoginForm from './LoginForm';
 import AuthScene from './AuthScene';
 import RegisterForm from './RegisterForm';
-import { AUTH_EVENT, getProfile, readSession, saveSession, clearSession, type AuthResponse, type SessionUser } from '@/services/backend/auth';
+import { AUTH_EVENT, getProfile, logoutSession, readSession, saveSession, clearSession, type AuthResponse, type SessionUser } from '@/services/backend/auth';
 
 type Role = 'tenant' | 'landlord';
 type Mode = 'login' | 'register';
@@ -88,6 +88,7 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
     if (pathname === '/login' || pathname === '/register') router.replace('/', { scroll: false });
   };
   const logout = () => {
+    void logoutSession().catch(() => undefined);
     clearSession();
     setUser(null);
     if (pathname.startsWith('/admin')) router.push('/admin/login');
