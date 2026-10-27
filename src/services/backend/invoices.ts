@@ -71,3 +71,21 @@ export const disputeInvoice = (id: string, reason: string) => mutate(`/api/invoi
 export const resolveInvoiceDispute = (id: string, reason: string) => mutate(`/api/invoices/${id}/resolve-dispute`, { reason });
 export const remindInvoice = (id: string) => mutate(`/api/invoices/${id}/remind`);
 export const correctInvoice = (id: string, input: CorrectionInput) => mutate(`/api/invoices/${id}/corrections`, input);
+
+export interface VnpayPaymentResponse {
+  invoiceId: string;
+  paymentUrl: string;
+}
+export interface VnpayReturnResponse {
+  invoiceId: string;
+  invoiceCode: string;
+  transactionStatus: string;
+  transactionReference: string;
+  amount: number;
+  paidAt: string;
+}
+
+export const createVnpayPaymentUrl = (invoiceId: string) => mutate<VnpayPaymentResponse>(`/api/invoices/${invoiceId}/vnpay/payment-url`);
+export const devConfirmVnpay = (invoiceId: string) => mutate<VnpayReturnResponse>(`/api/invoices/${invoiceId}/vnpay/dev-confirm`);
+
+

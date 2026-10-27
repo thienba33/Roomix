@@ -1,4 +1,4 @@
-import { allPages, emit, post } from './http';
+import { allPages, api, emit, post } from './http';
 import { readSession } from './session';
 export interface RentalRequest {
   id: string; roomId: string; postId: string; tenantId: string; landlordId: string;
@@ -31,3 +31,64 @@ export const rejectRental = (id: string, reason: string) => mutate<RentalRequest
 export const acceptRental = (id: string, terms: ContractTerms) => mutate<Tenancy>(`/api/rentals/${id}/accept`, terms);
 export const cancelTenancy = (id: string, reason: string) => mutate<Tenancy>(`/api/tenancies/${id}/cancel`, { reason });
 export const confirmDeposit = (id: string) => mutate<Tenancy>(`/api/tenancies/${id}/confirm-deposit`);
+
+export interface SettlementPreviewRequest {
+  actualReturnDate: string;
+  finalElectricity: number;
+  finalWater: number;
+  damageCharge: number;
+  damageReason?: string;
+}
+
+export interface CompleteSettlementRequest {
+  details: SettlementPreviewRequest;
+  expectedTotalDue: number;
+  collectedAmount: number;
+  refundedAmount: number;
+  paymentMethod: 'CASH' | 'BANK_TRANSFER';
+}
+
+export interface TenancySettlement {
+  id: string;
+  tenancyId: string;
+  actualReturnDate: string;
+  lastBilledMonth?: string;
+  unbilledMonths: number;
+  previousElectricity: number;
+  finalElectricity: number;
+  previousWater: number;
+  finalWater: number;
+  monthlyRent: number;
+  electricityUnitPrice: number;
+  waterUnitPrice: number;
+  damageCharge: number;
+  invoiceDebt: number;
+  additionalRent: number;
+  additionalElectricity: number;
+  additionalWater: number;
+  totalDue: number;
+  depositAmount: number;
+  depositApplied: number;
+  amountToCollect: number;
+  amountToRefund: number;
+  collectedAmount: number;
+  refundedAmount: number;
+  damageReason?: string;
+  paymentMethod: string;
+  settledBy: string;
+  createdAt: string;
+  invoiceBalances?: Record<string, number>;
+}
+
+export const endTenancy = (tenancyId: string, actualReturnDate: string) =>
+  mutate<Tenancy>(`/api/tenancies/${tenancyId}/end`, { actualReturnDate });
+
+export const previewSettlement = (tenancyId: string, request: SettlementPreviewRequest) =>
+  mutate<TenancySettlement>(`/api/tenancies/${tenancyId}/settlement/preview`, request);
+
+export const completeSettlement = (tenancyId: string, request: CompleteSettlementRequest) =>
+  mutate<TenancySettlement>(`/api/tenancies/${tenancyId}/settlement`, request);
+
+export const getSettlement = (tenancyId: string) =>
+  api<TenancySettlement>(`/api/tenancies/${tenancyId}/settlement`);
+
