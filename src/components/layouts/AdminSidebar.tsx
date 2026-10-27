@@ -4,7 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { useAuth } from '@/components/auth/AuthProvider';
+import { useAdminAuth } from '@/components/auth/AdminAuthProvider';
 import MobileNavigation from './MobileNavigation';
 import { useCatalog } from '@/hooks/useCatalog';
 
@@ -34,13 +34,16 @@ const GROUPS: { title: string; items: { label: string; href: string; icon: () =>
   },
   {
     title: 'Vận hành',
-    items: [{ label: 'Thông báo & Log', href: '/admin/notifications', icon: IconList }],
+    items: [
+      { label: 'Đăng ký khuôn mặt', href: '/admin/face', icon: IconShield },
+      { label: 'Thông báo & Log', href: '/admin/notifications', icon: IconList },
+    ],
   },
 ];
 const ALL_ITEMS = GROUPS.flatMap((g) => g.items);
 
 export default function AdminSidebar() {
-  const { logout } = useAuth();
+  const { logout, session } = useAdminAuth();
   const pathname = usePathname();
   const { items } = useCatalog();
   const pendingCount = items.filter((r) => r.postStatus === 'PENDING').length;
@@ -83,7 +86,7 @@ export default function AdminSidebar() {
             <div className="flex min-w-0 flex-1 items-center gap-3 px-2 py-1.5">
               <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-ink text-[13px] font-bold text-white">AD</span>
               <span className="min-w-0">
-                <span className="block truncate text-sm font-semibold text-ink">Admin</span>
+                <span className="block truncate text-sm font-semibold text-ink">{session?.user.fullName ?? 'Admin'}</span>
                 <span className="block text-xs text-muted">Quản trị viên</span>
               </span>
             </div>

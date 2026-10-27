@@ -1,6 +1,9 @@
-# Luồng tài khoản — mock theo backend
+# Luồng tài khoản — Admin HTTP, tenant/landlord mock
 
-Cập nhật 22/10/2026. FE chạy độc lập, không gọi mạng; `src/services/mock/auth.ts` mô phỏng hành vi AuthServiceImpl và cấu trúc AuthResponse. Đây không phải hệ thống xác thực bảo mật.
+Cập nhật 24/10/2026: `/admin/login` chuyển sang HTTP Core, xem
+`ADMIN_AUTH_INTEGRATION.md`. Phần tenant/landlord dưới đây vẫn dùng mock;
+`src/services/mock/auth.ts` mô phỏng hành vi AuthServiceImpl và cấu trúc
+AuthResponse. Mock không phải hệ thống xác thực bảo mật.
 
 ## Giao diện
 
@@ -10,7 +13,7 @@ Cập nhật 22/10/2026. FE chạy độc lập, không gọi mạng; `src/servi
 - Bỏ Google, quên mật khẩu, ghi nhớ đăng nhập khỏi luồng đang dùng vì chưa có hợp đồng backend hỗ trợ. Component ForgotPasswordForm được giữ để dùng sau.
 - Đăng xuất desktop/mobile chủ trọ và khách thuê xóa phiên mock. Header hiển thị tên tài khoản trong phiên.
 - `/login`, `/register` vẫn mở popup trên nền trang tìm phòng. Tham số role chỉ chọn sẵn vai trò đăng ký, không cấp quyền đăng nhập.
-- `/admin/login` đã dùng kho tài khoản chung với `admin_demo`, bỏ face scan. Luồng admin/users duyệt tài khoản vẫn chưa tích hợp với kho tài khoản này. Tài khoản chủ trọ đăng ký mới vì vậy vẫn chờ duyệt; dùng landlord_demo để trải nghiệm chủ trọ hoạt động.
+- `/admin/login` có hai lựa chọn độc lập: mật khẩu và khuôn mặt. Cả hai nhận JWT qua Core và kiểm tra /api/users/me; phiên mock không mở khu vực Admin. Đăng ký mặt tại /admin/face yêu cầu phiên đăng nhập mật khẩu. Các API phiên Face/hoàn tất LOGIN đã kiểm tra qua Core/Gateway và webcam thật local/Docker; xem ADMIN_AUTH_INTEGRATION.md. Tài khoản chủ trọ đăng ký qua mock vẫn chờ duyệt.
 
 ## Tài khoản trải nghiệm
 
@@ -22,7 +25,7 @@ Mật khẩu chung `Roomix123!`:
 | landlord_demo | LANDLORD | ACTIVE |
 | pending_demo | LANDLORD | PENDING_VERIFICATION |
 | locked_demo | TENANT | LOCKED |
-| admin_demo | ADMIN | ACTIVE |
+| admin_demo | ADMIN (fixture cũ, không dùng tại /admin/login) | ACTIVE |
 
 ## Dữ liệu và giới hạn
 
@@ -41,4 +44,4 @@ Mật khẩu chung `Roomix123!`:
 
 Chỉ chuyển adapter sang HTTP khi môi trường backend đã sẵn sàng. Khi đó xác thực và cấp quyền do server quyết định.
 
-Trang `/admin/login` không hiển thị đăng ký hoặc tài khoản demo khách thuê/chủ trọ. ADMIN chỉ dùng tài khoản đã cấp (mock: admin_demo). Đăng ký công khai chỉ nhận TENANT/LANDLORD ở cả kiểu TypeScript và kiểm tra runtime; backend AuthServiceImpl cũng từ chối vai trò khác bằng INVALID_ROLE. Nút đăng ký từng xuất hiện do dùng chung LoginForm, không phải endpoint cấp quyền admin.
+Trang `/admin/login` không hiển thị đăng ký hoặc tài khoản demo khách thuê/chủ trọ. ADMIN cần tài khoản thật đã được cấp trong Core. Đăng ký công khai chỉ nhận TENANT/LANDLORD ở cả kiểu TypeScript và kiểm tra runtime. Không tạo tài khoản Admin từ frontend.

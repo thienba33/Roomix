@@ -43,3 +43,15 @@ next-env.d.ts
 # Local UI review screenshots
 /docs/ui-review/
 AGENTS.md
+
+# Private local review and biometric exports
+/.tmp/
+*.npy
+*.npz
+*.pkl
+*.pickle
+*.dump
+*.backup
+
+# Share the empty configuration template
+!.env.example
