@@ -1,6 +1,6 @@
 'use client';
 
-import HouseBotIcon from '@/components/ui/HouseBotIcon';
+import ChatIcon from '@/components/ui/ChatIcon';
 import { openAi, useAi } from './AiProvider';
 import { cn } from '@/lib/utils';
 
@@ -17,11 +17,11 @@ export default function AiLauncher() {
       aria-controls="roomix-ai"
       aria-expanded={state.open}
       className={cn(
-        'flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border transition hover:border-primary hover:shadow focus-visible:outline-offset-4',
-        state.open ? 'border-primary bg-primary-soft' : 'border-line bg-white',
+        'flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border transition hover:border-primary hover:text-primary focus-visible:outline-offset-4',
+        state.open ? 'border-primary bg-primary-soft' : 'border-line bg-white text-secondary',
       )}
     >
-      <HouseBotIcon size={30} />
+      <ChatIcon size={21} />
     </button>
   );
 }

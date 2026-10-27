@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import Modal from '@/components/ui/Modal';
 import Button from '@/components/ui/Button';
 
@@ -14,13 +14,14 @@ interface Props {
 }
 
 export default function RejectModal({ open, onClose, onConfirm, tenantName, roomLabel }: Props) {
+  if (!open) return null;
+  return <RejectModalContent onClose={onClose} onConfirm={onConfirm} tenantName={tenantName} roomLabel={roomLabel} />;
+}
+
+function RejectModalContent({ onClose, onConfirm, tenantName, roomLabel }: Omit<Props, 'open'>) {
   const [reason, setReason] = useState(REASONS[0]);
   const [note, setNote] = useState('');
   const [error, setError] = useState('');
-
-  useEffect(() => {
-    if (open) { setReason(REASONS[0]); setNote(''); setError(''); }
-  }, [open ]);
 
   const handleConfirm = () => {
     // Reason is REQUIRED (UC02.7 / POST /reject ReasonRequest). "Lý do khác" requires detail.
@@ -32,7 +33,7 @@ export default function RejectModal({ open, onClose, onConfirm, tenantName, room
   };
 
   return (
-    <Modal open={open} onClose={onClose} title="Từ chối yêu cầu">
+    <Modal open onClose={onClose} title="Từ chối yêu cầu">
       {(tenantName || roomLabel) && (
         <p className="-mt-2 mb-5 text-sm text-muted">
           {[tenantName, roomLabel].filter(Boolean).join(' · ')}

@@ -9,6 +9,10 @@ const devHosts = Object.values(networkInterfaces()).flatMap((addresses) =>
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   allowedDevOrigins: [...new Set(devHosts)],
+  async rewrites() {
+    const backend = (process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:18080').replace(/\/$/, '');
+    return [{ source: '/backend/:path*', destination: `${backend}/:path*` }];
+  },
   async redirects() {
     return [
       // Tenant (old Vietnamese slugs -> English)

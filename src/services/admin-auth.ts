@@ -4,6 +4,7 @@ export interface AdminUser {
   username: string;
   fullName: string;
   email: string;
+  phoneNumber?: string;
   role: 'ADMIN';
   status: 'ACTIVE';
 }
@@ -67,6 +68,7 @@ function readAdmin(value: Record<string, unknown>): AdminUser {
     id: value.id as string, username: value.username as string,
     fullName: value.fullName as string, email: value.email as string,
     role: 'ADMIN', status: 'ACTIVE',
+    ...(typeof value.phoneNumber === 'string' ? { phoneNumber: value.phoneNumber } : {}),
   };
 }
 
@@ -88,7 +90,7 @@ export function createAdminAuthClient({
     const timer = setTimeout(() => controller.abort(), timeoutMs);
     try {
       const response = await fetchImpl(`${root}${path}`, {
-        ...init, signal: controller.signal, cache: 'no-store', credentials: 'omit', redirect: 'error',
+        ...init, signal: controller.signal, cache: 'no-store', credentials: 'include', redirect: 'error',
       });
       if (!response.ok) {
         if (response.status === 401) throw new AdminAuthError('UNAUTHORIZED', 'Thông tin đăng nhập hoặc phiên xác thực không hợp lệ.');

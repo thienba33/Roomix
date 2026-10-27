@@ -277,3 +277,22 @@ test('cancelled profile request cannot finish face login after JWT has been rece
   });
   await assert.rejects(client.completeFaceLogin(loginTicket, 'SUCCEEDED', controller.signal), { name: 'AbortError' });
 });
+
+
+test('same-origin rewrite keeps credentials and profile fields for shared API sessions', async () => {
+  const calls = [];
+  const client = createAdminAuthClient({
+    baseUrl: '/backend',
+    fetchImpl: async (url, options) => {
+      calls.push({ url, options });
+      return url.endsWith('/login')
+        ? json({ data: token })
+        : json({ data: { ...admin, phoneNumber: '0900000000' } });
+    },
+  });
+  const result = await client.login('admin', 'password');
+  assert.deepEqual(calls.map(({ url }) => url), ['/backend/api/auth/login', '/backend/api/users/me']);
+  assert.ok(calls.every(({ options }) => options.credentials === 'include'));
+  assert.equal(result.user.phoneNumber, '0900000000');
+  assert.equal(result.user.role, 'ADMIN');
+});

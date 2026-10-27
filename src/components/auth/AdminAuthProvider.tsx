@@ -1,10 +1,13 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
+import { createContext, useContext, useState, type ReactNode } from 'react';
+import { useAuth } from './AuthProvider';
+import { readSession, saveSession } from '@/services/backend/auth';
+import { API_URL } from '@/services/backend/http';
 import { createAdminAuthClient, type AdminSession, type FaceLoginSession } from '@/services/admin-auth';
 
 const client = createAdminAuthClient({
-  baseUrl: process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:18080',
+  baseUrl: API_URL,
 });
 
 const AdminAuthContext = createContext<{
@@ -21,30 +24,44 @@ export function useAdminAuth() {
 }
 
 export default function AdminAuthProvider({ children }: { children: ReactNode }) {
-  // JWT chỉ nằm trong bộ nhớ, không đưa vào kho localStorage của bản mock.
-  // Tải lại toàn trang sẽ yêu cầu đăng nhập lại cho đến khi Core có refresh/session API.
-  const [session, setSession] = useState<AdminSession | null>(null);
+  const { user, ready, logout: logoutSharedSession } = useAuth();
+  // Keep login provenance in memory: a restored session must authenticate by
+  // password again before enrolling a face. API calls use the shared token.
+  const [authenticated, setAuthenticated] = useState<AdminSession | null>(null);
+  const stored = readSession();
+  const session = ready && user?.role === 'ADMIN' && user.status === 'ACTIVE'
+    && authenticated?.user.id === user.id && stored?.user.id === user.id
+    && stored.accessToken === authenticated.accessToken && stored.expiresAt !== undefined
+    ? { ...authenticated, accessToken: stored.accessToken, expiresAt: stored.expiresAt }
+    : null;
 
-  useEffect(() => {
-    if (!session) return;
-    const timer = window.setInterval(() => {
-      if (Date.now() >= session.expiresAt) setSession(null);
-    }, 1000);
-    return () => window.clearInterval(timer);
-  }, [session]);
+  const acceptSession = (value: AdminSession) => {
+    saveSession({
+      accessToken: value.accessToken,
+      tokenType: 'Bearer',
+      expiresIn: (value.expiresAt - Date.now()) / 1000,
+      user: { ...value.user, phoneNumber: value.user.phoneNumber ?? '' },
+    });
+    setAuthenticated(value);
+  };
+
+  const logout = () => {
+    setAuthenticated(null);
+    logoutSharedSession();
+  };
 
   const login = async (username: string, password: string) => {
-    setSession(null);
-    setSession(await client.login(username, password));
+    setAuthenticated(null);
+    acceptSession(await client.login(username, password));
   };
 
   const completeFaceLogin = async (ticket: FaceLoginSession, status: string, signal: AbortSignal) => {
     const authenticated = await client.completeFaceLogin(ticket, status, signal);
     if (signal.aborted) throw new DOMException('Stopped', 'AbortError');
-    setSession(authenticated);
+    acceptSession(authenticated);
   };
 
-  return <AdminAuthContext.Provider value={{ session, login, completeFaceLogin, logout: () => setSession(null) }}>
+  return <AdminAuthContext.Provider value={{ session, login, completeFaceLogin, logout }}>
     {children}
   </AdminAuthContext.Provider>;
 }

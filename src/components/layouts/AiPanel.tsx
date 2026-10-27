@@ -1,206 +1,273 @@
 'use client';
-import { useCallback, useEffect, useRef, useState } from 'react';
-import Image from 'next/image';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { rooms } from '@/lib/data';
-import { formatPriceShort } from '@/lib/utils';
-import { extractCriteria } from '@/services/ai';
-import { useAi } from './AiProvider';
-import { useDialogFocus } from '@/hooks/useDialogFocus';
-import { AI_PANEL_DEFAULT, AI_PANEL_MIN } from '@/hooks/useAiPanelWidth';
 
-const QUICK = ['Phòng dưới 3 triệu', 'Phòng ở Cầu Giấy', 'Phòng có ban công'];
-export default function AiPanel({ onClose, width, maxWidth, onWidthChange }: {
+import { useEffect, useRef, useState, type FormEvent } from 'react';
+import Link from 'next/link';
+import { useDialogFocus } from '@/hooks/useDialogFocus';
+import ChatIcon from '@/components/ui/ChatIcon';
+import Button from '@/components/ui/Button';
+import { sendAiMessage, type ChatMessage, type MatchedRoom } from '@/services/ai';
+import { formatVND } from '@/lib/utils';
+import { readSession } from '@/services/backend/session';
+
+interface DisplayMessage {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  matchedRooms?: MatchedRoom[];
+  followUps?: string[];
+  createdAt: string;
+}
+
+const DEFAULT_SUGGESTIONS = [
+  'Tìm phòng trọ dưới 4 triệu có gác lửng và máy lạnh',
+  'Quy định pháp lý về hợp đồng thuê và tiền cọc',
+  'Cách tính chỉ số điện nước hàng tháng',
+  'Phòng trọ gần trung tâm cho sinh viên',
+];
+
+export default function AiPanel({
+  onClose,
+  width,
+}: {
   onClose: () => void;
   width: number;
   maxWidth: number;
   onWidthChange: (width: number) => void;
 }) {
-  const { state, update, busy, error, send, reset } = useAi();
-  const { messages, draft, roomId } = state;
-  const [confirmReset, setConfirmReset] = useState(false);
+  const ref = useRef<HTMLElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
   const [mobile, setMobile] = useState(false);
-  const [newMessage, setNewMessage] = useState(false);
-  const [resizing, setResizing] = useState(false);
-  const [resizeFocused, setResizeFocused] = useState(false);
-  const drag = useRef<{ x: number; width: number } | null>(null);
-  const panelRef = useRef<HTMLElement>(null);
-  const resetRef = useRef<HTMLDivElement>(null);
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const nearBottom = useRef(true);
-  const router = useRouter();
-  const close = useCallback(() => onClose(), [onClose]);
-  const closeReset = useCallback(() => setConfirmReset(false), []);
-  useDialogFocus(panelRef, mobile, close);
-  useDialogFocus(resetRef, confirmReset, closeReset);
-  const room = rooms.find((item) => item.id === roomId);
-  const latest = [...messages].reverse().find((message) => message.role === 'ai');
-  const lastQuestion = [...messages].reverse().find((message) => message.role === 'user')?.text;
-  const criteria = latest?.search ?? extractCriteria(lastQuestion || '');
+  const [input, setInput] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [messages, setMessages] = useState<DisplayMessage[]>([
+    {
+      id: 'welcome',
+      role: 'assistant',
+      content:
+        'Xin chào! Tôi là Roomix AI — Trợ lý thông minh hỗ trợ tìm kiếm phòng trọ, gợi ý mức giá tối ưu và giải đáp các quy định hợp đồng, điện nước, cọc phòng theo chuẩn nghiệp vụ.',
+      followUps: DEFAULT_SUGGESTIONS,
+      createdAt: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
+    },
+  ]);
 
   useEffect(() => {
-    if (!resizing) return;
-    const { cursor, userSelect } = document.body.style;
-    document.body.style.cursor = 'col-resize';
-    document.body.style.userSelect = 'none';
-    return () => {
-      document.body.style.cursor = cursor;
-      document.body.style.userSelect = userSelect;
-    };
-  }, [resizing]);
-
-  useEffect(() => {
-    const media = window.matchMedia('(max-width: 1279px)');
+    const media = window.matchMedia('(max-width: 767px)');
     const sync = () => setMobile(media.matches);
-    sync(); media.addEventListener('change', sync);
-    return () => { media.removeEventListener('change', sync); };
-  }, []);
-  useEffect(() => {
-    const previous = (document.activeElement === document.body || panelRef.current?.contains(document.activeElement)
-      ? document.getElementById('roomix-ai-launcher')
-      : document.activeElement) as HTMLElement | null;
-    const restoreFocus = () => requestAnimationFrame(() => {
-      if (previous?.isConnected && document.activeElement === document.body) {
-        previous.focus({ preventScroll: true });
-      }
-    });
-    if (mobile) return () => { restoreFocus(); };
-    textareaRef.current?.focus({ preventScroll: true });
+    sync();
+    media.addEventListener('change', sync);
     const escape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' && !document.querySelector('[aria-modal="true"]')) close();
+      if (!media.matches && event.key === 'Escape') onClose();
     };
-    document.addEventListener('keydown', escape);
+    window.addEventListener('keydown', escape);
     return () => {
-      document.removeEventListener('keydown', escape);
-      // Restore focus after the panel has been removed.
-      restoreFocus();
+      media.removeEventListener('change', sync);
+      window.removeEventListener('keydown', escape);
     };
-  }, [mobile, close]);
+  }, [onClose]);
+
   useEffect(() => {
-    const el = textareaRef.current;
-    if (el) { el.style.height = 'auto'; el.style.height = `${Math.min(el.scrollHeight, 112)}px`; }
-  }, [draft]);
+    if (window.matchMedia('(max-width: 767px)').matches) return;
+    const previous = document.activeElement as HTMLElement | null;
+    ref.current?.focus({ preventScroll: true });
+    return () => {
+      if (previous?.isConnected) previous.focus({ preventScroll: true });
+    };
+  }, []);
+
+  useDialogFocus(ref, mobile, onClose);
+
   useEffect(() => {
-    if (nearBottom.current) { scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight }); setNewMessage(false); }
-    else setNewMessage(true);
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, busy]);
 
-  const applyCriteria = () => {
-    // Only map criteria that the current catalogue can actually filter.
-    const notes = [criteria.people ? `${criteria.people} người: cần xác nhận sức chứa` : '', criteria.nearSchool ? 'Gần Bách Khoa: cần xác nhận vị trí' : ''].filter(Boolean);
-    try { localStorage.setItem('roomix_mock_room_search_v1', JSON.stringify({ location: criteria.area || '', maxPrice: criteria.maxPrice || undefined, amenities: criteria.amenities, sort: 'newest', page: 0, size: 2 })); } catch { /* Optional persistence. */ }
-    try { sessionStorage.setItem('roomix:tenant:ai-search-notes', JSON.stringify(notes)); } catch { /* Optional persistence. */ }
-    window.dispatchEvent(new CustomEvent('roomix:tenant:search-applied'));
-    if (mobile) update({ open: false });
-    router.push('/');
+  const handleSend = async (textToSend?: string) => {
+    const text = (textToSend ?? input).trim();
+    if (!text || busy) return;
+
+    const userMessage: DisplayMessage = {
+      id: `user-${Date.now()}`,
+      role: 'user',
+      content: text,
+      createdAt: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
+    };
+
+    setMessages((prev) => [...prev, userMessage]);
+    setInput('');
+    setBusy(true);
+
+    try {
+      const history: ChatMessage[] = messages
+        .filter((m) => m.id !== 'welcome')
+        .map((m) => ({ role: m.role, content: m.content }));
+
+      const session = readSession();
+      const userRole = session?.user.role === 'LANDLORD' ? 'LANDLORD' : 'TENANT';
+
+      const response = await sendAiMessage({
+        message: text,
+        conversation_history: history,
+        user_role: userRole,
+      });
+
+      const assistantMessage: DisplayMessage = {
+        id: `ai-${Date.now()}`,
+        role: 'assistant',
+        content: response.answer,
+        matchedRooms: response.matched_rooms,
+        followUps: response.suggested_follow_ups?.length
+          ? response.suggested_follow_ups
+          : undefined,
+        createdAt: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
+      };
+
+      setMessages((prev) => [...prev, assistantMessage]);
+    } catch (err) {
+      const errorMessage: DisplayMessage = {
+        id: `err-${Date.now()}`,
+        role: 'assistant',
+        content:
+          err instanceof Error
+            ? `Rất tiếc, đã có lỗi xử lý: ${err.message}`
+            : 'Hệ thống AI hiện chưa thể phản hồi. Vui lòng thử lại sau ít phút.',
+        createdAt: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
+      };
+      setMessages((prev) => [...prev, errorMessage]);
+    } finally {
+      setBusy(false);
+    }
   };
 
-  return <aside id="roomix-ai" ref={panelRef} role={mobile ? 'dialog' : 'complementary'} aria-modal={mobile || undefined} aria-labelledby="ai-heading" tabIndex={-1} style={{ width: mobile ? undefined : width }} className="ai-panel flex flex-col bg-white">
-    {!mobile && <div
-      role="separator"
-      aria-label="Điều chỉnh độ rộng chatbot"
-      aria-orientation="vertical"
-      aria-controls="roomix-ai"
-      aria-valuemin={AI_PANEL_MIN}
-      aria-valuemax={maxWidth}
-      aria-valuenow={width}
-      aria-valuetext={`${width} pixel`}
-      tabIndex={0}
-      title="Kéo để đổi độ rộng · Nhấp đúp để đặt lại"
-      style={{ position: 'absolute', inset: '0 auto 0 -5px', width: 10, zIndex: 2, cursor: 'col-resize', touchAction: 'none', outline: 'none', background: resizing ? 'rgba(79,70,229,0.12)' : undefined }}
-      className="group flex items-center justify-center hover:bg-primary-soft focus-visible:bg-primary-soft"
-      onFocus={() => setResizeFocused(true)}
-      onBlur={() => setResizeFocused(false)}
-      onPointerDown={(event) => {
-        if (event.button !== 0) return;
-        event.preventDefault();
-        event.currentTarget.focus();
-        event.currentTarget.setPointerCapture(event.pointerId);
-        drag.current = { x: event.clientX, width };
-        setResizing(true);
-      }}
-      onPointerMove={(event) => {
-        if (drag.current) onWidthChange(drag.current.width + drag.current.x - event.clientX);
-      }}
-      onPointerUp={(event) => {
-        drag.current = null;
-        setResizing(false);
-        if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
-      }}
-      onLostPointerCapture={() => { drag.current = null; setResizing(false); }}
-      onDoubleClick={() => onWidthChange(AI_PANEL_DEFAULT)}
-      onKeyDown={(event) => {
-        const step = event.shiftKey ? 32 : 16;
-        const values: Record<string, number> = { ArrowLeft: width + step, ArrowRight: width - step, Home: AI_PANEL_MIN, End: maxWidth };
-        if (event.key in values) { event.preventDefault(); onWidthChange(values[event.key]); }
-      }}
-    ><span aria-hidden style={{ width: resizeFocused ? 4 : 3, height: 36, borderRadius: 99, background: resizing || resizeFocused ? 'var(--color-primary)' : 'var(--color-line)' }} /></div>}
-    <div className="flex shrink-0 items-center justify-between gap-2 border-b border-line px-4 py-3">
-      <div>
-        <h2 id="ai-heading" className="text-base font-bold">Roomix AI</h2>
-      </div>
-      <div className="flex items-center gap-1">
-        <button onClick={() => setConfirmReset(true)} disabled={busy || (!messages.length && !draft)} aria-label="Trò chuyện mới" title="Trò chuyện mới" className="flex h-8 w-8 items-center justify-center rounded-lg text-muted hover:bg-page disabled:opacity-40"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden><path d="M12 5v14M5 12h14" /></svg></button>
-        <button onClick={close} aria-label={mobile ? 'Quay lại trang đang xem' : 'Đóng Roomix AI'} className="flex h-8 w-8 items-center justify-center rounded-lg text-secondary hover:bg-page">{mobile ? '←' : '✕'}</button>
-      </div>
-    </div>
-    {room && <div className="flex shrink-0 items-start gap-2 border-b border-line bg-primary-soft/50 px-5 py-3">
-      <div className="min-w-0 flex-1">
-        <p className="text-xs text-muted">Đang hỏi về</p>
-        <Link href={`/rooms/${room.id}`} onClick={() => { if (mobile) close(); }} className="text-sm font-semibold text-primary">{room.name}</Link>
-      </div>
-      <button onClick={() => update({ roomId: undefined })} aria-label="Bỏ ngữ cảnh phòng" className="h-8 w-8 rounded-full hover:bg-white">✕</button>
-    </div>}
-    <div ref={scrollRef} onScroll={(event) => { const el = event.currentTarget; nearBottom.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80; if (nearBottom.current) setNewMessage(false); }} className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4">
-      {messages.length === 0 && <div className="flex min-h-full flex-col justify-center pb-8">
-        <h3 className="text-2xl font-bold leading-tight tracking-tight">Bạn đang tìm phòng<br />như thế nào?</h3>
-        <p className="mt-3 text-sm leading-6 text-muted">Cho mình biết ngân sách, khu vực hoặc tiện ích bạn cần để bắt đầu.</p>
-        <div className="mt-6 space-y-2">{QUICK.map((question) => <button key={question} disabled={busy} onClick={() => void send(question)} className="flex w-full items-center justify-between rounded-xl border border-line px-4 py-3 text-left text-sm text-secondary transition hover:border-primary hover:bg-primary-soft/40">{question}<span aria-hidden className="text-primary">↗</span>
-        </button>)}</div>
-      </div>}
-      <div role="log" aria-label="Hội thoại với Roomix AI" aria-live="polite" aria-relevant="additions" className="space-y-4">
-        {messages.map((message) => <div key={message.id} className={message.role === 'user' ? 'ml-10 rounded-2xl rounded-br-sm bg-primary-soft px-3 py-2.5' : ''}>
-          <p className={message.role === 'user' ? 'sr-only' : 'mb-1 text-[11px] font-semibold text-muted'}>{message.role === 'user' ? 'Bạn' : 'Roomix AI'}</p>
-          <p className="whitespace-pre-wrap break-words text-sm leading-relaxed text-ink">{message.text}</p>
-          {message.hits && <div className="mt-2 space-y-2">{message.hits.map(({ room: hit, reason }) => <Link key={hit.id} href={`/rooms/${hit.id}`} onClick={() => { if (mobile) close(); }} className="block rounded-xl border border-line p-2.5 transition hover:border-primary/50 hover:bg-page">
-            <div className="flex items-center gap-2.5">
-              <Image src={hit.image} alt={hit.name} width={56} height={56} className="h-14 w-14 shrink-0 rounded-lg object-cover" />
-              <div className="min-w-0">
-                <p className="break-words text-sm font-semibold leading-5">{hit.name}</p>
-                <p className="mt-0.5 text-sm font-bold text-primary">{formatPriceShort(hit.price)}/tháng</p>
-                <p className="mt-0.5 text-xs text-muted">{hit.size} m² · {hit.area}</p>
-              </div>
-            </div>
-            <p className="mt-1.5 break-words text-xs leading-5 text-muted">{reason}</p>
-          </Link>)}</div>}
-          {!!message.criteria?.length && <div className="mt-3 flex flex-wrap gap-1.5">{message.criteria.map((criterion) => <span key={criterion} className="rounded-md bg-page px-2 py-1 text-xs text-secondary">{criterion}</span>)}</div>}
-          {!!message.sources?.length && <details className="mt-2 text-xs text-muted">
-            <summary>Nguồn thông tin</summary>{message.sources.map((source) => <p key={source} className="mt-1 break-words">{source}</p>)}</details>}
-        </div>)}
-        {busy && <p role="status" className="text-sm text-muted">Đang tìm thông tin phù hợp…</p>}
-      </div>
-      {latest && !busy && <div className="mt-4 flex flex-wrap gap-1.5">{latest.followUps?.map((question) => <button key={question} onClick={() => void send(question)} className="rounded-full border border-line px-2.5 py-1.5 text-xs text-secondary hover:border-primary hover:text-primary">{question}</button>)}{criteria.chips.length > 0 && <button onClick={applyCriteria} className="rounded-full bg-primary-soft px-2.5 py-1.5 text-xs font-semibold text-primary">Áp dụng tiêu chí vào danh sách ↗</button>}</div>}
-      {error && <div role="alert" className="mt-4 rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}<button onClick={() => void send(lastQuestion || '', true)} className="ml-2 font-semibold underline">Thử lại</button>
-      </div>}
-    </div>
-    {newMessage && <button onClick={() => { nearBottom.current = true; scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight }); setNewMessage(false); }} className="mx-auto mb-2 rounded-full border border-line bg-white px-4 py-2 text-xs font-semibold shadow-sm">Tin nhắn mới ↓</button>}
-    <div className="ai-composer shrink-0 border-t border-line px-3 py-3">
-      <form onSubmit={(event) => { event.preventDefault(); void send(draft); }} className="flex items-end gap-2 rounded-xl border border-line bg-white p-1.5 focus-within:border-primary">
-        <textarea ref={textareaRef} value={draft} onChange={(event) => update({ draft: event.target.value })} onKeyDown={(event) => { if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing && event.keyCode !== 229) { event.preventDefault(); void send(draft); } }} rows={1} aria-label="Nhắn cho Roomix AI" placeholder="Mô tả phòng bạn muốn tìm…" className="max-h-28 min-h-10 min-w-0 flex-1 resize-none bg-transparent px-2 py-2 text-sm leading-6 outline-none" />
-        <button type="submit" disabled={!draft.trim() || busy} aria-label="Gửi tin nhắn" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary text-white hover:bg-primary-dark disabled:cursor-not-allowed disabled:opacity-40"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="m5 12 7-7 7 7M12 5v14" /></svg></button>
-      </form>
-    </div>
-    {confirmReset && <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/30 p-5">
-      <div ref={resetRef} role="dialog" aria-modal="true" aria-labelledby="reset-heading" tabIndex={-1} className="w-full rounded-2xl bg-white p-5 shadow-xl">
-        <h3 id="reset-heading" className="font-bold">Bắt đầu cuộc trò chuyện mới?</h3>
-        <p className="mt-2 text-sm text-muted">Hội thoại và bản nháp hiện tại sẽ được xóa.</p>
-        <div className="mt-5 flex justify-end gap-3">
-          <button onClick={closeReset} className="rounded-xl border border-line px-4 py-2 text-sm">Giữ lại</button>
-          <button onClick={() => { reset(); update({ open: true }); closeReset(); }} className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white">Bắt đầu mới</button>
+  const onSubmit = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    void handleSend();
+  };
+
+  return (
+    <aside
+      id="roomix-ai"
+      ref={ref}
+      role={mobile ? 'dialog' : 'complementary'}
+      aria-modal={mobile || undefined}
+      aria-labelledby="ai-heading"
+      tabIndex={-1}
+      style={{ width: mobile ? undefined : width }}
+      className="ai-panel flex flex-col bg-page text-ink shadow-[-8px_0_32px_-24px_rgba(34,34,34,0.3)] h-full overflow-hidden"
+    >
+      {/* Header */}
+      <header className="flex items-center justify-between border-b border-line bg-white px-5 py-4 shrink-0">
+        <div className="flex items-center gap-2.5">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
+            <ChatIcon size={20} />
+          </div>
+          <div>
+            <h2 id="ai-heading" className="text-base font-bold leading-5">Roomix AI</h2>
+            <p className="text-xs text-muted">Trợ lý tư vấn &amp; tìm phòng thông minh</p>
+          </div>
         </div>
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Đóng Roomix AI"
+          className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-page transition text-muted hover:text-ink focus-visible:outline-2 focus-visible:outline-primary"
+        >
+          ✕
+        </button>
+      </header>
+
+      {/* Message List */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        {messages.map((msg) => (
+          <div
+            key={msg.id}
+            className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}
+          >
+            <div
+              className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-6 shadow-sm ${
+                msg.role === 'user'
+                  ? 'bg-primary text-white rounded-br-none'
+                  : 'bg-white text-ink border border-line rounded-bl-none'
+              }`}
+            >
+              <div className="whitespace-pre-wrap break-words">{msg.content}</div>
+
+              {/* Matched Rooms List */}
+              {msg.matchedRooms && msg.matchedRooms.length > 0 && (
+                <div className="mt-3 space-y-2 border-t border-line/50 pt-3">
+                  <p className="text-xs font-bold uppercase tracking-wider text-muted">
+                    Phòng gợi ý phù hợp:
+                  </p>
+                  <div className="grid gap-2">
+                    {msg.matchedRooms.map((room) => (
+                      <Link
+                        key={room.id}
+                        href={`/rooms/${room.id}`}
+                        onClick={onClose}
+                        className="group block rounded-xl border border-line bg-page/50 p-2.5 transition hover:border-primary hover:bg-white"
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <span className="font-semibold text-ink group-hover:text-primary line-clamp-1">
+                            {room.title}
+                          </span>
+                          <span className="shrink-0 font-bold text-primary">
+                            {room.price ? formatVND(room.price) : ''}
+                          </span>
+                        </div>
+                        <p className="mt-1 text-xs text-muted line-clamp-1">
+                          {[room.address, room.district, room.city].filter(Boolean).join(', ')}
+                          {room.area_sqm ? ` · ${room.area_sqm} m²` : ''}
+                        </p>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+            <span className="mt-1 px-1 text-[11px] text-muted">{msg.createdAt}</span>
+
+            {/* Suggested Follow-ups */}
+            {msg.followUps && msg.followUps.length > 0 && (
+              <div className="mt-2.5 flex flex-wrap gap-1.5 max-w-[90%]">
+                {msg.followUps.map((prompt, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    disabled={busy}
+                    onClick={() => void handleSend(prompt)}
+                    className="rounded-full border border-line bg-white px-3 py-1 text-xs text-secondary transition hover:border-primary hover:text-primary hover:bg-primary-soft/30 text-left disabled:opacity-50"
+                  >
+                    {prompt}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        ))}
+
+        {busy && (
+          <div className="flex items-center gap-2 text-xs text-muted p-2">
+            <span className="inline-block h-2 w-2 animate-ping rounded-full bg-primary" />
+            Roomix AI đang phân tích dữ liệu và soạn câu trả lời…
+          </div>
+        )}
+        <div ref={messagesEndRef} />
       </div>
-    </div>}
-  </aside>;
+
+      {/* Input Form */}
+      <footer className="border-t border-line bg-white p-3 shrink-0">
+        <form onSubmit={onSubmit} className="flex items-center gap-2">
+          <input
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            disabled={busy}
+            placeholder="Hỏi về phòng, giá, tiền cọc, hợp đồng..."
+            className="flex-1 rounded-xl border border-line bg-page px-3.5 py-2.5 text-sm text-ink placeholder:text-muted focus-visible:outline-2 focus-visible:outline-primary focus-visible:bg-white"
+          />
+          <Button type="submit" size="sm" disabled={busy || !input.trim()}>
+            Gửi
+          </Button>
+        </form>
+      </footer>
+    </aside>
+  );
 }

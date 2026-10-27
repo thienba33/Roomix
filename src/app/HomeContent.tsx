@@ -1,23 +1,21 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { useCatalog } from '@/hooks/useCatalog';
+import Image from 'next/image';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Modal from '@/components/ui/Modal';
 import RoomListingCard from '@/components/rooms/RoomListingCard';
-import { searchRooms, CATALOG_EVENT, type RoomSearch } from '@/services/mock/rooms';
+import { searchRooms, validateSearch, CATALOG_EVENT, type RoomSearch, type PageResponse, type RoomSummary } from '@/services/backend/rooms';
 
 const AMENITIES = [{ value: 'private_bathroom', label: 'WC riêng' }, { value: 'air_conditioner', label: 'Điều hòa' }, { value: 'water_heater', label: 'Nóng lạnh' }, { value: 'balcony', label: 'Ban công' }];
-const SEARCH_KEY = 'roomix_mock_room_search_v1';
+const SEARCH_KEY = 'roomix_api_room_search_v1';
 const PAGE_SIZE = 16;
 const INITIAL: RoomSearch = { location: '', sort: 'newest', page: 0, size: PAGE_SIZE, amenities: [] };
 
 export default function HomeContent() {
-  const catalog = useCatalog();
   const [query, setQuery] = useState<RoomSearch>(INITIAL);
   const [draft, setDraft] = useState<RoomSearch>(INITIAL);
   const [open, setOpen] = useState(false);
-  const [aiNotes, setAiNotes] = useState<string[]>([]);
   const [ready, setReady] = useState(false);
   const [filterError, setFilterError] = useState('');
   useEffect(() => {
@@ -26,11 +24,10 @@ export default function HomeContent() {
         const saved = JSON.parse(localStorage.getItem(SEARCH_KEY) || 'null');
         if (saved) {
           const restored = { ...saved, size: PAGE_SIZE, page: saved.size === PAGE_SIZE ? saved.page ?? 0 : 0 };
-          const result = searchRooms(restored);
-          setQuery({ ...restored, page: Math.max(0, Math.min(restored.page, result.totalPages - 1)) });
+          validateSearch(restored);
+          setQuery(restored);
         }
       } catch { /* Invalid preferences use the default search. */ }
-      try { const notes = JSON.parse(sessionStorage.getItem('roomix:tenant:ai-search-notes') || '[]'); setAiNotes(Array.isArray(notes) ? notes.filter((n): n is string => typeof n === 'string') : []); } catch { setAiNotes([]); }
       setReady(true);
     };
     restore();
@@ -47,34 +44,64 @@ export default function HomeContent() {
     return () => { window.removeEventListener(CATALOG_EVENT, resetPage); window.removeEventListener('storage', resetPage); };
   }, []);
   const update = (value: Partial<RoomSearch>) => setQuery((q) => ({ ...q, ...value, page: 0 }));
-  let result; let error = catalog.error;
-  try { result = searchRooms(query); } catch (e) { error = e instanceof Error ? e.message : 'Không thể tìm phòng.'; }
+  const [result, setResult] = useState<PageResponse<RoomSummary> | null>(null);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [retry, setRetry] = useState(0);
+  useEffect(() => {
+    if (!ready) return;
+    const controller = new AbortController();
+    const timer = window.setTimeout(() => {
+      setLoading(true); setError('');
+      searchRooms(query, controller.signal).then((page) => {
+        if (!controller.signal.aborted) { setResult(page); setLoading(false); }
+      }).catch((cause) => {
+        if (!controller.signal.aborted) { setResult(null); setError(cause instanceof Error ? cause.message : 'Không thể tìm phòng.'); setLoading(false); }
+      });
+    }, 250);
+    return () => { window.clearTimeout(timer); controller.abort(); };
+  }, [query, ready, retry]);
   const count = [query.minPrice, query.maxPrice, query.minArea].filter((v) => v !== undefined).length + (query.amenities?.length ?? 0);
   const reset = () => {
     setQuery(INITIAL);
-    setAiNotes([]);
-    try { sessionStorage.removeItem('roomix:tenant:ai-search-notes'); } catch { /* Optional persistence. */ }
   };
   const apply = () => {
-    try { searchRooms(draft); setQuery({ ...draft, page: 0 }); setOpen(false); setFilterError(''); }
+    try { validateSearch(draft); setQuery({ ...draft, page: 0 }); setOpen(false); setFilterError(''); }
     catch (e) { setFilterError(e instanceof Error ? e.message : 'Bộ lọc không hợp lệ.'); }
   };
-  return <div className="mx-auto w-full max-w-[1440px] px-4 py-6 sm:px-6 lg:px-8">
-    <h1 className="text-[28px] font-extrabold text-ink">Tìm phòng</h1>
-    <Input value={query.location ?? ''} onChange={(e) => update({ location: e.target.value })} placeholder="Tìm theo đường, phường, quận hoặc thành phố…" aria-label="Tìm theo địa chỉ" className="mt-4 h-[52px]" />
+  return <div className="mx-auto w-full max-w-[1440px] px-4 py-6 sm:px-6 lg:px-8 discovery-page">
+    <section style={{ position: 'relative' }} className="isolate overflow-hidden rounded-3xl bg-[#edf2f8] px-5 py-6 sm:px-8 md:px-10 md:py-7" aria-labelledby="discovery-title">
+      <div
+        aria-hidden="true"
+        style={{ maskImage: 'linear-gradient(to right, transparent, rgba(0,0,0,0.3) 30%, black 85%)', WebkitMaskImage: 'linear-gradient(to right, transparent, rgba(0,0,0,0.3) 30%, black 85%)' }}
+        className="pointer-events-none absolute -right-12 -top-12 hidden h-[400px] w-[400px] select-none md:block lg:h-[440px] lg:w-[440px]"
+      >
+        <Image src="/images/logo-mark.png" alt="" fill sizes="440px" className="object-contain opacity-25" priority />
+      </div>
+      <div className="relative z-10">
+        <h1 id="discovery-title" className="text-[32px] font-extrabold leading-[1.18] tracking-[-1.2px] text-[#202b3c] sm:text-[38px] lg:text-[44px] lg:tracking-[-1.7px]">Tìm một nơi<br />để gọi là nhà.</h1>
+        <p className="mt-3 max-w-[48ch] text-sm leading-6 text-[#536175]">Tìm phòng theo khu vực, ngân sách và tiện ích bạn cần.</p>
+        <div role="search" aria-label="Tìm kiếm phòng" className="mt-5 max-w-[840px]">
+          <div className="discovery-search-field">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" /><path d="m16 16 5 5" /></svg>
+            <Input value={query.location ?? ''} onChange={(e) => update({ location: e.target.value })} placeholder="Tìm theo đường, phường, quận hoặc thành phố…" aria-label="Tìm theo địa chỉ" className="h-[56px]" />
+          </div>
+        </div>
+      </div>
+    </section>
+    <h2 className="mt-9 text-xl font-bold tracking-tight">Phòng dành cho bạn</h2>
     <div className="mt-4 flex flex-wrap items-center gap-3">
-      <p role="status" className="mr-auto text-sm text-muted">{ready ? `${result?.totalElements ?? 0} phòng phù hợp` : 'Đang tải phòng…'}</p>
+      <p role="status" className="mr-auto text-sm text-muted">{ready && !loading ? `${result?.totalElements ?? 0} phòng phù hợp` : 'Đang tải phòng…'}</p>
       <label className="flex items-center gap-2 text-sm">Sắp xếp
         <select className="rounded-full border border-line bg-white px-3 py-2" value={query.sort} onChange={(e) => update({ sort: e.target.value as RoomSearch['sort'] })}>
           <option value="newest">Mới nhất</option><option value="price_asc">Giá tăng dần</option><option value="price_desc">Giá giảm dần</option>
         </select>
       </label>
-      <Button variant="outline" onClick={() => { setDraft(query); setFilterError(''); setOpen(true); }}>Bộ lọc{count ? ` · ${count}` : ''}</Button>
+      <Button variant="outline" onClick={() => { setDraft(query); setFilterError(''); setOpen(true); }}><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><path d="M4 7h16M4 17h16" /><circle cx="9" cy="7" r="3" fill="white" /><circle cx="15" cy="17" r="3" fill="white" /></svg>Bộ lọc{count ? ` · ${count}` : ''}</Button>
       {(count > 0 || query.location) && <button className="text-sm font-semibold text-primary" onClick={reset}>Xóa bộ lọc</button>}
     </div>
-    {aiNotes.length > 0 && <p className="mt-3 text-sm text-muted">Cần xác nhận thêm: {aiNotes.join(' · ')}</p>}
-    {error && <div role="alert" className="mt-6 rounded-xl border border-line p-5"><p className="text-red-600">{error}</p><Button className="mt-3" variant="outline" onClick={() => { catalog.retry(); reset(); }}>Thử lại</Button></div>}
-    {ready && !error && result && (result.content.length ? <>
+    {error && <div role="alert" className="mt-6 rounded-xl border border-line p-5"><p className="text-red-600">{error}</p><Button className="mt-3" variant="outline" onClick={() => { setRetry((value) => value + 1); }}>Thử lại</Button></div>}
+    {ready && !loading && !error && result && (result.content.length ? <>
       <div className="room-grid mt-7 gap-x-5 gap-y-8">{result.content.map((room) => <RoomListingCard key={room.postId} room={room} />)}</div>
       <nav aria-label="Phân trang phòng" className="mt-8 flex items-center justify-center gap-3">
         <button type="button" aria-label="Trang trước" title="Trang trước" disabled={result.first} onClick={() => setQuery((q) => ({ ...q, page: result.page - 1 }))} className="flex h-10 w-10 items-center justify-center rounded-full border border-line text-ink transition hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-35">

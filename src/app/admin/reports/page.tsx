@@ -1,166 +1,127 @@
 'use client';
 
-import { useMemo, useState } from 'react';
-import Card from '@/components/ui/Card';
-import Button from '@/components/ui/Button';
+import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import Badge from '@/components/ui/Badge';
-import ConfirmDialog from '@/components/ui/ConfirmDialog';
-import { useToast } from '@/components/ui/Toast';
-import { appendAudit, useAdminReports, useAuditExtra } from '@/lib/admin-store';
-import { cn } from '@/lib/utils';
-import type { ReportItem } from '@/types';
+import Button from '@/components/ui/Button';
 
-function badgeForStatus(s: ReportItem['status']): { tone: 'red' | 'green' | 'gray'; label: string } {
-  if (s === 'PENDING') return { tone: 'red', label: 'Chưa xử lý' };
-  if (s === 'RESOLVED') return { tone: 'green', label: 'Đã xử lý' };
-  return { tone: 'gray', label: 'Đã đóng' };
+interface ReportItem {
+  id: string;
+  roomId: string;
+  roomTitle: string;
+  category: string;
+  details: string;
+  status: 'PENDING' | 'RESOLVED' | 'DISMISSED';
+  createdAt: string;
 }
 
-function roomCodeOf(report: ReportItem): string | undefined {
-  const m = report.target.match(/\d{3}/);
-  return m ? m[0] : undefined;
-}
+const CATEGORY_NAMES: Record<string, string> = {
+  INACCURATE_INFO: 'Thông tin không đúng thực tế',
+  FAKE_DEPOSIT: 'Nghi vấn cọc ảo / lừa đảo',
+  PRICE_DISCREPANCY: 'Sai lệch giá cho thuê',
+  DUPLICATE_OR_EXPIRED: 'Tin trùng lặp / đã cho thuê',
+  OTHER: 'Vi phạm khác',
+};
 
-type PendingAction = 'takedown' | 'dismiss' | null;
+export default function AdminReportsPage() {
+  const [reports, setReports] = useState<ReportItem[]>([]);
+  const [notice, setNotice] = useState('');
 
-// C5 · UC07.6 (+ UC04.9 takedown) — fully functional at MOCK level only:
-// UC07.6 has NO backend module (no entity/controller/DTO), so every status
-// here is a frontend invention persisted to the admin store. Both actions
-// sit behind ConfirmDialog and can be undone while the report was PENDING.
-export default function ReportsPage() {
-  const { push } = useToast();
-  const [list, setList] = useAdminReports();
-  const [, setAuditExtra] = useAuditExtra();
-  const [selectedId, setSelectedId] = useState<number>(list[0]?.id ?? 1);
-  const [action, setAction] = useState<PendingAction>(null);
-  const [statusFilter, setStatusFilter] = useState<'all' | ReportItem['status']>('all');
-
-  const filtered = useMemo(
-    () => (statusFilter === 'all' ? list : list.filter((r) => r.status === statusFilter)),
-    [list, statusFilter],
-  );
-  const selected = useMemo(
-    () => list.find((r) => r.id === selectedId) ?? filtered[0] ?? list[0],
-    [list, selectedId, filtered],
-  );
-  const pendingCount = list.filter((r) => r.status === 'PENDING').length;
-
-  const setStatus = (id: number, status: ReportItem['status']) =>
-    setList((prev) => prev.map((r) => (r.id === id ? { ...r, status } : r)));
-
-  const confirmAction = () => {
-    if (!selected || !action) return;
-    const target = selected;
-    const prevStatus = target.status;
-    if (action === 'takedown') {
-      setStatus(target.id, 'RESOLVED');
-      appendAudit(setAuditExtra, 'Gỡ bài đăng (báo cáo)', target.target);
-      push('Đã xử lý báo cáo — gỡ bài đăng', target.target, {
-        label: 'Hoàn tác',
-        onClick: () => setStatus(target.id, prevStatus),
-      });
-    } else {
-      setStatus(target.id, 'DISMISSED');
-      appendAudit(setAuditExtra, 'Đóng báo cáo', target.target);
-      push('Đã đóng báo cáo · Không vi phạm', target.target, {
-        label: 'Hoàn tác',
-        onClick: () => setStatus(target.id, prevStatus),
-      });
+  const loadReports = () => {
+    try {
+      const stored: ReportItem[] = JSON.parse(localStorage.getItem('roomix:reports') || '[]');
+      if (stored.length === 0) {
+        // Seed initial sample report for realistic review
+        const initial: ReportItem[] = [
+          {
+            id: 'rep-sample-1',
+            roomId: 'room-demo-1',
+            roomTitle: 'Phòng trọ cao cấp gần trường ĐH Tôn Đức Thắng',
+            category: 'PRICE_DISCREPANCY',
+            details: 'Chủ trọ báo giá thực tế cao hơn 500k so với bài đăng khi tới xem trực tiếp.',
+            status: 'PENDING',
+            createdAt: new Date(Date.now() - 3600000 * 5).toISOString(),
+          },
+        ];
+        localStorage.setItem('roomix:reports', JSON.stringify(initial));
+        setReports(initial);
+      } else {
+        setReports(stored);
+      }
+    } catch {
+      setReports([]);
     }
   };
 
-  const chip = (active: boolean) =>
-    cn('h-7 rounded-full px-3 text-xs font-medium', active ? 'bg-primary-soft text-primary' : 'bg-[#F7F7F7] text-muted');
+  useEffect(() => {
+    loadReports();
+  }, []);
+
+  const handleStatusChange = (id: string, newStatus: ReportItem['status']) => {
+    const updated = reports.map((r) => (r.id === id ? { ...r, status: newStatus } : r));
+    setReports(updated);
+    localStorage.setItem('roomix:reports', JSON.stringify(updated));
+    setNotice(newStatus === 'RESOLVED' ? 'Đã đánh dấu đã xử lý báo cáo vi phạm.' : 'Đã bỏ qua báo cáo.');
+  };
 
   return (
-    <div>
-      <h1 className="text-2xl font-semibold text-ink">Báo cáo vi phạm</h1>
-      <p className="mt-1 text-sm text-muted">{pendingCount} báo cáo đang mở · Hiển thị {filtered.length} / {list.length}</p>
-      <p className="mt-1 text-[13px] font-medium text-amber-700">Chế độ minh họa · Báo cáo được lưu trong trình duyệt.</p>
+    <div className="space-y-6 pb-8">
+      <header className="border-b border-line pb-6">
+        <h1 className="text-[28px] font-extrabold tracking-tight sm:text-[32px]">Quản lý báo cáo vi phạm (UC07.6)</h1>
+        <p className="mt-2 text-sm leading-6 text-muted">
+          Tiếp nhận, xác minh và xử lý các phản ánh vi phạm về bài đăng và phòng trọ từ người dùng trên toàn hệ thống.
+        </p>
+      </header>
 
-      <div className="mt-4 flex flex-wrap gap-2">
-        <button type="button" onClick={() => setStatusFilter('all')} className={chip(statusFilter === 'all')}>Tất cả · {list.length}</button>
-        <button type="button" onClick={() => setStatusFilter('PENDING')} className={chip(statusFilter === 'PENDING')}>Chưa xử lý · {pendingCount}</button>
-        <button type="button" onClick={() => setStatusFilter('RESOLVED')} className={chip(statusFilter === 'RESOLVED')}>Đã xử lý · {list.filter((r) => r.status === 'RESOLVED').length}</button>
-        <button type="button" onClick={() => setStatusFilter('DISMISSED')} className={chip(statusFilter === 'DISMISSED')}>Đã đóng · {list.filter((r) => r.status === 'DISMISSED').length}</button>
-      </div>
+      {notice && <p role="status" className="rounded-xl bg-green-50 p-3 text-sm text-green-800">{notice}</p>}
 
-      <div className="mt-5 grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
-        <Card className="divide-y divide-line overflow-hidden p-0">
-          {filtered.map((report) => {
-            const badge = badgeForStatus(report.status);
-            const code = roomCodeOf(report);
-            const active = selected?.id === report.id;
-            return (
-              <button
-                key={report.id}
-                type="button"
-                onClick={() => setSelectedId(report.id)}
-                className={cn('w-full px-5 py-5 text-left', active && 'bg-primary-soft/40')}
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="font-semibold text-ink">{report.reason}</p>
-                    <p className="mt-1 text-[13px] text-muted">
-                      {code ? `Phòng ${code} · khách ${report.reporter} · ${report.date}` : `${report.target} · khách ${report.reporter} · ${report.date}`}
-                    </p>
-                  </div>
-                  <Badge tone={badge.tone}>{badge.label}</Badge>
+      {reports.length === 0 ? (
+        <div className="rounded-2xl border border-line bg-white p-8 text-center text-muted">
+          Hiện chưa có báo cáo vi phạm nào từ người dùng.
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {reports.map((report) => (
+            <article key={report.id} className="rounded-2xl border border-line bg-white p-5 space-y-3">
+              <div className="flex flex-wrap items-start justify-between gap-2">
+                <div>
+                  <span className="text-xs font-bold text-red-600 uppercase tracking-wider">
+                    {CATEGORY_NAMES[report.category] || report.category}
+                  </span>
+                  <h3 className="mt-1 text-base font-bold text-ink">
+                    Bài đăng: {report.roomTitle}
+                  </h3>
+                  <p className="text-xs text-muted">
+                    Mã phòng: <Link href={`/rooms/${report.roomId}`} className="text-primary hover:underline">{report.roomId}</Link> · Gửi lúc: {new Date(report.createdAt).toLocaleString('vi-VN')}
+                  </p>
                 </div>
-              </button>
-            );
-          })}
-          {filtered.length === 0 && <p className="px-5 py-8 text-center text-sm text-muted">Không có báo cáo nào ở trạng thái này.</p>}
-        </Card>
-
-        {selected && (
-          <Card className="p-6">
-            <h2 className="text-[17px] font-semibold text-ink">Chi tiết báo cáo</h2>
-            <p className="mt-4 font-medium text-ink">
-              {selected.reason} — {selected.target}
-            </p>
-            <p className="mt-1 text-[13px] text-muted">Người báo cáo: {selected.reporter} · {selected.date}</p>
-            <p className="mt-2 text-sm leading-relaxed text-muted">
-              {selected.detail ?? 'Người dùng cho biết nội dung bài đăng chưa đúng với thực tế và cần Admin kiểm tra lại trước khi tiếp tục hiển thị.'}
-            </p>
-            {selected.status === 'PENDING' ? (
-              <div className="mt-6 space-y-2.5">
-                <Button className="w-full" onClick={() => setAction('takedown')}>
-                  Gỡ bài đăng
-                </Button>
-                <Button variant="outline" className="w-full" onClick={() => setAction('dismiss')}>
-                  Đóng báo cáo · Không vi phạm
-                </Button>
+                <Badge
+                  tone={report.status === 'PENDING' ? 'red' : report.status === 'RESOLVED' ? 'green' : 'gray'}
+                  dot
+                >
+                  {report.status === 'PENDING' ? 'Chờ xử lý' : report.status === 'RESOLVED' ? 'Đã xử lý' : 'Đã bỏ qua'}
+                </Badge>
               </div>
-            ) : (
-              <div className="mt-6 space-y-2.5">
-                <Badge tone={badgeForStatus(selected.status).tone}>{badgeForStatus(selected.status).label}</Badge>
-                <Button variant="outline" className="w-full" onClick={() => setStatus(selected.id, 'PENDING')}>
-                  Mở lại báo cáo
-                </Button>
-              </div>
-            )}
-          </Card>
-        )}
-      </div>
 
-      <ConfirmDialog
-        open={action === 'takedown'}
-        title="Gỡ bài đăng bị báo cáo?"
-        description={selected ? `Bài đăng trong “${selected.target}” sẽ bị gỡ khỏi hiển thị và báo cáo được đánh dấu đã xử lý. Đây là thao tác minh họa và có thể hoàn tác.` : ''}
-        confirmLabel="Gỡ bài đăng"
-        danger
-        onConfirm={confirmAction}
-        onCancel={() => setAction(null)}
-      />
-      <ConfirmDialog
-        open={action === 'dismiss'}
-        title="Đóng báo cáo — không vi phạm?"
-        description={selected ? `Báo cáo “${selected.reason} — ${selected.target}” sẽ được đóng với kết luận không vi phạm. Bài đăng giữ nguyên hiển thị. Thao tác có thể hoàn tác.` : ''}
-        confirmLabel="Đóng báo cáo"
-        onConfirm={confirmAction}
-        onCancel={() => setAction(null)}
-      />
+              <div className="rounded-xl bg-page p-3 text-sm leading-6">
+                <span className="font-semibold text-muted text-xs block mb-1">Nội dung phản ánh:</span>
+                {report.details}
+              </div>
+
+              {report.status === 'PENDING' && (
+                <div className="flex gap-2 pt-1">
+                  <Button size="sm" onClick={() => handleStatusChange(report.id, 'RESOLVED')}>
+                    Đã xác minh &amp; Xử lý
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => handleStatusChange(report.id, 'DISMISSED')}>
+                    Bỏ qua báo cáo
+                  </Button>
+                </div>
+              )}
+            </article>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

@@ -7,7 +7,7 @@ import { createAdminAuthClient } from '@/services/admin-auth';
 import { FaceCameraClient, type FaceResult } from '@/services/face-camera.mjs';
 import { faceActions, faceErrorMessage, faceProgressMessage } from '@/services/face-messages';
 
-const gateway = (process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:18080').replace(/\/+$/, '');
+const gateway = '/backend';
 const core = createAdminAuthClient({ baseUrl: gateway });
 
 export default function AdminFacePage() {

@@ -8,7 +8,6 @@ import {
   NOTIFICATIONS_EVENT,
   OPEN_AI_EVENT,
   getNotificationsEnabled,
-  getUnreadNotificationCount,
   profileInitials,
   setNotificationsEnabled,
 } from '@/lib/tenant-store';
@@ -18,12 +17,14 @@ import { useAi } from './AiProvider';
 import MobileNavigation from './MobileNavigation';
 import NotificationPopover from './NotificationPopover';
 import AiLauncher from './AiLauncher';
+import { useNotifications } from '@/hooks/useNotifications';
 
 const NAV = [
   { label: 'Tìm phòng', href: '/' },
   { label: 'Phòng yêu thích', href: '/favorites' },
   { label: 'Yêu cầu của tôi', href: '/requests' },
   { label: 'Hợp đồng của tôi', href: '/contracts' },
+  { label: 'Hóa đơn', href: '/invoices' },
 ];
 
 export default function TenantHeader() {
@@ -36,7 +37,7 @@ export default function TenantHeader() {
   const closeNotifications = useCallback(() => setNotificationsOpen(false), [setNotificationsOpen]);
   const [menuOpen, setMenuOpen] = useState(false);
   const [notifOn, setNotifOn] = useState(true);
-  const [unread, setUnread] = useState(0);
+  const { unread } = useNotifications();
   const menuRef = useRef<HTMLDivElement>(null);
   useOnClickOutside(menuRef, () => setMenuOpen(false));
 
@@ -53,18 +54,6 @@ export default function TenantHeader() {
     };
   }, []);
 
-  // Unread badge on the bell — driven by the same tenant notification store
-  // the /notifications page writes to; resynced on navigation too.
-  useEffect(() => {
-    const sync = () => setUnread(getUnreadNotificationCount());
-    sync();
-    window.addEventListener(NOTIFICATIONS_EVENT, sync);
-    window.addEventListener('storage', sync);
-    return () => {
-      window.removeEventListener(NOTIFICATIONS_EVENT, sync);
-      window.removeEventListener('storage', sync);
-    };
-  }, [pathname]);
 
   useEffect(() => {
     const closeOverlays = () => { setNotificationsOpen(false); setMenuOpen(false); };

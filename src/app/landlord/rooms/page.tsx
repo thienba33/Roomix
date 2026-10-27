@@ -1,2 +1,5 @@
-import ListingManager from '@/components/rooms/ListingManager';
-export default function RoomsPage() { return <ListingManager roomsOnly />; }
+import PropertyWorkspace from '@/components/rooms/PropertyWorkspace';
+
+export default function RoomsPage() {
+  return <PropertyWorkspace />;
+}

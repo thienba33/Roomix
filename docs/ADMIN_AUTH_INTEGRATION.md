@@ -1,23 +1,21 @@
 # Đăng nhập Admin qua Core
 
-Trang `/admin/login` gọi HTTP thật, không dùng `mockLogin` hoặc phiên
-`roomix_mock_session_v1`. Tenant và landlord giữ luồng hiện có.
-Sau đăng nhập mở `/admin`. Các màn hình nghiệp vụ quản trị vẫn có dữ liệu
-và thao tác mock như trước; chặng này chưa nối API kiểm duyệt/người dùng.
-Không chép phiên Admin thật vào kho mock để kích hoạt các thao tác giả lập.
+Trang `/admin/login` gọi HTTP thật và kiểm tra hồ sơ ADMIN ACTIVE qua Core.
+Mật khẩu và khuôn mặt cùng lưu token vào phiên API chung để các màn hình
+quản trị sử dụng. Sau đăng nhập mở `/admin`; đăng ký mặt ở `/admin/face`.
+Tenant và landlord cũng dùng adapter API, không dùng phiên mock.
 
 ## Cấu hình
 
 Trong `.env.local` của frontend:
 
 ```dotenv
-NEXT_PUBLIC_API_URL=http://localhost:18080
+API_URL=http://localhost:18080
 ```
 
-Đây là Gateway khi dùng Compose mặc định của nhóm. Không đặt token nội bộ
-Face, mật khẩu database hoặc JWT_SECRET vào biến NEXT_PUBLIC.
-Gateway cần cho phép origin frontend (ví dụ localhost:3000) với POST/GET
-và header Content-Type/Authorization khi frontend gọi khác origin.
+Trình duyệt gọi cùng origin qua `/backend/api/...`; Next.js rewrite đến
+Gateway. Khởi động lại frontend sau khi đổi cấu hình. Cả Core và Face dùng
+chung đường dẫn này; không đặt bí mật backend vào biến NEXT_PUBLIC.
 
 ## Hợp đồng cần xác nhận với người làm Core
 
@@ -30,11 +28,8 @@ database Core của người dùng. Hướng dẫn tại `core-service/docs/ADMI
 2. `GET /api/users/me`, header Authorization Bearer, trả
    `{id, username, fullName, email, role, status}`.
 
-Thử riêng mật khẩu với Core chạy trực tiếp: cấu hình frontend
-NEXT_PUBLIC_API_URL=http://localhost:8081 và Core
-CORE_ALLOWED_ORIGINS=http://localhost:3000 (đổi origin nếu frontend dùng cổng khác).
-Khởi động lại frontend sau khi đổi biến NEXT_PUBLIC. Core trực tiếp không
-proxy /api/face; khi nối toàn luồng, dùng Gateway với các route phù hợp.
+Để thử Core trực tiếp, đặt API_URL=http://localhost:8081 và khởi động lại
+frontend. Core trực tiếp không proxy /api/face; toàn luồng cần Gateway.
 
 Cả hai chấp nhận DTO trực tiếp hoặc bọc trong `{data: ...}`. Nếu vỏ có
 `success: false`, client từ chối. Nếu Core dùng kiểu bọc khác, điều chỉnh
@@ -52,8 +47,8 @@ Menu Admin có `/admin/face`. Sau đăng nhập mật khẩu, người dùng b�
 1. Frontend gọi `POST /api/auth/face/sessions`, header Bearer JWT và body
    `{purpose: "ENROLL"}`. Không gửi adminId từ trình duyệt.
 2. Core trả `{authSessionId, purpose: "ENROLL", expiresAt}` trực tiếp hoặc
-   trong `{data: ...}`. expiresAt là Unix seconds. API này đã được triển khai
-   trong Core, cùng validate/callback/complete; xem core-service/docs/FACE_AUTH.md.
+   trong `{data: ...}`. expiresAt là Unix seconds. Nếu backend chưa cung cấp
+   endpoint, giao diện báo API chưa sẵn sàng và không tạo phiên cục bộ.
 3. Client mở camera rồi gọi `/api/face/challenges` qua Gateway với phiên
    ENROLL và JWT; ảnh được gửi tuần tự qua `/api/face/challenges/{id}/frames`.
 4. Chỉ báo thành công khi Face trả SUCCEEDED, nghĩa là hồ sơ đã được lưu.
@@ -81,7 +76,7 @@ Chưa kiểm chứng webcam người thật hoặc API Core thật trong chặng
 Trang `/admin/login` có hai lựa chọn độc lập. Chọn mật khẩu không mở camera
 hoặc gọi Face. Chọn khuôn mặt không yêu cầu nhập username/password.
 
-Hợp đồng công khai đã được triển khai trong Core của checkout hiện tại:
+Luồng khuôn mặt cần các endpoint sau từ Core/Gateway:
 
 1. `POST /api/auth/face/sessions`, body `{purpose: "LOGIN"}`, không JWT,
    trả `{authSessionId, purpose: "LOGIN", expiresAt, completionToken}`.
@@ -117,12 +112,16 @@ Phiên UI có method FACE; chức năng đăng ký/thay mặt yêu cầu đăng 
 
 ## Phiên và đăng xuất
 
-AdminAuthProvider giữ JWT trong bộ nhớ trong thời gian điều hướng dưới
-`/admin`. Tải lại toàn trang hoặc rời khu vực Admin sẽ cần đăng nhập lại.
-Đây là lựa chọn hiện tại khi chưa có hợp đồng refresh/cookie session từ Core.
-Phiên hết hạn được xóa bởi timer; sidebar dùng tên từ hồ sơ Core.
-Đăng xuất xóa phiên cục bộ, chưa thu hồi JWT ở Core vì chưa có API logout.
-Phiên mock trong trình duyệt không mở được khu vực Admin.
+AdminAuthProvider chuyển phiên đã xác thực sang `roomix_api_session_v1`.
+AuthProvider chung kiểm tra hồ sơ và quyền truy cập; adapter API gửi Bearer
+token, xử lý refresh theo hợp đồng backend hiện có. Tải lại trang vẫn có thể
+khôi phục phiên API, nhưng thông tin đăng nhập bằng mật khẩu chỉ giữ trong
+bộ nhớ và gắn với token đã xác thực: cần đăng nhập mật khẩu lại trước khi
+đăng ký mặt sau khi tải lại trang hoặc token đổi.
+
+Đăng xuất xóa phiên chung, thông tin phương thức và gọi adapter logout.
+Khả năng refresh/thu hồi phiên phụ thuộc endpoint backend đang triển khai.
+Token mock không mở được khu vực Admin.
 
 ## Kiểm tra
 
