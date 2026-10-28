@@ -2,6 +2,7 @@
 import { useCallback, useEffect, type ReactNode } from 'react';
 import TenantHeader from './TenantHeader';
 import AiPanel from './AiPanel';
+import AiLauncher from './AiLauncher';
 import { useAi } from './AiProvider';
 import Footer from './Footer';
 import { ToastProvider } from '@/components/ui/Toast';
@@ -22,6 +23,7 @@ export default function TenantShell({ children, defaultAiOpen = false }: { child
         </div>
         {state.open && <AiPanel onClose={closeAi} width={width} maxWidth={maxWidth} onWidthChange={resize} />}
       </div>
+      <AiLauncher />
     </div>
   </ToastProvider>;
 }

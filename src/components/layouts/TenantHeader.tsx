@@ -16,7 +16,6 @@ import { useAuth } from '@/components/auth/AuthProvider';
 import { useAi } from './AiProvider';
 import MobileNavigation from './MobileNavigation';
 import NotificationPopover from './NotificationPopover';
-import AiLauncher from './AiLauncher';
 import { useNotifications } from '@/hooks/useNotifications';
 
 const NAV = [
@@ -89,7 +88,6 @@ export default function TenantHeader() {
           </nav>
 
           <div className="ml-auto flex items-center gap-4">
-            <AiLauncher />
             {signedIn && <button
               ref={notificationTriggerRef}
               type="button"
