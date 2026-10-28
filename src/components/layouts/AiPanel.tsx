@@ -1,13 +1,13 @@
 'use client';
 
-import { useEffect, useId, useRef, useState, type FormEvent } from 'react';
+import { useCallback, useEffect, useId, useRef, useState, type FormEvent } from 'react';
 import Link from 'next/link';
 import { useDialogFocus } from '@/hooks/useDialogFocus';
 import ChatIcon from '@/components/ui/ChatIcon';
 import Button from '@/components/ui/Button';
 import { sendAiMessage, type ChatMessage, type MatchedRoom } from '@/services/ai';
 import { formatVND } from '@/lib/utils';
-import { readSession } from '@/services/backend/session';
+import { AUTH_EVENT, readSession } from '@/services/backend/session';
 
 interface DisplayMessage {
   id: string;
@@ -25,6 +25,41 @@ const DEFAULT_SUGGESTIONS = [
   'Phòng trọ gần trung tâm cho sinh viên',
 ];
 
+function getChatStorageKey(userId?: string): string {
+  return `roomix_chat_history_${userId || 'guest'}`;
+}
+
+function getWelcomeMessage(): DisplayMessage {
+  return {
+    id: 'welcome',
+    role: 'assistant',
+    content:
+      'Xin chào! Tôi là Roomix AI — Trợ lý thông minh hỗ trợ tìm kiếm phòng trọ, gợi ý mức giá tối ưu và giải đáp các quy định hợp đồng, điện nước, cọc phòng theo chuẩn nghiệp vụ.',
+    followUps: DEFAULT_SUGGESTIONS,
+    createdAt: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
+  };
+}
+
+function renderCleanContent(content: string) {
+  if (!content) return null;
+  const normalized = content.replace(/~\s*/g, 'khoảng ');
+  const parts = normalized.split(/(\*\*[^*]+\*\*)/g);
+  return (
+    <>
+      {parts.map((part, index) => {
+        if (part.startsWith('**') && part.endsWith('**')) {
+          return (
+            <strong key={index} className="font-semibold">
+              {part.slice(2, -2)}
+            </strong>
+          );
+        }
+        return part.replace(/[*_#`]/g, '');
+      })}
+    </>
+  );
+}
+
 export default function AiPanel({
   onClose,
   width,
@@ -40,16 +75,61 @@ export default function AiPanel({
   const [mobile, setMobile] = useState(false);
   const [input, setInput] = useState('');
   const [busy, setBusy] = useState(false);
-  const [messages, setMessages] = useState<DisplayMessage[]>([
-    {
-      id: 'welcome',
-      role: 'assistant',
-      content:
-        'Xin chào! Tôi là Roomix AI — Trợ lý thông minh hỗ trợ tìm kiếm phòng trọ, gợi ý mức giá tối ưu và giải đáp các quy định hợp đồng, điện nước, cọc phòng theo chuẩn nghiệp vụ.',
-      followUps: DEFAULT_SUGGESTIONS,
-      createdAt: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
-    },
-  ]);
+
+  const getActiveKey = useCallback(() => {
+    const session = readSession();
+    return getChatStorageKey(session?.user?.id);
+  }, []);
+
+  const [messages, setMessages] = useState<DisplayMessage[]>(() => {
+    if (typeof window === 'undefined') return [getWelcomeMessage()];
+    try {
+      const session = readSession();
+      const saved = localStorage.getItem(getChatStorageKey(session?.user?.id));
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {}
+    return [getWelcomeMessage()];
+  });
+
+  // Lưu lịch sử chat vào localStorage mỗi khi có tin nhắn mới
+  useEffect(() => {
+    const key = getActiveKey();
+    try {
+      localStorage.setItem(key, JSON.stringify(messages));
+    } catch {}
+  }, [messages, getActiveKey]);
+
+  // Đồng bộ lịch sử khi tài khoản đăng nhập/đăng xuất/chuyển đổi
+  useEffect(() => {
+    const onAuth = () => {
+      const key = getActiveKey();
+      try {
+        const saved = localStorage.getItem(key);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setMessages(parsed);
+            return;
+          }
+        }
+      } catch {}
+      setMessages([getWelcomeMessage()]);
+    };
+    window.addEventListener(AUTH_EVENT, onAuth);
+    return () => window.removeEventListener(AUTH_EVENT, onAuth);
+  }, [getActiveKey]);
+
+  const handleClearHistory = () => {
+    const key = getActiveKey();
+    const fresh = [getWelcomeMessage()];
+    setMessages(fresh);
+    try {
+      localStorage.removeItem(key);
+    } catch {}
+  };
 
   useEffect(() => {
     const media = window.matchMedia('(max-width: 767px)');
@@ -165,14 +245,28 @@ export default function AiPanel({
             <p className="text-xs text-muted">Trợ lý tư vấn &amp; tìm phòng thông minh</p>
           </div>
         </div>
-        <button
-          type="button"
-          onClick={onClose}
-          aria-label="Đóng Roomix AI"
-          className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-page transition text-muted hover:text-ink focus-visible:outline-2 focus-visible:outline-primary"
-        >
-          ✕
-        </button>
+        <div className="flex items-center gap-1.5">
+          <button
+            type="button"
+            onClick={handleClearHistory}
+            title="Bắt đầu đoạn chat mới"
+            aria-label="Bắt đầu đoạn chat mới"
+            className="flex h-8 items-center gap-1 rounded-lg px-2.5 text-xs font-medium text-muted hover:bg-page hover:text-ink transition focus-visible:outline-2 focus-visible:outline-primary"
+          >
+            <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            <span>Chat mới</span>
+          </button>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Đóng Roomix AI"
+            className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-page transition text-muted hover:text-ink focus-visible:outline-2 focus-visible:outline-primary"
+          >
+            ✕
+          </button>
+        </div>
       </header>
 
       {/* Message List */}
@@ -189,7 +283,7 @@ export default function AiPanel({
                   : 'bg-white text-ink border border-line rounded-bl-none'
               }`}
             >
-              <div className="whitespace-pre-wrap break-words">{msg.content}</div>
+              <div className="whitespace-pre-wrap break-words">{renderCleanContent(msg.content)}</div>
 
               {/* Matched Rooms List */}
               {msg.matchedRooms && msg.matchedRooms.length > 0 && (
