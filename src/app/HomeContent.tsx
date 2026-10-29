@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Modal from '@/components/ui/Modal';
+import { formatVND } from '@/lib/utils';
 import RoomListingCard from '@/components/rooms/RoomListingCard';
 import { searchRooms, validateSearch, CATALOG_EVENT, type RoomSearch, type PageResponse, type RoomSummary } from '@/services/backend/rooms';
 
@@ -10,6 +11,14 @@ const AMENITIES = [{ value: 'private_bathroom', label: 'WC riêng' }, { value: '
 const SEARCH_KEY = 'roomix_api_room_search_v1';
 const PAGE_SIZE = 16;
 const INITIAL: RoomSearch = { location: '', sort: 'newest', page: 0, size: PAGE_SIZE, amenities: [] };
+
+const PRICE_RANGES = [
+  { value: 'all', label: 'Mọi mức giá', min: undefined, max: undefined },
+  { value: 'under3', label: 'Đến 3 triệu', min: undefined, max: 3000000 },
+  { value: '3to5', label: '3–5 triệu', min: 3000000, max: 5000000 },
+  { value: '5to7', label: '5–7 triệu', min: 5000000, max: 7000000 },
+  { value: 'over7', label: 'Từ 7 triệu', min: 7000000, max: undefined },
+];
 
 export default function HomeContent() {
   const [query, setQuery] = useState<RoomSearch>(INITIAL);
@@ -68,33 +77,43 @@ export default function HomeContent() {
     try { validateSearch(draft); setQuery({ ...draft, page: 0 }); setOpen(false); setFilterError(''); }
     catch (e) { setFilterError(e instanceof Error ? e.message : 'Bộ lọc không hợp lệ.'); }
   };
+  const priceRange = PRICE_RANGES.find((range) => range.min === query.minPrice && range.max === query.maxPrice)?.value ?? 'custom';
+  const openFilters = () => { setDraft(query); setFilterError(''); setOpen(true); };
   return <div className="mx-auto w-full max-w-[1440px] px-4 py-6 sm:px-6 lg:px-8 discovery-page">
-    <section className="discovery-intro" aria-labelledby="discovery-title">
-      <div className="discovery-intro-content">
-        <h1 id="discovery-title" className="discovery-title">Tìm phòng phù hợp với bạn.</h1>
-        <p className="mt-2 max-w-[48ch] text-sm leading-6 text-secondary">Tìm phòng theo khu vực, ngân sách và tiện ích bạn cần.</p>
-        <div role="search" aria-label="Tìm kiếm phòng" className="mt-5 max-w-[700px]">
-          <div className="discovery-search-field">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" /><path d="m16 16 5 5" /></svg>
-            <Input value={query.location ?? ''} onChange={(e) => update({ location: e.target.value })} placeholder="Tìm theo đường, phường, quận hoặc thành phố…" aria-label="Tìm theo địa chỉ" className="h-[56px]" />
-          </div>
-        </div>
+    <h1 className="sr-only">Tìm phòng</h1>
+    <div role="search" aria-label="Tìm kiếm phòng" className="discovery-toolbar">
+      <div className="discovery-search-field">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" /><path d="m16 16 5 5" /></svg>
+        <Input value={query.location ?? ''} onChange={(e) => update({ location: e.target.value })} placeholder="Tìm đường, phường, quận hoặc thành phố…" aria-label="Tìm theo địa chỉ" className="h-12" />
       </div>
-    </section>
-    <h2 className="mt-8 text-xl font-bold tracking-tight">Phòng dành cho bạn</h2>
-    <div className="mt-4 flex flex-wrap items-center gap-3">
-      <p role="status" className="mr-auto text-sm text-muted">{ready && !loading ? `${result?.totalElements ?? 0} phòng phù hợp` : 'Đang tải phòng…'}</p>
-      <label className="flex items-center gap-2 text-sm">Sắp xếp
-        <select className="rounded-lg border border-line bg-white px-3 py-2" value={query.sort} onChange={(e) => update({ sort: e.target.value as RoomSearch['sort'] })}>
+      <select aria-label="Khoảng giá thuê mỗi tháng" value={priceRange} onChange={(event) => {
+        const range = PRICE_RANGES.find((item) => item.value === event.target.value);
+        if (range) update({ minPrice: range.min, maxPrice: range.max });
+        else openFilters();
+      }}>
+        {PRICE_RANGES.map((range) => <option key={range.value} value={range.value}>{range.label}</option>)}
+        <option value="custom">Giá tùy chỉnh…</option>
+      </select>
+      <Button variant="outline" onClick={openFilters}><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><path d="M4 7h16M4 17h16" /><circle cx="9" cy="7" r="3" fill="white" /><circle cx="15" cy="17" r="3" fill="white" /></svg>Bộ lọc{count ? ` (${count})` : ''}</Button>
+    </div>
+    {(count > 0 || query.location) && <div className="discovery-active-filters" aria-label="Điều kiện đang lọc">
+      {query.location && <button onClick={() => update({ location: '' })} aria-label="Bỏ lọc khu vực">{query.location}<span aria-hidden="true">×</span></button>}
+      {(query.minPrice !== undefined || query.maxPrice !== undefined) && <button onClick={() => update({ minPrice: undefined, maxPrice: undefined })} aria-label="Bỏ lọc giá">{query.minPrice !== undefined ? formatVND(query.minPrice) : '0 đ'} – {query.maxPrice !== undefined ? formatVND(query.maxPrice) : 'không giới hạn'}<span aria-hidden="true">×</span></button>}
+      {query.minArea !== undefined && <button onClick={() => update({ minArea: undefined })} aria-label="Bỏ lọc diện tích">Từ {query.minArea} m²<span aria-hidden="true">×</span></button>}
+      {AMENITIES.filter((item) => query.amenities?.includes(item.value)).map((item) => <button key={item.value} onClick={() => update({ amenities: query.amenities?.filter((value) => value !== item.value) })} aria-label={`Bỏ lọc ${item.label}`}>{item.label}<span aria-hidden="true">×</span></button>)}
+      <button className="discovery-clear" onClick={reset}>Xóa tất cả</button>
+    </div>}
+    <div className="discovery-results-bar">
+      <p role="status" className="text-sm text-muted">{ready && !loading ? `${result?.totalElements ?? 0} phòng phù hợp` : 'Đang tải phòng…'}</p>
+      <label className="flex items-center gap-2 text-sm text-muted">Sắp xếp
+        <select value={query.sort} onChange={(e) => update({ sort: e.target.value as RoomSearch['sort'] })}>
           <option value="newest">Mới nhất</option><option value="price_asc">Giá tăng dần</option><option value="price_desc">Giá giảm dần</option>
         </select>
       </label>
-      <Button variant="outline" onClick={() => { setDraft(query); setFilterError(''); setOpen(true); }}><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><path d="M4 7h16M4 17h16" /><circle cx="9" cy="7" r="3" fill="white" /><circle cx="15" cy="17" r="3" fill="white" /></svg>Bộ lọc{count ? ` · ${count}` : ''}</Button>
-      {(count > 0 || query.location) && <button className="text-sm font-semibold text-primary" onClick={reset}>Xóa bộ lọc</button>}
     </div>
     {error && <div role="alert" className="mt-6 rounded-xl border border-line p-5"><p className="text-red-600">{error}</p><Button className="mt-3" variant="outline" onClick={() => { setRetry((value) => value + 1); }}>Thử lại</Button></div>}
     {ready && !loading && !error && result && (result.content.length ? <>
-      <div className="room-grid mt-7 gap-x-5 gap-y-8">{result.content.map((room) => <RoomListingCard key={room.postId} room={room} />)}</div>
+      <div className="room-grid mt-5 gap-x-5 gap-y-8">{result.content.map((room) => <RoomListingCard key={room.postId} room={room} />)}</div>
       <nav aria-label="Phân trang phòng" className="mt-8 flex items-center justify-center gap-3">
         <button type="button" aria-label="Trang trước" title="Trang trước" disabled={result.first} onClick={() => setQuery((q) => ({ ...q, page: result.page - 1 }))} className="flex h-10 w-10 items-center justify-center rounded-full border border-line text-ink transition hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-35">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>
