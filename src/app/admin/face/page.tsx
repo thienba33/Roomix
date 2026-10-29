@@ -94,18 +94,18 @@ export default function AdminFacePage() {
     finally { inProgress.current = false; setBusy(false); }
   };
 
-  return <section className="mx-auto max-w-2xl space-y-5">
+  return <section className="admin-face space-y-5">
     <h1 className="text-[28px] font-extrabold">Đăng ký khuôn mặt</h1>
     {session?.method !== 'PASSWORD' && <p role="alert" className="text-red-600">Bạn cần đăng xuất và đăng nhập lại bằng mật khẩu để đăng ký hoặc thay khuôn mặt.</p>}
-    <p className="text-muted">Đăng ký cho tài khoản {session?.user.fullName}. Thực hiện các bước quay đầu theo hướng dẫn. Đăng ký lại thành công sẽ thay mẫu khuôn mặt cũ.</p>
-    <video ref={video} autoPlay muted playsInline aria-label="Camera đăng ký khuôn mặt" className="aspect-[4/3] w-full rounded-2xl bg-black object-contain" />
-    <canvas ref={canvas} hidden />
+    <p className="text-muted">{session?.user.fullName}. Đăng ký lại sẽ thay mẫu khuôn mặt cũ.</p>
+    <div className="admin-face-layout"><div><video ref={video} autoPlay muted playsInline aria-label="Camera đăng ký khuôn mặt" className="aspect-[4/3] w-full rounded-2xl bg-black object-contain" />
+    <canvas ref={canvas} hidden /></div><div className="admin-face-controls">
     <p role={failed ? 'alert' : 'status'} aria-live="polite" className={failed ? 'text-red-600' : 'text-ink'}>{message}</p>
     <div className="flex flex-wrap gap-3">
       <Button onClick={start} disabled={busy || session?.method !== 'PASSWORD'}>{busy ? 'Đang xử lý…' : 'Bắt đầu đăng ký'}</Button>
       <Button variant="outline" onClick={stop} disabled={!busy}>Dừng</Button>
       <Button variant="outline" onClick={readResult} disabled={busy || !canRead}>Đọc lại kết quả</Button>
     </div>
-    <p className="text-sm text-muted">Camera chỉ mở khi bạn bắt đầu, không thu âm và tự tắt khi kết thúc hoặc rời trang. Nếu gửi Telegram đã được cấu hình, đăng ký thành công sẽ tạo thông báo kèm ảnh.</p>
+    <details className="text-sm text-muted"><summary className="cursor-pointer font-semibold text-primary">Thông tin camera</summary><p className="mt-3 leading-6">Camera chỉ mở khi bạn bắt đầu, không thu âm và tự tắt khi kết thúc hoặc rời trang. Nếu gửi Telegram đã được cấu hình, đăng ký thành công sẽ tạo thông báo kèm ảnh.</p></details></div></div>
   </section>;
 }

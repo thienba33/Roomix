@@ -16,7 +16,39 @@ export default function AdminModeration({ postId }: { postId?: string }) {
   if (error) return <div role="alert" className="space-y-3"><p>{error}</p><Button onClick={retry}>Thử lại</Button></div>;
   const selected = items.find((item) => item.id === postId);
   if (postId && !selected) return <p role="alert">Không tìm thấy tin đăng. <Link href="/admin/moderation">Về hàng chờ</Link></p>;
-  return <section className="space-y-5"><h1 className="text-2xl font-bold">Kiểm duyệt tin đăng</h1>{selected ? <><Link className="text-sm text-primary" href="/admin/moderation">Về hàng chờ</Link><article className="space-y-4 rounded-2xl border border-line p-6"><h2 className="text-xl font-semibold">{selected.title}</h2><p className="text-sm text-muted">{postStatusLabel[selected.status]}</p><p className="whitespace-pre-line text-sm leading-7">{selected.description}</p><dl className="grid gap-4 text-sm sm:grid-cols-2">{[['Tiền thuê / tháng', formatVND(selected.rentalPrice)], ['Tiền cọc', formatVND(selected.depositAmount)], ['Ngày có thể thuê', selected.availableFrom], ['Mã phòng', selected.roomId]].map(([label, value]) => <div key={label}><dt className="text-muted">{label}</dt><dd className="mt-1 break-all font-medium">{value}</dd></div>)}</dl><p className="text-xs text-muted">Ảnh và thông tin chi tiết của phòng chưa được cung cấp trong dữ liệu kiểm duyệt.</p>{selected.rejectReason && <p className="text-sm text-red-700">Lý do từ chối: {selected.rejectReason}</p>}{selected.status === 'PENDING' && <div className="flex gap-3"><Button onClick={() => { setFailure(''); setAction('approve'); }}>Duyệt tin</Button><Button variant="outline" onClick={() => { setFailure(''); setAction('reject'); }}>Từ chối</Button></div>}</article></> : <div className="divide-y divide-line rounded-2xl border border-line">{items.filter((item) => item.status === 'PENDING').length ? items.filter((item) => item.status === 'PENDING').map((item) => <article key={item.id} className="flex flex-wrap justify-between gap-4 p-5"><div><h2 className="font-semibold">{item.title}</h2><p className="mt-1 text-sm text-muted">{formatVND(item.rentalPrice)}/tháng</p></div><Link className="text-sm font-semibold text-primary" href={`/admin/moderation/${item.id}`}>Kiểm tra tin</Link></article>) : <p className="p-8 text-sm text-muted">Không có tin chờ duyệt.</p>}</div>}<Modal open={!!action} onClose={() => { if (!busy) setAction(null); }} title={action === 'approve' ? 'Duyệt tin đăng' : 'Từ chối tin đăng'}><form className="space-y-4" onSubmit={async (event) => {
+  const pending = items.filter((item) => item.status === 'PENDING');
+  return <section className="admin-moderation space-y-5">
+    <h1 className="text-2xl font-bold">Kiểm duyệt tin đăng</h1>
+    {selected ? <>
+      <Link className="inline-block text-sm font-semibold text-primary" href="/admin/moderation">← Hàng chờ</Link>
+      <article className="admin-review">
+        <div className="admin-review-content">
+          <h2 className="text-xl font-semibold">{selected.title}</h2>
+          <p className="mt-3 text-sm text-muted">{postStatusLabel[selected.status]}</p>
+          <p className="mt-6 whitespace-pre-line text-sm leading-7">{selected.description}</p>
+          <p className="mt-6 text-xs leading-5 text-muted">Chưa có ảnh và thông tin chi tiết phòng trong dữ liệu kiểm duyệt.</p>
+          {selected.rejectReason && <p className="mt-4 text-sm text-red-700">Lý do từ chối: {selected.rejectReason}</p>}
+        </div>
+        <div className="admin-review-decision">
+          <dl className="grid gap-5 text-sm sm:grid-cols-2">
+            {[['Tiền thuê / tháng', formatVND(selected.rentalPrice)], ['Tiền cọc', formatVND(selected.depositAmount)], ['Ngày có thể thuê', selected.availableFrom], ['Mã phòng', selected.roomId]].map(([label, value]) => <div key={label}><dt className="text-muted">{label}</dt><dd className="mt-1 break-all font-semibold">{value}</dd></div>)}
+          </dl>
+          {selected.status === 'PENDING' && <div className="mt-6 flex flex-wrap gap-3 border-t border-line pt-5">
+            <Button onClick={() => { setFailure(''); setAction('approve'); }}>Duyệt tin</Button>
+            <Button variant="outline" onClick={() => { setFailure(''); setAction('reject'); }}>Từ chối</Button>
+          </div>}
+        </div>
+      </article>
+    </> : <>
+      <p role="status" className="border-b border-line pb-4 text-sm text-muted">{pending.length} tin chờ duyệt</p>
+      <div className="admin-review-queue divide-y divide-line">
+        {pending.length ? pending.map((item) => <article key={item.id} className="flex flex-wrap items-center justify-between gap-4 py-5">
+          <div className="min-w-0 flex-1"><h2 className="break-words font-semibold">{item.title}</h2><p className="mt-2 text-sm text-muted">{formatVND(item.rentalPrice)} / tháng</p></div>
+          <Link className="shrink-0 rounded-sm border border-line px-4 py-2 text-sm font-semibold text-primary hover:border-primary" href={`/admin/moderation/${item.id}`}>Kiểm tra tin</Link>
+        </article>) : <p className="py-10 text-sm text-muted">Không có tin chờ duyệt.</p>}
+      </div>
+    </>}
+    <Modal contentClassName="admin-dialog" open={!!action} onClose={() => { if (!busy) setAction(null); }} title={action === 'approve' ? 'Duyệt tin đăng' : 'Từ chối tin đăng'}><form className="space-y-4" onSubmit={async (event) => {
     event.preventDefault(); if (!selected || !action || lock.current) return;
     const data = new FormData(event.currentTarget);
     lock.current = true; setBusy(true); setFailure('');

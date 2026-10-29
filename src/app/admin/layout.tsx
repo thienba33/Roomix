@@ -37,9 +37,9 @@ function AdminAccess({ children }: { children: ReactNode }) {
 
   return (
     <ToastProvider>
-      <div className="flex min-h-screen bg-white">
+      <div className="admin-shell flex min-h-screen bg-white">
         <AdminSidebar />
-        <main className="mx-auto w-full min-w-0 max-w-[1180px] flex-1 px-4 pb-8 pt-[88px] sm:px-6 lg:pt-8">{children}</main>
+        <main className="admin-workspace mx-auto w-full min-w-0 max-w-[1600px] flex-1 px-4 pb-8 pt-[88px] sm:px-6 lg:pt-8">{children}</main>
       </div>
     </ToastProvider>
   );
