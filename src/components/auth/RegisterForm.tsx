@@ -115,7 +115,6 @@ export default function RegisterForm({ initialRole, onLogin, onSuccess, onBrowse
         <Image src="/images/logo.png" alt="Roomix" width={1961} height={680} className="h-8 w-auto" priority />
       </div>
       <h2 className="auth-heading">Bắt đầu với Roomix</h2>
-      <p className="auth-description">Chọn tài khoản phù hợp với bạn.</p>
 
       <form onSubmit={onSubmit} noValidate className="mt-5 space-y-2">
         <div>

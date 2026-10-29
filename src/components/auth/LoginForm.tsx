@@ -18,6 +18,7 @@ const LockIcon = (
 
 type LoginFormProps = {
   initialRole: 'tenant' | 'landlord';
+  appearance?: 'default' | 'admin';
   onRegister?: (role: 'tenant' | 'landlord') => void;
 } & ({
   onLogin: (username: string, password: string) => Promise<void>;
@@ -27,7 +28,7 @@ type LoginFormProps = {
   onSuccess: (response: AuthResponse) => void;
 });
 
-export default function LoginForm({ initialRole, onSuccess, onRegister, onLogin }: LoginFormProps) {
+export default function LoginForm({ initialRole, onSuccess, onRegister, onLogin, appearance = 'default' }: LoginFormProps) {
   const [busy, setBusy] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -63,11 +64,10 @@ export default function LoginForm({ initialRole, onSuccess, onRegister, onLogin 
 
   return (
     <div className="auth-form">
-      <div className="mb-7 flex justify-start">
+      {appearance === 'default' && <><div className="mb-7 flex justify-start">
         <Image src="/images/logo.png" alt="Roomix" width={1961} height={680} className="h-8 w-auto" priority />
       </div>
-      <h2 className="auth-heading">Chào mừng trở lại</h2>
-      <p className="auth-description">Đăng nhập để tiếp tục với tài khoản Roomix của bạn.</p>
+      <h2 className="auth-heading">Chào mừng trở lại</h2></>}
 
       <form onSubmit={onSubmit} noValidate className="mt-7 space-y-3">
         <div>

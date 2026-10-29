@@ -112,7 +112,7 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
   return (
     <AuthContext.Provider value={{ signedIn, ready, user, openAuth, logout, updateUser, requireTenant }}>
       {children}
-      <Modal open={!!dialog} onClose={close} title={dialog?.mode === 'register' ? 'Đăng ký' : 'Đăng nhập'} hideTitle widthClass="max-w-[480px] md:max-w-[960px]" contentClassName="auth-dialog">
+      <Modal open={!!dialog} onClose={close} title={dialog?.mode === 'register' ? 'Đăng ký' : 'Đăng nhập'} hideTitle widthClass="max-w-[480px]" contentClassName="auth-dialog">
         <AuthScene>
         {dialog?.mode === 'login' && <LoginForm key={`login-${dialog.role}`} initialRole={dialog.role} onSuccess={login} onRegister={(role) => openAuth('register', role)} />}
         {dialog?.mode === 'register' && <RegisterForm onBrowse={close} onSuccess={login} initialRole={dialog.role} onLogin={(role) => openAuth('login', role)} />}
