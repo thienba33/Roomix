@@ -367,3 +367,199 @@ body {
 .admin-login .auth-form > form { margin-top: 24px; }
 .admin-login .auth-form input { background: white; }
 .admin-login section > p { line-height: 1.7; }
+
+/* Public and tenant navigation share the left edge on desktop. */
+@media (min-width: 1024px) {
+  .tenant-header .tenant-navigation-frame { height: 100%; flex-direction: column; align-items: stretch; gap: 24px; padding: 24px 12px 16px; }
+  .tenant-navigation-frame > a { padding: 0 12px; }
+  .tenant-side-nav { flex: 1; flex-direction: column; gap: 4px; min-height: 0; overflow-y: auto; }
+  .tenant-header-actions { margin: 0; flex-direction: column; align-items: stretch; gap: 12px; border-top: 1px solid #e7e7e7; padding-top: 16px; }
+  .tenant-header-actions .tenant-notification-trigger { width: 100%; justify-content: flex-start; gap: 12px; padding: 0 12px; border: 0; font-size: 14px; }
+  .tenant-notification-trigger > span:last-child:not(:nth-child(2)) { top: 10px; right: 8px; }
+  .tenant-auth-actions { flex-direction: column-reverse; align-items: stretch; gap: 8px; }
+  .tenant-auth-actions button { width: 100%; }
+  .tenant-account-trigger { width: 100%; justify-content: flex-start; gap: 12px; padding: 0 12px; text-align: left; font-size: 13px; }
+  .tenant-account .tenant-profile-menu { top: auto; bottom: 0; left: calc(100% + 24px); right: auto; }
+  .tenant-notification-popup { top: 24px; left: 244px; right: auto; max-height: calc(100dvh - 48px); }
+}
+@media (min-width: 1280px) {
+  .tenant-shell .ai-panel { top: 12px; height: calc(100dvh - 24px); }
+}
+
+/* Notification inbox: readable rows with quiet read-state markers. */
+.notifications-page .notification-heading { padding-bottom: 4px; }
+.notifications-page .notification-heading h1 { font-size: 24px; letter-spacing: -.5px; }
+.notifications-page button { border-radius: 4px; }
+.notifications-page-list .notification-row { display: grid; grid-template-columns: 8px minmax(0, 1fr); gap: 0 14px; width: 100%; padding: 20px 16px; border-bottom: 1px solid #e7e7e7; border-radius: 0; text-align: left; }
+.notification-row.is-unread { background: #f6f7ff; }
+.notification-row:hover { background: #f1f3f8; }
+.notification-read-dot { width: 6px; height: 6px; margin-top: 7px; border-radius: 50%; background: #4f46e5; }
+.notification-row.is-read .notification-read-dot { background: #d1d5df; }
+.notification-row.is-read .notification-row-copy > span:first-child { font-weight: 500; }
+.notification-row-copy { min-width: 0; overflow-wrap: anywhere; }
+.notification-row-copy > span { max-width: 75ch; }
+.notification-row time { grid-column: 2; margin-top: 10px; color: #6a6a6a; font-size: 12px; }
+@container tenant (min-width: 900px) {
+  .notifications-page-list .notification-row { grid-template-columns: 8px minmax(0, 1fr) auto; gap: 0 16px; padding: 24px 20px; }
+  .notification-row time { grid-column: 3; margin-top: 2px; white-space: nowrap; }
+}
+
+/* Discovery starts with the task itself: location, budget and available rooms. */
+.discovery-toolbar { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; }
+.discovery-toolbar .discovery-search-field { min-width: 0; border-radius: 4px; padding: 0 12px; }
+.discovery-toolbar :is(select, button), .discovery-results-bar select { min-height: 48px; border: 1px solid #dfe3eb; border-radius: 4px; background: white; padding: 0 14px; color: #484848; font-size: 13px; }
+.discovery-toolbar > button { justify-content: center; }
+.discovery-results-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-top: 20px; padding-bottom: 16px; border-bottom: 1px solid #e7e7e7; }
+.discovery-results-bar select { min-height: 40px; }
+.discovery-active-filters { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.discovery-active-filters button { display: inline-flex; align-items: center; gap: 12px; padding: 6px 10px; border-radius: 4px; background: #f1f3f8; font-size: 12px; overflow-wrap: anywhere; }
+.discovery-active-filters button:hover { background: #e8ecf6; }
+.discovery-active-filters .discovery-clear { background: transparent; color: #4338ca; }
+.tenant-auth-icon { display: none; }
+@container tenant (min-width: 600px) {
+  .discovery-toolbar { grid-template-columns: minmax(0, 1fr) 160px auto; }
+}
+@media (max-width: 639px) {
+  .discovery-toolbar { grid-template-columns: minmax(0, 1fr) auto; }
+  .discovery-toolbar > .discovery-search-field { grid-column: 1 / -1; }
+}
+@media (min-width: 1024px) {
+  .tenant-header[data-collapsed="true"] { width: 76px; }
+  .tenant-header[data-collapsed="true"] .tenant-navigation-frame > a { justify-content: center; padding: 0; }
+  .tenant-header[data-collapsed="true"] :is(.tenant-nav-label, .tenant-account-name, .tenant-auth-label) { display: none; }
+  .tenant-header[data-collapsed="true"] :is(.tenant-side-nav a, .tenant-notification-trigger, .tenant-account-trigger, .tenant-collapse-trigger) { justify-content: center; padding-left: 0; padding-right: 0; }
+  .tenant-header[data-collapsed="true"] .tenant-auth-actions button { display: flex; align-items: center; justify-content: center; padding: 12px; }
+  .tenant-header[data-collapsed="true"] .tenant-auth-icon { display: block; }
+  .tenant-header[data-collapsed="true"] .tenant-notification-trigger > span:last-child:not(:nth-child(2)) { top: -4px; right: -4px; }
+  .tenant-notification-overlay[data-sidebar-collapsed="true"] .tenant-notification-popup { left: 88px; }
+}
+
+/* Admin work queues expose pending decisions before aggregate totals. */
+.admin-overview-queues { display: grid; gap: 28px; align-items: start; }
+.admin-work-queue { min-width: 0; border: 1px solid #dfe3eb; border-radius: 6px; overflow: hidden; }
+.admin-work-queue > header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 18px 20px; background: #f7f8fb; border-bottom: 1px solid #e7e7e7; }
+.admin-work-queue h2 { font-size: 15px; font-weight: 700; }
+.admin-work-queue header a { color: #4338ca; font-size: 12px; font-weight: 600; }
+.admin-work-item { display: flex; justify-content: space-between; align-items: start; gap: 16px; padding: 18px 20px; border-bottom: 1px solid #e7e7e7; }
+.admin-work-item:last-child { border-bottom: 0; }
+.admin-work-item:hover { background: #fafbfe; }
+.admin-work-item > span { min-width: 0; overflow-wrap: anywhere; }
+.admin-work-item strong { display: block; font-size: 14px; font-weight: 600; }
+.admin-work-item > span > span { display: block; margin-top: 6px; color: #6a6a6a; font-size: 12px; }
+.admin-work-item time { flex-shrink: 0; color: #6a6a6a; font-size: 12px; }
+.admin-queue-empty { padding: 32px 20px; color: #6a6a6a; font-size: 13px; }
+.admin-account-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; }
+.admin-account-table th { padding: 12px 16px; background: #f7f8fb; border-block: 1px solid #dfe3eb; color: #6a6a6a; font-weight: 500; }
+.admin-account-table td { padding: 18px 16px; vertical-align: middle; border-bottom: 1px solid #e7e7e7; }
+.admin-account-table td:first-child { width: 35%; overflow-wrap: anywhere; }
+.admin-account-table td:last-child > div { justify-content: flex-end; }
+.admin-account-table tbody tr:hover { background: #fafbfe; }
+.admin-queue-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
+@container admin (min-width: 850px) {
+  .admin-overview-queues { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .admin-user-filters-expanded { grid-template-columns: minmax(0, 1fr) 180px 200px; }
+  .admin-review-decision { position: sticky; top: 24px; }
+  .admin-workspace .notifications-page-list .notification-row { grid-template-columns: 8px minmax(0, 1fr) auto; }
+  .admin-workspace .notification-row time { grid-column: 3; margin-top: 2px; white-space: nowrap; }
+}
+@container admin (max-width: 849px) {
+  .admin-account-table, .admin-account-table tbody { display: block; }
+  .admin-account-table thead { display: none; }
+  .admin-account-table tr { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; padding: 20px 0; border-bottom: 1px solid #e7e7e7; }
+  .admin-account-table td { display: block; min-width: 0; border: 0; padding: 0; }
+  .admin-account-table td:first-child { grid-column: 1 / -1; width: auto; }
+  .admin-account-table td:last-child { grid-column: 1 / -1; }
+  .admin-account-table td[data-label]:not(:first-child)::before { content: attr(data-label); display: block; color: #6a6a6a; font-size: 11px; margin-bottom: 6px; }
+}
+
+/* Landlord workflow: rooms and pending tasks lead; record details open on demand. */
+.host-primary-link { display: inline-flex; align-items: center; justify-content: center; min-height: 40px; border-radius: 4px; background: #4f46e5; color: white; padding: 10px 16px; font-size: 13px; font-weight: 600; }
+.host-primary-link:hover { background: #4338ca; }
+.host-dashboard-queues { display: grid; gap: 24px; align-items: start; }
+.host-work-queue { min-width: 0; border: 1px solid #dfe3eb; border-radius: 6px; overflow: hidden; }
+.host-work-queue > header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 18px 20px; border-bottom: 1px solid #e7e7e7; background: #f7f8fb; }
+.host-work-queue h2 { font-size: 15px; font-weight: 700; }
+.host-work-queue header a { font-size: 12px; font-weight: 600; color: #4338ca; }
+.host-work-item { display: flex; align-items: start; justify-content: space-between; gap: 16px; padding: 18px 20px; border-bottom: 1px solid #e7e7e7; }
+.host-work-item:last-child { border-bottom: 0; }
+.host-work-item:hover { background: #fafbfe; }
+.host-work-item > span:first-child { min-width: 0; }
+.host-work-item > span > strong { display: block; overflow-wrap: anywhere; font-size: 14px; font-weight: 600; }
+.host-work-item > span > span { margin-top: 6px; color: #6a6a6a; font-size: 12px; }
+.host-work-item > span > span:not(.line-clamp-2) { display: block; }
+.host-work-item > time, .host-work-date { flex-shrink: 0; font-size: 12px; color: #6a6a6a; }
+.host-work-date time { display: block; margin-top: 4px; }
+.host-queue-empty { padding: 32px 20px; font-size: 13px; color: #6a6a6a; }
+.host-room-filters { display: grid; gap: 12px; padding: 16px; background: #f7f8fb; }
+.host-room-filters select { min-width: 0; min-height: 44px; border: 1px solid #dfe3eb; background: white; padding: 10px 12px; font-size: 13px; }
+.host-room-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; }
+.host-room-table th { padding: 12px 16px; border-block: 1px solid #dfe3eb; background: #f7f8fb; color: #6a6a6a; font-weight: 500; }
+.host-room-table td { padding: 20px 16px; border-bottom: 1px solid #e7e7e7; vertical-align: top; overflow-wrap: anywhere; }
+.host-room-table tbody tr:hover { background: #fafbfe; }
+.host-room-table td:nth-child(2) { max-width: 240px; }
+.host-room-actions { position: relative; }
+.host-room-actions > div { position: absolute; top: calc(100% + 6px); right: 0; z-index: 20; display: grid; width: 160px; gap: 4px; padding: 6px; border: 1px solid #dfe3eb; border-radius: 4px; background: white; box-shadow: 0 8px 20px #22222212; }
+.host-room-actions:not([open]) > div { display: none; }
+.host-room-actions button { justify-content: flex-start; }
+.host-rental-records { display: grid; gap: 12px; }
+.host-rental-record { min-width: 0; border: 1px solid #dfe3eb; border-radius: 6px; }
+.host-rental-record > summary { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; padding: 20px; cursor: pointer; list-style: none; }
+.host-rental-record > summary::-webkit-details-marker { display: none; }
+.host-rental-record[open] > summary { background: #f7f8fb; border-bottom: 1px solid #e7e7e7; }
+.host-record-name { flex: 1; min-width: 160px; overflow-wrap: anywhere; }
+.host-record-name strong { display: block; font-size: 14px; font-weight: 600; }
+.host-record-name > span { display: block; margin-top: 6px; font-size: 12px; color: #6a6a6a; }
+.host-record-rent { font-size: 15px; font-weight: 600; }
+.host-record-rent > span { display: block; margin-top: 4px; font-size: 11px; font-weight: 400; color: #6a6a6a; }
+.host-record-expand { color: #6a6a6a; }
+.host-rental-record[open] .host-record-expand { transform: rotate(180deg); }
+.host-record-body { display: grid; gap: 24px; padding: 20px; }
+.host-contract-body { padding: 20px; }
+.host-contract-facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; padding: 20px 0; font-size: 13px; }
+.host-contract-facts dt { color: #6a6a6a; }
+.host-contract-facts dd { margin-top: 5px; font-weight: 600; }
+.host-invoice-layout { display: grid; gap: 24px; align-items: start; }
+.host-invoice-list { display: grid; gap: 0; border: 1px solid #dfe3eb; border-radius: 6px; overflow: hidden; }
+.host-invoice-list > button { border: 0; border-bottom: 1px solid #e7e7e7; border-radius: 0; }
+.host-invoice-list > button[aria-pressed="true"] { box-shadow: inset 3px 0 #4f46e5; background: #eef2ff; }
+.host-invoice-list > button > div { flex-direction: column; gap: 6px; }
+.host-invoice-details { scroll-margin-top: 88px; border-top: 3px solid #4f46e5; }
+.host-invoice-details > dl:first-of-type { background: #f7f8fb; padding: 16px; border-top: 0; }
+.host-invoice-details > dl:nth-of-type(2) > div { padding-bottom: 12px; border-bottom: 1px solid #eee; }
+.host-create-invoice > summary { color: #4338ca; font-weight: 700; }
+.host-listing-savebar { position: sticky; bottom: 16px; z-index: 20; box-shadow: 0 4px 20px #22222210; }
+.host-finance-table { width: 100%; text-align: right; border-collapse: collapse; font-size: 12px; }
+.host-finance-table th, .host-finance-table td { padding: 12px 8px; border-bottom: 1px solid #e7e7e7; font-variant-numeric: tabular-nums; }
+.host-finance-table thead th { color: #6a6a6a; font-weight: 500; }
+.host-finance-table th:first-child { text-align: left; }
+.host-finance-table td { white-space: nowrap; }
+.host-profile form > div:first-child > div[role="img"] { width: 72px; height: 72px; border-radius: 4px; }
+.host-profile form.h-fit { background: #f7f8fb; border: 0; border-top: 2px solid #dfe3eb; }
+@container host (min-width: 900px) {
+  .host-dashboard-queues { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .host-overdue-queue { grid-column: 1 / -1; }
+  .host-room-filters { grid-template-columns: minmax(0, 1fr) 200px 200px; }
+  .host-record-body { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .host-contract-facts { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .host-invoice-layout { grid-template-columns: minmax(260px, .7fr) minmax(0, 1.3fr); }
+  .host-invoice-layout .tenant-invoice-jump { display: none; }
+  .host-workspace .notifications-page-list .notification-row { grid-template-columns: 8px minmax(0, 1fr) auto; }
+  .host-workspace .notification-row time { grid-column: 3; margin-top: 2px; white-space: nowrap; }
+}
+@container host (max-width: 899px) {
+  .host-room-table, .host-room-table tbody { display: block; }
+  .host-room-table thead { display: none; }
+  .host-room-table tr { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; padding: 20px 0; border-bottom: 1px solid #e7e7e7; }
+  .host-room-table td { min-width: 0; border: 0; padding: 0; }
+  .host-room-table td:first-child, .host-room-table td:nth-child(2), .host-room-table td:last-child { grid-column: 1 / -1; max-width: none; }
+  .host-room-table td[data-label]:not(:first-child)::before { content: attr(data-label); display: block; margin-bottom: 6px; font-size: 11px; color: #6a6a6a; }
+  .host-invoice-layout .tenant-invoice-jump { display: block; }
+}
+.host-workspace .host-invoice-list > button { border-radius: 0; }
+.host-invoice-outstanding { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px; margin-top: 16px; padding: 16px; background: #f7f8fb; }
+.host-invoice-outstanding > span { font-size: 13px; color: #6a6a6a; }
+.host-invoice-outstanding > strong { font-size: 24px; letter-spacing: -.5px; }
+.host-create-invoice { border: 0; }
+.host-create-invoice > summary { display: flex; width: fit-content; margin-left: auto; margin-bottom: 12px; padding: 12px 16px; border-radius: 4px; background: #4f46e5; color: white; }
+.host-create-invoice > summary:hover { background: #4338ca; }
+.host-create-invoice > section { border: 1px solid #dfe3eb; border-radius: 6px; }
