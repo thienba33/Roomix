@@ -62,7 +62,7 @@ function Dashboard({ landlordId, rooms, tenancies, invoices, error }: {
   const houseLabel = houses.find(([id]) => id === selectedHouse)?.[1] ?? 'Tất cả các nhà';
 
   return <div className="space-y-6 pb-6">
-    <header className="flex flex-wrap items-start justify-between gap-4"><div><h1 className="text-[28px] font-extrabold tracking-tight text-ink sm:text-[32px]">Thống kê tài chính</h1><p className="mt-2 max-w-xl text-sm leading-6 text-muted">Theo dõi hóa đơn phải thu và khoản tiền đã ghi nhận thanh toán.</p></div><Link href="/landlord/invoices" className="inline-flex h-11 items-center rounded-xl border border-line px-4 text-sm font-semibold text-primary hover:bg-primary-soft focus-visible:outline-2 focus-visible:outline-primary">Xem hóa đơn</Link></header>
+    <header className="flex flex-wrap items-start justify-between gap-4"><div><h1 className="text-[28px] font-extrabold tracking-tight text-ink sm:text-[32px]">Thống kê tài chính</h1></div><Link href="/landlord/invoices" className="inline-flex h-11 items-center rounded-xl border border-line px-4 text-sm font-semibold text-primary hover:bg-primary-soft focus-visible:outline-2 focus-visible:outline-primary">Xem hóa đơn</Link></header>
     <section aria-label="Bộ lọc thống kê" className="grid gap-3 rounded-2xl border border-line bg-page p-4 sm:grid-cols-3 sm:p-5">
       <label className="space-y-1.5 text-xs font-semibold text-muted">Khoảng thời gian<select className={controlClass} value={period} onChange={(event) => setPeriod(event.target.value as FinancePeriod)}>{(Object.keys(periodLabels) as FinancePeriod[]).map((key) => <option key={key} value={key}>{periodLabels[key]}</option>)}</select></label>
       <label className="space-y-1.5 text-xs font-semibold text-muted">Tháng tham chiếu<input className={controlClass} type="month" value={anchor} onChange={(event) => setAnchor(event.target.value)} /></label>
@@ -79,7 +79,7 @@ function Dashboard({ landlordId, rooms, tenancies, invoices, error }: {
           <Metric label="Thực thu trong kỳ" value={summary.revenue} detail="Theo ngày chủ trọ ghi nhận thanh toán" tone="indigo" />
         </section>
         {summary.invoiceCount === 0 && summary.revenue === 0 ? <Card className="px-6 py-12 text-center"><h2 className="text-lg font-bold">Chưa có dữ liệu tài chính trong khoảng này</h2><p className="mx-auto mt-2 max-w-md text-sm leading-6 text-muted">Chọn thời gian hoặc nhà khác. Khi có hóa đơn và thanh toán, số liệu sẽ xuất hiện ở đây.</p><Link href="/landlord/invoices" className="mt-5 inline-block text-sm font-semibold text-primary hover:underline">Xem hóa đơn của tôi</Link></Card> : <div className="grid gap-5 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]"><RevenueChart summary={summary} title={title} /><HouseBreakdown summary={summary} /></div>}
-        <p className="text-xs leading-5 text-muted">Khoản phải thu được nhóm theo kỳ hóa đơn. Thực thu được nhóm theo ngày ghi nhận thanh toán trực tiếp (tiền mặt/chuyển khoản), chưa gồm bù trừ quyết toán; vì vậy hai số có thể khác nhau trong cùng khoảng thời gian.</p>
+        <details className="text-xs leading-5 text-muted"><summary className="cursor-pointer font-semibold text-primary">Cách tính số liệu</summary><p className="mt-2">Khoản phải thu được nhóm theo kỳ hóa đơn. Thực thu được nhóm theo ngày ghi nhận thanh toán trực tiếp (tiền mặt/chuyển khoản), chưa gồm bù trừ quyết toán; vì vậy hai số có thể khác nhau trong cùng khoảng thời gian.</p></details>
       </>}
     </>}
   </div>;

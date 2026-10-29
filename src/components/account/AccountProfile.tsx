@@ -119,15 +119,12 @@ function AccountProfileEditor({
   };
 
   return (
-    <section className="space-y-6 pb-8">
-      <header className="flex flex-wrap items-start justify-between gap-4 border-b border-line pb-6">
+    <section className={role === 'TENANT' ? 'tenant-profile pb-8' : 'host-profile space-y-6 pb-8'}>
+      <header className={role === 'TENANT' ? 'sr-only' : 'flex flex-wrap items-start justify-between gap-4 border-b border-line pb-6'}>
         <div>
           <h1 className="text-[28px] font-extrabold tracking-tight text-ink sm:text-[32px]">
             Hồ sơ của tôi
           </h1>
-          <p className="mt-2 text-sm leading-6 text-muted">
-            Cập nhật thông tin cá nhân và bảo vệ tài khoản của bạn.
-          </p>
         </div>
         {role === 'LANDLORD' && (
           <Link
@@ -139,8 +136,8 @@ function AccountProfileEditor({
         )}
       </header>
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.65fr)]">
-        <form onSubmit={submitProfile} className="rounded-2xl border border-line bg-white p-5 sm:p-6">
+      <div className={role === 'TENANT' ? 'tenant-profile-layout' : 'grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.65fr)]'}>
+        <form onSubmit={submitProfile} className={role === 'TENANT' ? 'tenant-profile-info' : 'rounded-2xl border border-line bg-white p-5 sm:p-6'}>
           <div className="flex flex-col gap-5 border-b border-line pb-6 sm:flex-row sm:items-center">
             <div
               role="img"
@@ -227,7 +224,7 @@ function AccountProfileEditor({
           </div>
         </form>
 
-        <form onSubmit={submitPassword} className="h-fit rounded-2xl border border-line bg-white p-5 sm:p-6">
+        <form onSubmit={submitPassword} className={role === 'TENANT' ? 'tenant-profile-password' : 'h-fit rounded-2xl border border-line bg-white p-5 sm:p-6'}>
           <h2 className="text-lg font-bold text-ink">Đổi mật khẩu</h2>
           <p className="mt-2 text-sm leading-6 text-muted">
             Sau khi đổi mật khẩu, bạn cần đăng nhập lại trên các thiết bị.

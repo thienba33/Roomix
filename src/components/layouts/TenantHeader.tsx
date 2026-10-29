@@ -21,8 +21,8 @@ import { useNotifications } from '@/hooks/useNotifications';
 const NAV = [
   { label: 'Tìm phòng', href: '/' },
   { label: 'Phòng yêu thích', href: '/favorites' },
-  { label: 'Yêu cầu của tôi', href: '/requests' },
-  { label: 'Hợp đồng của tôi', href: '/contracts' },
+  { label: 'Yêu cầu', href: '/requests' },
+  { label: 'Hợp đồng', href: '/contracts' },
   { label: 'Hóa đơn', href: '/invoices' },
 ];
 
@@ -69,18 +69,18 @@ export default function TenantHeader() {
 
   return (
     <>
-      <header className="sticky top-0 z-50 border-b border-line bg-white/95 backdrop-blur">
+      <header className="tenant-header sticky top-0 z-50 border-b border-line bg-white/95 backdrop-blur">
         <div className="flex h-16 w-full items-center gap-3 px-4 sm:px-6 lg:gap-8 lg:px-12">
           <Link href="/" className="flex shrink-0 items-center" aria-label="Roomix">
             <Image src="/images/logo.png" alt="Roomix" width={1961} height={680} className="h-9 w-auto" priority />
           </Link>
 
-          <div className="md:hidden">{signedIn && <MobileNavigation title="Khách thuê" groups={[{ title: 'Khám phá', items: navigation }]} />}</div>
-          <nav className="hidden items-center gap-7 md:flex">
+          <div className="lg:hidden">{signedIn && <MobileNavigation title="Khách thuê" groups={[{ title: 'Khám phá', items: navigation }]} />}</div>
+          <nav className="hidden items-center gap-5 lg:flex">
             {navigation.map((n) => {
               const active = n.href === '/' ? pathname === '/' : pathname.startsWith(n.href);
               return (
-                <Link key={n.href} href={n.href} className={cn('text-sm transition', active ? 'font-bold text-ink' : 'font-medium text-muted hover:text-ink')}>
+                <Link key={n.href} href={n.href} className={cn('text-sm transition', active ? 'font-bold text-primary' : 'font-medium text-muted hover:text-ink')}>
                   {n.label}
                 </Link>
               );
@@ -115,27 +115,29 @@ export default function TenantHeader() {
 
 
             {!signedIn ? (
-              <div className="flex items-center gap-2"><button type="button" onClick={() => { closeNotifications(); update({ open: false }); openAuth('register'); }} className="hidden px-3 py-2 text-sm font-semibold text-primary sm:block">Đăng ký</button><button type="button" onClick={() => { closeNotifications(); update({ open: false }); openAuth(); }} className="rounded-full bg-primary px-4 py-2.5 text-sm font-semibold text-white transition hover:opacity-90" aria-haspopup="dialog">
+              <div className="flex items-center gap-2"><button type="button" onClick={() => { closeNotifications(); update({ open: false }); openAuth('register'); }} className="hidden rounded-sm px-3 py-2 text-sm font-semibold text-primary sm:block">Đăng ký</button><button type="button" onClick={() => { closeNotifications(); update({ open: false }); openAuth(); }} className="rounded-sm bg-primary px-4 py-2.5 text-sm font-semibold text-white transition hover:opacity-90" aria-haspopup="dialog">
                 Đăng nhập
               </button></div>
-            ) : <div className="relative" ref={menuRef}>
+            ) : <div className="relative" ref={menuRef} onKeyDown={(event) => { if (event.key === 'Escape') { setMenuOpen(false); menuRef.current?.querySelector('button')?.focus(); } }}>
               <button
                 onClick={() => { closeNotifications(); setMenuOpen((o) => !o); }}
                 className="flex h-10 w-10 items-center justify-center rounded-full bg-primary-soft text-sm font-bold text-primary transition hover:ring-2 hover:ring-primary/30"
                 aria-label="Menu người dùng"
+                aria-expanded={menuOpen}
+                aria-controls="tenant-profile-menu"
               >
                 {profileInitials(user?.fullName ?? '')}
               </button>
               {menuOpen && (
-                <div className="absolute right-0 top-12 w-[300px] rounded-2xl border border-line bg-white p-2 shadow-2xl">
-                  <Link href="/profile" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 rounded-xl px-3 py-2.5 transition hover:bg-page">
-                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary-soft font-bold text-primary">{profileInitials(user?.fullName ?? '')}</span>
+                <div id="tenant-profile-menu" className="tenant-profile-menu absolute right-0 top-12 w-[min(288px,calc(100vw-32px))] overflow-hidden rounded-md border border-line bg-white py-1 shadow-lg">
+                  <Link href="/profile" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 bg-page px-4 py-4 transition hover:bg-primary-soft">
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-primary-soft font-bold text-primary">{profileInitials(user?.fullName ?? '')}</span>
                     <div className="min-w-0">
                       <p className="truncate font-bold text-ink">{user?.fullName ?? ''}</p>
                     </div>
                   </Link>
                   <div className="border-t border-line" />
-                  <Link href="/profile" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-ink hover:bg-page">
+                  <Link href="/profile" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 rounded-sm px-4 py-3 text-sm font-medium text-ink hover:bg-page">
                     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
                     Hồ sơ của tôi
                   </Link>
@@ -145,16 +147,16 @@ export default function TenantHeader() {
                     aria-checked={notifOn}
                     aria-label="Bật hoặc tắt thông báo"
                     onClick={toggleNotif}
-                    className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-ink transition hover:bg-page"
+                    className="flex w-full items-center gap-3 rounded-sm px-4 py-3 text-left text-sm font-medium text-ink transition hover:bg-page"
                   >
                     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" /><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" /></svg>
-                    Thông báo <span className="text-muted">· {notifOn ? 'Bật' : 'Tắt'}</span>
+                    Thông báo
                     <span className={cn('ml-auto flex h-5 w-9 shrink-0 items-center rounded-full p-0.5 transition', notifOn ? 'justify-end bg-primary' : 'justify-start bg-line')}>
                       <span className="h-4 w-4 rounded-full bg-white shadow" />
                     </span>
                   </button>
                   <div className="border-t border-line" />
-                  <button type="button" onClick={() => { reset(); setMenuOpen(false); logout(); }} className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-ink hover:bg-page">
+                  <button type="button" onClick={() => { reset(); setMenuOpen(false); logout(); }} className="flex w-full items-center gap-3 rounded-sm px-4 py-3 text-sm font-medium text-ink hover:bg-page">
                     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><path d="m16 17 5-5-5-5M21 12H9" /></svg>
                     Đăng xuất
                   </button>

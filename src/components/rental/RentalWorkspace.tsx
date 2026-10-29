@@ -11,6 +11,7 @@ import Modal from '@/components/ui/Modal';
 import Badge from '@/components/ui/Badge';
 import { ListingPhoto } from '@/components/rooms/ListingVisuals';
 import ContactCard from './ContactCard';
+import StatusFilter from './StatusFilter';
 import { formatVND } from '@/lib/utils';
 import {
   acceptRental, cancelRental, cancelTenancy, confirmDeposit,
@@ -161,25 +162,32 @@ export default function RentalWorkspace({ mode }: { mode: 'tenant' | 'tenant-con
     }
   };
 
-  if (!authReady || !rental.ready || !catalog.ready) return <div role="status" className="space-y-4 py-8"><h1 className="text-2xl font-bold">{title}</h1><p className="text-muted">Đang tải thông tin thuê phòng…</p><div className="h-40 animate-pulse rounded-2xl bg-page" aria-hidden="true" /></div>;
-  if (!user) return <div className="space-y-4 py-10"><h1 className="text-2xl font-bold">{title}</h1><p>Đăng nhập để xem {contracts ? 'hợp đồng' : 'yêu cầu thuê phòng'} của bạn.</p><Button onClick={() => openAuth('login', tenantView ? 'tenant' : 'landlord')}>Đăng nhập</Button></div>;
+  if (!authReady || !rental.ready || !catalog.ready) return <div role="status" className="space-y-4 py-8"><h1 className={tenantView ? 'sr-only' : 'text-2xl font-bold'}>{title}</h1><p className="text-muted">Đang tải thông tin thuê phòng…</p><div className="h-40 animate-pulse rounded-2xl bg-page" aria-hidden="true" /></div>;
+  if (!user) return <div className="space-y-4 py-10"><h1 className={tenantView ? 'sr-only' : 'text-2xl font-bold'}>{title}</h1><p>Đăng nhập để xem {contracts ? 'hợp đồng' : 'yêu cầu thuê phòng'} của bạn.</p><Button onClick={() => openAuth('login', tenantView ? 'tenant' : 'landlord')}>Đăng nhập</Button></div>;
   if (user.role !== (tenantView ? 'TENANT' : 'LANDLORD')) return <p role="alert" className="py-10">Tài khoản hiện tại không có quyền xem mục này.</p>;
   if (rental.error || catalog.error) return <div role="alert" className="rounded-2xl border border-red-200 bg-red-50 p-6"><h1 className="font-bold">Chưa thể tải dữ liệu thuê phòng</h1><p className="mt-2 text-sm">{rental.error || catalog.error}</p><p className="mt-2 text-sm">Kiểm tra kết nối rồi tải lại trang.</p></div>;
 
   const requests = rental.requests.filter((r) => !filter || r.status === filter);
   const tenancies = rental.tenancies.filter((t) => !filter || t.status === filter);
   const visibleCount = contracts ? tenancies.length : requests.length;
-  const subtitle = contracts ? tenantView ? 'Theo dõi điều khoản, hạn cọc và tình trạng thuê của bạn.' : 'Theo dõi hợp đồng chờ cọc, đang thuê và hoàn tất thủ tục trả phòng, quyết toán cọc.' : tenantView ? 'Xem phản hồi của chủ trọ cho những phòng bạn quan tâm.' : 'Xem yêu cầu mới và chọn khách thuê phù hợp cho từng phòng.';
 
-  return <div className="space-y-6 pb-8">
-    <header className="border-b border-line pb-6"><h1 className="text-[28px] font-extrabold tracking-tight text-ink sm:text-[32px]">{title}</h1><p className="mt-2 text-sm leading-6 text-muted">{subtitle}</p></header>
-    <div className="flex flex-wrap items-center justify-between gap-3"><p role="status" className="text-sm text-muted">{visibleCount} {contracts ? 'hợp đồng' : 'yêu cầu'}{filter ? ' phù hợp' : ''}</p><label className="flex items-center gap-2 text-sm font-semibold">Trạng thái<select aria-label="Lọc theo trạng thái" className="min-h-10 rounded-xl border border-line bg-white px-3 py-2 font-normal focus-visible:outline-2 focus-visible:outline-primary" value={filter} onChange={(e) => setFilter(e.target.value)}><option value="">Tất cả</option>{(contracts ? ['PENDING', 'ACTIVE', 'CANCELLED', 'ENDED'] : ['PENDING', 'ACCEPTED', 'REJECTED', 'CANCELLED']).map((s) => <option key={s} value={s}>{contracts ? contractLabels[s] : requestLabels[s]}</option>)}</select></label></div>
+
+  return <div className={tenantView ? 'tenant-rental space-y-6 pb-8' : `host-rental ${contracts ? 'host-contracts' : 'host-requests'} space-y-6 pb-8`}>
+    <header className={tenantView ? 'sr-only' : 'border-b border-line pb-6'}><h1 className="text-[28px] font-extrabold tracking-tight text-ink sm:text-[32px]">{title}</h1></header>
+    {tenantView ? <StatusFilter label={contracts ? 'Lọc hợp đồng' : 'Lọc yêu cầu'} value={filter} onChange={setFilter} options={[
+      { value: '', label: 'Tất cả', count: contracts ? rental.tenancies.length : rental.requests.length },
+      ...(contracts ? ['PENDING', 'ACTIVE', 'CANCELLED', 'ENDED'] : ['PENDING', 'ACCEPTED', 'REJECTED', 'CANCELLED']).map((value) => ({
+        value, label: (contracts ? contractLabels : requestLabels)[value],
+        count: (contracts ? rental.tenancies : rental.requests).filter((item) => item.status === value).length,
+      })),
+    ]} /> : <div className={tenantView ? 'tenant-list-toolbar' : 'flex flex-wrap items-center justify-between gap-3'}><p role="status" className="text-sm text-muted">{visibleCount} {contracts ? 'hợp đồng' : 'yêu cầu'}{filter ? ' phù hợp' : ''}</p><label className="flex items-center gap-2 text-sm font-semibold">Trạng thái<select aria-label="Lọc theo trạng thái" className="min-h-10 rounded-xl border border-line bg-white px-3 py-2 font-normal focus-visible:outline-2 focus-visible:outline-primary" value={filter} onChange={(e) => setFilter(e.target.value)}><option value="">Tất cả</option>{(contracts ? ['PENDING', 'ACTIVE', 'CANCELLED', 'ENDED'] : ['PENDING', 'ACCEPTED', 'REJECTED', 'CANCELLED']).map((s) => <option key={s} value={s}>{contracts ? contractLabels[s] : requestLabels[s]}</option>)}</select></label></div>}
+
     {notice && <p role="status" className="rounded-xl bg-green-50 p-3 text-sm text-green-800">{notice}</p>}
     {visibleCount === 0 && <div className="rounded-2xl border border-line bg-white px-6 py-12 text-center"><h2 className="text-lg font-bold">{filter ? 'Không có mục ở trạng thái này' : contracts ? 'Chưa có hợp đồng' : 'Chưa có yêu cầu quan tâm'}</h2><p className="mt-2 text-sm text-muted">{filter ? 'Chọn trạng thái khác để xem danh sách.' : tenantView ? 'Khám phá phòng phù hợp để bắt đầu.' : 'Khi khách gửi yêu cầu, thông tin sẽ xuất hiện tại đây.'}</p>{filter ? <Button variant="outline" className="mt-5" onClick={() => setFilter('')}>Xóa bộ lọc</Button> : tenantView ? <Link href="/" className="mt-5 inline-block text-sm font-semibold text-primary">Tìm phòng</Link> : null}</div>}
 
-    {!contracts && requests.slice().reverse().map((r) => <article key={r.id} className="rounded-2xl border border-line bg-white p-4 sm:p-5">
-      <div className="grid gap-4 sm:grid-cols-[112px_minmax(0,1fr)]"><ListingPhoto src={room(r.roomId)?.primaryImageUrl} alt={`Ảnh ${room(r.roomId)?.title || 'phòng thuê'}`} className="h-28 rounded-xl sm:h-24" /><div className="min-w-0"><div className="flex flex-wrap items-start justify-between gap-2"><div><Link className="text-base font-bold text-ink hover:text-primary" href={`/rooms/${r.roomId}`}>{room(r.roomId)?.title || `Phòng ${r.roomId}`}</Link><p className="mt-1 text-xs text-muted">Gửi {dateTime(r.createdAt)} · Mã yêu cầu {r.id.slice(0, 8)}</p></div><Status value={r.status} /></div>{room(r.roomId) && <p className="mt-2 text-sm text-muted">{room(r.roomId)?.houseName} · {room(r.roomId)?.floorName} · Phòng {room(r.roomId)?.roomNumber}</p>}</div></div>
-      <div className="mt-4 border-t border-line pt-4">{!tenantView && <p className="mb-3 text-xs text-muted">Mã khách thuê: <span className="font-semibold text-secondary">{r.tenantId.slice(0, 8)}…{r.tenantId.slice(-4)}</span></p>}<p className="text-xs font-semibold text-muted">Lời nhắn</p><p className="mt-1 whitespace-pre-wrap break-words text-sm leading-6">{r.note || 'Không có lời nhắn.'}</p>
+    {!contracts && requests.slice().reverse().map((r) => <article key={r.id} className={tenantView ? 'tenant-request' : 'rounded-2xl border border-line bg-white p-4 sm:p-5'}>
+      <div className={tenantView ? 'tenant-request-heading grid gap-4 sm:grid-cols-[112px_minmax(0,1fr)]' : 'grid gap-4 sm:grid-cols-[112px_minmax(0,1fr)]'}><ListingPhoto src={room(r.roomId)?.primaryImageUrl} alt={`Ảnh ${room(r.roomId)?.title || 'phòng thuê'}`} className="h-28 rounded-xl sm:h-24" /><div className="min-w-0"><div className="flex flex-wrap items-start justify-between gap-2"><div><Link className="text-base font-bold text-ink hover:text-primary" href={`/rooms/${r.roomId}`}>{room(r.roomId)?.title || `Phòng ${r.roomId}`}</Link><p className="mt-1 text-xs text-muted">Gửi {dateTime(r.createdAt)} · Mã yêu cầu {r.id.slice(0, 8)}</p></div><Status value={r.status} /></div>{room(r.roomId) && <p className="mt-2 text-sm text-muted">{room(r.roomId)?.houseName} · {room(r.roomId)?.floorName} · Phòng {room(r.roomId)?.roomNumber}</p>}</div></div>
+      <div className={tenantView ? 'tenant-request-body' : 'mt-4 border-t border-line pt-4'}>{!tenantView && <p className="mb-3 text-xs text-muted">Mã khách thuê: <span className="font-semibold text-secondary">{r.tenantId.slice(0, 8)}…{r.tenantId.slice(-4)}</span></p>}<p className="text-xs font-semibold text-muted">Lời nhắn</p><p className="mt-1 whitespace-pre-wrap break-words text-sm leading-6">{r.note || 'Không có lời nhắn.'}</p>
       {r.rejectReason && <p className="mt-3 rounded-xl bg-red-50 px-3 py-2 text-sm text-red-800">Lý do từ chối: {r.rejectReason}</p>}
       {r.status === 'ACCEPTED' && <p className="mt-3 text-sm text-secondary">Yêu cầu đã được chấp nhận. Hợp đồng đang chờ xác nhận cọc. <Link href={tenantView ? '/contracts' : '/landlord/tenants'} className="font-semibold text-primary hover:underline">Xem hợp đồng</Link></p>}
       {r.status === 'ACCEPTED' && tenantView && <ContactCard key={r.id} request={r} />}
@@ -187,10 +195,10 @@ export default function RentalWorkspace({ mode }: { mode: 'tenant' | 'tenant-con
       {r.status === 'PENDING' && <div className="mt-4 flex flex-wrap gap-2">{tenantView ? <Button size="sm" variant="outline" onClick={() => open('cancel-request', r.id)}>Hủy yêu cầu</Button> : <><Button size="sm" onClick={() => open('accept', r.id)}>Chấp nhận</Button><Button size="sm" variant="outline" onClick={() => open('reject', r.id)}>Từ chối</Button></>}</div>}</div>
     </article>)}
 
-    {contracts && tenancies.slice().reverse().map((t) => <article key={t.id} className="rounded-2xl border border-line bg-white p-5 sm:p-6">
+    {contracts && tenancies.slice().reverse().map((t) => <article key={t.id} className={tenantView ? 'tenant-contract' : 'rounded-2xl border border-line bg-white p-5 sm:p-6'}>
       <div className="flex flex-wrap items-start justify-between gap-3"><div><h2 className="text-lg font-bold">{room(t.roomId)?.title || `Phòng ${t.roomId}`}</h2><p className="mt-1 break-all text-xs text-muted">Hợp đồng {t.contractCode}</p></div><Status value={t.status} contract /></div>
       {t.status === 'PENDING' && <p className="mt-4 rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-900">Hợp đồng đã tạo, chưa có hiệu lực thuê. Chủ trọ cần xác nhận đã nhận cọc trước {dateTime(t.depositDeadline)}.</p>}
-      <dl className="mt-5 grid gap-4 border-t border-line pt-5 text-sm sm:grid-cols-2"><div><dt className="text-muted">Thời hạn thuê</dt><dd className="mt-1 font-semibold">{t.startDate.split('-').reverse().join('/')} – {t.endDate.split('-').reverse().join('/')}</dd></div><div><dt className="text-muted">Tiền thuê mỗi tháng</dt><dd className="mt-1 font-semibold">{formatVND(t.monthlyRent)}</dd></div><div><dt className="text-muted">Tiền cọc</dt><dd className="mt-1 font-semibold">{formatVND(t.depositAmount)}</dd></div><div><dt className="text-muted">Hạn xác nhận cọc</dt><dd className="mt-1 font-semibold">{dateTime(t.depositDeadline)}</dd></div></dl>
+      <dl className={tenantView ? 'tenant-contract-facts mt-5 grid gap-4 border-t border-line pt-5 text-sm sm:grid-cols-2' : 'mt-5 grid gap-4 border-t border-line pt-5 text-sm sm:grid-cols-2'}><div><dt className="text-muted">Thời hạn thuê</dt><dd className="mt-1 font-semibold">{t.startDate.split('-').reverse().join('/')} – {t.endDate.split('-').reverse().join('/')}</dd></div><div><dt className="text-muted">Tiền thuê mỗi tháng</dt><dd className="mt-1 font-semibold">{formatVND(t.monthlyRent)}</dd></div><div><dt className="text-muted">Tiền cọc</dt><dd className="mt-1 font-semibold">{formatVND(t.depositAmount)}</dd></div><div><dt className="text-muted">Hạn xác nhận cọc</dt><dd className="mt-1 font-semibold">{dateTime(t.depositDeadline)}</dd></div></dl>
       <details className="mt-5 border-t border-line pt-4 text-sm"><summary className="cursor-pointer font-semibold text-primary">Xem chỉ số và điều khoản</summary><div className="mt-3 space-y-2 leading-6 text-secondary"><p>Điện: {formatVND(t.electricityUnitPrice)}/kWh · Chỉ số ban đầu: {t.initialElectricity}</p><p>Nước: {formatVND(t.waterUnitPrice)}/m³ · Chỉ số ban đầu: {t.initialWater}</p><p className="whitespace-pre-wrap break-words">{t.termsAndConditions || 'Không có điều khoản bổ sung.'}</p>{t.depositConfirmedAt && <p>Đã xác nhận cọc: {dateTime(t.depositConfirmedAt)}</p>}</div></details>
       {t.cancellationReason && <p className="mt-4 text-sm text-red-700">Lý do hủy: {t.cancellationReason}</p>}
       <div className="mt-5 flex flex-wrap gap-2">
@@ -214,7 +222,7 @@ export default function RentalWorkspace({ mode }: { mode: 'tenant' | 'tenant-con
     </article>)}
 
     {/* Action Modal */}
-    <Modal open={action !== null} onClose={() => setAction(null)} title={action ? actionTitles[action.kind] : undefined} widthClass="max-w-2xl">
+    <Modal contentClassName={tenantView ? undefined : 'host-dialog'} open={action !== null} onClose={() => setAction(null)} title={action ? actionTitles[action.kind] : undefined} widthClass="max-w-2xl">
       {action?.kind === 'view-settlement' ? (
         <div className="space-y-4">
           {error ? (
