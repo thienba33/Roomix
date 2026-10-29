@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
+import StatusFilter from '@/components/rental/StatusFilter';
 
 interface ReportItem {
   id: string;
@@ -26,6 +27,7 @@ const CATEGORY_NAMES: Record<string, string> = {
 export default function AdminReportsPage() {
   const [reports, setReports] = useState<ReportItem[]>([]);
   const [notice, setNotice] = useState('');
+  const [filter, setFilter] = useState('ALL');
 
   const loadReports = () => {
     try {
@@ -66,21 +68,27 @@ export default function AdminReportsPage() {
     setNotice(newStatus === 'RESOLVED' ? 'Đã đánh dấu đã xử lý báo cáo vi phạm.' : 'Đã bỏ qua báo cáo.');
   };
 
+  const visible = reports.filter((report) => filter === 'ALL' || report.status === filter);
+
   return (
     <div className="admin-reports space-y-6 pb-8">
       <header className="border-b border-line pb-6">
         <h1 className="text-[28px] font-extrabold tracking-tight sm:text-[32px]">Báo cáo vi phạm</h1>
       </header>
 
+      <StatusFilter label="Lọc báo cáo" value={filter} onChange={setFilter} options={[
+        { value: 'ALL', label: 'Tất cả', count: reports.length },
+        ...[{ value: 'PENDING', label: 'Chờ xử lý' }, { value: 'RESOLVED', label: 'Đã xử lý' }, { value: 'DISMISSED', label: 'Bỏ qua' }].map((item) => ({ ...item, count: reports.filter((report) => report.status === item.value).length })),
+      ]} />
       {notice && <p role="status" className="rounded-xl bg-green-50 p-3 text-sm text-green-800">{notice}</p>}
 
-      {reports.length === 0 ? (
+      {visible.length === 0 ? (
         <div className="rounded-2xl border border-line bg-white p-8 text-center text-muted">
-          Hiện chưa có báo cáo vi phạm nào từ người dùng.
+          {filter === 'ALL' ? 'Chưa có báo cáo vi phạm.' : 'Không có báo cáo ở trạng thái này.'}
         </div>
       ) : (
         <div className="space-y-4">
-          {reports.map((report) => (
+          {visible.map((report) => (
             <article key={report.id} className="rounded-2xl border border-line bg-white p-5 space-y-3">
               <div className="flex flex-wrap items-start justify-between gap-2">
                 <div>

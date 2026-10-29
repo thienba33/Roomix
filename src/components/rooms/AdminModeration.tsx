@@ -1,13 +1,17 @@
 'use client';
 import { useRef, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useAdminPosts } from '@/hooks/useAdminPosts';
 import { moderatePost } from '@/services/backend/rooms';
 import { formatVND, postStatusLabel } from '@/lib/utils';
 import Button from '@/components/ui/Button';
 import Modal from '@/components/ui/Modal';
+import { formatAdminDate } from '@/components/admin/presentation';
 export default function AdminModeration({ postId }: { postId?: string }) {
+  const router = useRouter();
   const { items, ready, error, retry } = useAdminPosts();
+  const [sort, setSort] = useState('oldest');
   const [action, setAction] = useState<'approve' | 'reject' | null>(null);
   const [failure, setFailure] = useState('');
   const [busy, setBusy] = useState(false);
@@ -16,7 +20,7 @@ export default function AdminModeration({ postId }: { postId?: string }) {
   if (error) return <div role="alert" className="space-y-3"><p>{error}</p><Button onClick={retry}>Thử lại</Button></div>;
   const selected = items.find((item) => item.id === postId);
   if (postId && !selected) return <p role="alert">Không tìm thấy tin đăng. <Link href="/admin/moderation">Về hàng chờ</Link></p>;
-  const pending = items.filter((item) => item.status === 'PENDING');
+  const pending = items.filter((item) => item.status === 'PENDING').sort((a, b) => sort === 'oldest' ? a.createdAt.localeCompare(b.createdAt) : b.createdAt.localeCompare(a.createdAt));
   return <section className="admin-moderation space-y-5">
     <h1 className="text-2xl font-bold">Kiểm duyệt tin đăng</h1>
     {selected ? <>
@@ -40,20 +44,22 @@ export default function AdminModeration({ postId }: { postId?: string }) {
         </div>
       </article>
     </> : <>
-      <p role="status" className="border-b border-line pb-4 text-sm text-muted">{pending.length} tin chờ duyệt</p>
-      <div className="admin-review-queue divide-y divide-line">
-        {pending.length ? pending.map((item) => <article key={item.id} className="flex flex-wrap items-center justify-between gap-4 py-5">
-          <div className="min-w-0 flex-1"><h2 className="break-words font-semibold">{item.title}</h2><p className="mt-2 text-sm text-muted">{formatVND(item.rentalPrice)} / tháng</p></div>
-          <Link className="shrink-0 rounded-sm border border-line px-4 py-2 text-sm font-semibold text-primary hover:border-primary" href={`/admin/moderation/${item.id}`}>Kiểm tra tin</Link>
-        </article>) : <p className="py-10 text-sm text-muted">Không có tin chờ duyệt.</p>}
+      <div className="admin-queue-toolbar"><p role="status" className="text-sm text-muted">{pending.length} tin chờ duyệt</p><label className="flex items-center gap-2 text-sm text-muted">Sắp xếp<select aria-label="Sắp xếp tin chờ duyệt" value={sort} onChange={(event) => setSort(event.target.value)} className="border border-line bg-white px-3 py-2"><option value="oldest">Cũ nhất trước</option><option value="newest">Mới nhất trước</option></select></label></div>
+      <div className="admin-review-queue">
+        {pending.length ? <table className="admin-account-table admin-post-table"><caption className="sr-only">Hàng chờ kiểm duyệt</caption><thead><tr><th>Tin đăng</th><th>Giá thuê / tháng</th><th>Ngày tạo</th><th><span className="sr-only">Thao tác</span></th></tr></thead><tbody>{pending.map((item) => <tr key={item.id}>
+          <td data-label="Tin đăng"><Link className="font-semibold hover:text-primary" href={`/admin/moderation/${item.id}`}>{item.title}</Link></td>
+          <td data-label="Giá thuê / tháng" className="font-semibold">{formatVND(item.rentalPrice)}</td>
+          <td data-label="Ngày tạo"><time dateTime={item.createdAt}>{formatAdminDate(item.createdAt)}</time></td>
+          <td><Link className="inline-flex shrink-0 rounded-sm border border-line px-4 py-2 text-sm font-semibold text-primary hover:border-primary" href={`/admin/moderation/${item.id}`}>Kiểm tra tin</Link></td>
+        </tr>)}</tbody></table> : <p className="py-10 text-sm text-muted">Không có tin chờ duyệt.</p>}
       </div>
     </>}
     <Modal contentClassName="admin-dialog" open={!!action} onClose={() => { if (!busy) setAction(null); }} title={action === 'approve' ? 'Duyệt tin đăng' : 'Từ chối tin đăng'}><form className="space-y-4" onSubmit={async (event) => {
     event.preventDefault(); if (!selected || !action || lock.current) return;
     const data = new FormData(event.currentTarget);
     lock.current = true; setBusy(true); setFailure('');
-    try { await moderatePost(selected.id, action, String(data.get('reason') ?? '')); setAction(null); }
+    try { await moderatePost(selected.id, action, String(data.get('reason') ?? '')); setAction(null); router.push('/admin/moderation'); }
     catch (cause) { setFailure(cause instanceof Error ? cause.message : 'Không thể kiểm duyệt.'); }
     finally { lock.current = false; setBusy(false); }
-  }}><p className="text-sm">{selected?.title}</p>{action === 'reject' && <label className="block text-sm">Lý do<textarea name="reason" required maxLength={1000} className="mt-2 w-full rounded-xl border border-line p-3" /></label>}{failure && <p role="alert" className="text-sm text-red-700">{failure}</p>}<Button type="submit" disabled={busy}>{busy ? 'Đang xử lý…' : 'Xác nhận'}</Button></form></Modal></section>;
+  }}><p className="text-sm">{selected?.title}</p>{action === 'reject' && <label className="block text-sm">Lý do<textarea name="reason" required maxLength={1000} className="mt-2 w-full rounded-xl border border-line p-3" /></label>}{failure && <p role="alert" className="text-sm text-red-700">{failure}</p>}<Button type="submit" disabled={busy}>{busy ? 'Đang xử lý…' : action === 'approve' ? 'Duyệt tin' : 'Từ chối tin'}</Button></form></Modal></section>;
 }
