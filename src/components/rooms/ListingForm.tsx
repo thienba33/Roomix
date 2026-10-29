@@ -122,15 +122,14 @@ export default function ListingForm({ current, floors }: { current?: CatalogRoom
   if (created) return <div className="max-w-2xl space-y-5 rounded-2xl border border-line bg-white p-6"><h1 className="text-2xl font-bold">{submitted ? 'Đã gửi tin chờ duyệt' : 'Đã lưu phòng và tin nháp'}</h1><p className="text-sm leading-6 text-muted">Mã phòng: <span className="break-all font-semibold text-ink">{created.roomId}</span></p><p className="text-sm leading-6 text-muted">Danh sách tin nháp của chủ trọ đang chờ API đọc từ backend. Hãy lưu mã phòng này để đối chiếu khi cần.</p>{!submitted && <><p className="text-sm text-muted">Tin cần có ảnh và giá thuê lớn hơn 0 trước khi gửi duyệt.</p>{submitError && <p role="alert" className="text-sm text-red-700">{submitError}</p>}<Button disabled={submitting || !created.imageUrls.length || created.basePrice <= 0} onClick={() => void submitCreated()}>{submitting ? 'Đang gửi…' : 'Gửi duyệt'}</Button></>}<Link href="/landlord/rooms" className="block text-sm font-semibold text-primary">Về nhà và tầng</Link></div>;
 
   return (
-    <div className="space-y-7 pb-6">
+    <div className="host-listing-form space-y-6 pb-6">
       <header>
         <Link href="/landlord/listings" className="inline-flex items-center gap-2 text-sm font-semibold text-muted hover:text-primary"><span aria-hidden="true">←</span>Tin đăng của tôi</Link>
         <div className="mt-5 flex flex-wrap items-center gap-3"><h1 className="text-[28px] font-extrabold tracking-tight sm:text-[32px]">{current ? 'Chỉnh sửa phòng & tin' : 'Tạo phòng & tin nháp'}</h1><ListingStatus status={current?.postStatus ?? 'DRAFT'} /></div>
-        <p className="mt-2 max-w-2xl text-sm leading-6 text-muted">Một tin rõ ràng giúp người thuê dễ chọn hơn. Bắt đầu với thông tin phòng, rồi thêm nội dung và hình ảnh.</p>
       </header>
       {current?.postStatus === 'REJECTED' && <div className="rounded-xl border border-red-100 bg-red-50 p-4"><h2 className="text-sm font-bold text-red-900">Tin cần điều chỉnh</h2><p className="mt-1 break-words text-sm text-red-800">{current.rejectReason || 'Vui lòng kiểm tra lại thông tin trước khi gửi duyệt.'}</p><p className="mt-2 text-xs text-red-800">Sau khi lưu chỉnh sửa, tin trở về bản nháp để bạn kiểm tra và gửi lại.</p></div>}
 
-      <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_300px]">
+      <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_280px]">
         <form noValidate onSubmit={submit} className="min-w-0 space-y-6" aria-busy={saving || readingImages}>
           <FormSection title="Vị trí & thông tin phòng" description="Chọn nhà và tầng thuộc tài khoản của bạn.">
             <div className="grid gap-4 sm:grid-cols-2">

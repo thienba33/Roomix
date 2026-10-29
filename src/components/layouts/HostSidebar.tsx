@@ -1,5 +1,5 @@
 'use client';
-import { type ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
@@ -53,6 +53,7 @@ const ALL_ITEMS = GROUPS.flatMap((g) => g.items);
 
 export default function HostSidebar() {
   const pathname = usePathname();
+  const [collapsed, setCollapsed] = useState(false);
   const { logout, user } = useAuth();
   const { requests } = useRental();
   const pendingCount = requests.filter((r) => r.status === 'PENDING').length;
@@ -71,23 +72,24 @@ export default function HostSidebar() {
       </div>
 
       {/* Desktop: left sidebar */}
-      <aside className="sticky top-0 hidden h-screen w-[264px] shrink-0 flex-col border-r border-line bg-white lg:flex">
-        <div className="border-b border-line px-5 pb-4 pt-5">
-          <Link href="/landlord" aria-label="Roomix" className="inline-flex"><Image src="/images/logo.png" alt="Roomix" width={1961} height={680} className="h-7 w-auto" priority /></Link>
-          <p className="mt-2 text-xs text-muted">Quản lý phòng cho thuê</p>
+      <aside className={cn('sticky top-0 hidden h-screen shrink-0 flex-col border-r border-line bg-white lg:flex', collapsed ? 'w-[76px]' : 'w-[232px]')}>
+        <div className={cn('flex border-b border-line py-4', collapsed ? 'flex-col items-center gap-3 px-2' : 'items-center justify-between gap-2 px-4')}>
+          <Link href="/landlord" aria-label="Roomix" className="inline-flex">
+            {collapsed ? <Image src="/images/logo-mark.png" alt="Roomix" width={32} height={32} className="h-8 w-8 object-contain" /> : <Image src="/images/logo.png" alt="Roomix" width={1961} height={680} className="h-7 w-auto" priority />}
+          </Link>
+
         </div>
-        <nav className="flex-1 space-y-7 overflow-y-auto px-3 py-5" aria-label="Điều hướng chủ trọ">
+        <nav id="host-desktop-navigation" className="flex-1 space-y-5 overflow-y-auto px-3 py-5" aria-label="Điều hướng chủ trọ">
           {GROUPS.map((g) => (
             <div key={g.title}>
-              <p className="px-3 text-[11px] font-bold uppercase tracking-[0.14em] text-[#9A9A9A]">{g.title}</p>
-              <div className="mt-2 space-y-1">
+              <div className="space-y-1">
                 {g.items.map((t) => {
                   const n = badgeFor(t.badge);
                   return (
-                    <Link key={t.href} href={t.href} aria-current={isActive(t.href) ? 'page' : undefined} className={cn('flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition', isActive(t.href) ? 'bg-primary-soft font-semibold text-primary' : 'font-medium text-[#484848] hover:bg-page hover:text-ink')}>
+                    <Link key={t.href} href={t.href} aria-current={isActive(t.href) ? 'page' : undefined} title={collapsed ? `${t.label}${n > 0 ? ` (${n})` : ''}` : undefined} className={cn('relative flex items-center gap-3 rounded-sm px-3 py-2.5 text-sm transition', collapsed && 'justify-center', isActive(t.href) ? 'bg-primary-soft font-semibold text-primary' : 'font-medium text-[#484848] hover:bg-page hover:text-ink')}>
                       <t.icon />
-                      <span className="flex-1">{t.label}</span>
-                      {n > 0 && <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1 text-[11px] font-bold text-white">{n}</span>}
+                      <span className={collapsed ? 'sr-only' : 'flex-1'}>{t.label}</span>
+                      {n > 0 && <span className={cn('flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1 text-[11px] font-bold text-white', collapsed && 'absolute -right-1 -top-1')}>{n > 99 ? '99+' : n}</span>}
                     </Link>
                   );
                 })}
@@ -96,15 +98,20 @@ export default function HostSidebar() {
           ))}
         </nav>
         <div className="border-t border-line p-3">
-          <div className="flex items-center gap-1">
-            <Link href="/landlord/profile" className="flex min-w-0 flex-1 items-center gap-3 rounded-lg px-2 py-1.5 transition hover:bg-page">
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary-soft text-[13px] font-bold text-primary">{profileInitials(user?.fullName ?? '')}</span>
-              <span className="min-w-0">
+          <button type="button" onClick={() => setCollapsed((value) => !value)} aria-label={collapsed ? 'Mở rộng thanh điều hướng' : 'Thu gọn thanh điều hướng'} title={collapsed ? 'Mở rộng' : 'Chỉ hiện biểu tượng'} aria-expanded={!collapsed} aria-controls="host-desktop-navigation" className={cn('flex items-center gap-3 rounded-sm px-3 py-2.5 text-sm text-muted hover:bg-page hover:text-primary', collapsed ? 'justify-center' : 'w-full')}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={collapsed ? 'm9 6 6 6-6 6' : 'm15 6-6 6 6 6'} /></svg>
+          </button>
+        </div>
+        <div className="border-t border-line p-3">
+          <div className={cn('flex items-center gap-1', collapsed && 'flex-col gap-3')}>
+            <Link href="/landlord/profile" aria-label="Hồ sơ chủ trọ" title={collapsed ? user?.fullName ?? 'Hồ sơ' : undefined} className={cn('flex min-w-0 items-center gap-3 rounded-sm py-1.5 transition hover:bg-page', collapsed ? 'justify-center' : 'flex-1 px-2')}>
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-sm bg-primary-soft text-[13px] font-bold text-primary">{profileInitials(user?.fullName ?? '')}</span>
+              <span className={collapsed ? 'sr-only' : 'min-w-0'}>
                 <span className="block truncate text-sm font-semibold text-ink">{user?.fullName ?? ''}</span>
                 <span className="block text-xs text-muted">Chủ trọ</span>
               </span>
             </Link>
-            <Link href="/login" onClick={logout} aria-label="Đăng xuất" title="Đăng xuất" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-[#484848] transition hover:bg-page hover:text-ink"><IconLogout /></Link>
+            <Link href="/login" onClick={logout} aria-label="Đăng xuất" title="Đăng xuất" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-sm text-[#484848] transition hover:bg-page hover:text-ink"><IconLogout /></Link>
           </div>
         </div>
       </aside>

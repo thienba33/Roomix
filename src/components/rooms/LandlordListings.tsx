@@ -82,21 +82,18 @@ export default function LandlordListings() {
   }
 
   return (
-    <div className="space-y-6 pb-8">
+    <div className="host-listings space-y-6 pb-8">
       {/* Header */}
       <header className="flex flex-wrap items-start justify-between gap-4 border-b border-line pb-6">
         <div>
-          <h1 className="text-[28px] font-extrabold tracking-tight sm:text-[32px]">Tin đăng &amp; Phòng của tôi</h1>
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-muted">
-            Theo dõi phòng trống, tỷ lệ lấp đầy, quản lý trạng thái và thao tác kiểm duyệt, ẩn/hiện tin đăng.
-          </p>
+          <h1 className="text-[28px] font-extrabold tracking-tight sm:text-[32px]">Phòng và tin đăng</h1>
         </div>
         <div className="flex gap-2">
           <Link
             href="/landlord/listings/create"
             className="inline-flex items-center rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-primary-hover"
           >
-            + Đăng phòng mới
+            Đăng phòng
           </Link>
           <Link
             href="/landlord/rooms"
@@ -111,21 +108,21 @@ export default function LandlordListings() {
       {actionError && <p role="alert" className="rounded-xl bg-red-50 p-3 text-sm text-red-700">{actionError}</p>}
 
       {/* KPI phòng trống và tỷ lệ lấp đầy */}
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+      <div className="host-metrics grid grid-cols-2 gap-4 sm:grid-cols-4">
         <div className="rounded-2xl border border-line bg-white p-4">
-          <span className="text-xs font-semibold uppercase tracking-wider text-muted">Tổng số phòng</span>
+          <span className="text-xs font-semibold text-muted">Tổng số phòng</span>
           <p className="mt-1 text-2xl font-extrabold text-ink">{totalRooms}</p>
         </div>
         <div className="rounded-2xl border border-line bg-white p-4">
-          <span className="text-xs font-semibold uppercase tracking-wider text-muted">Phòng đang trống</span>
+          <span className="text-xs font-semibold text-muted">Phòng đang trống</span>
           <p className="mt-1 text-2xl font-extrabold text-green-600">{availableRooms}</p>
         </div>
         <div className="rounded-2xl border border-line bg-white p-4">
-          <span className="text-xs font-semibold uppercase tracking-wider text-muted">Phòng đang cho thuê</span>
+          <span className="text-xs font-semibold text-muted">Phòng đang cho thuê</span>
           <p className="mt-1 text-2xl font-extrabold text-primary">{occupiedRooms}</p>
         </div>
         <div className="rounded-2xl border border-line bg-white p-4">
-          <span className="text-xs font-semibold uppercase tracking-wider text-muted">Tỷ lệ lấp đầy</span>
+          <span className="text-xs font-semibold text-muted">Tỷ lệ lấp đầy</span>
           <p className="mt-1 text-2xl font-extrabold text-secondary">{occupancyRate}%</p>
         </div>
       </div>
@@ -172,7 +169,7 @@ export default function LandlordListings() {
           )}
         </div>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
           {filteredRooms.map((room) => {
             const tone =
               room.status === 'AVAILABLE'
