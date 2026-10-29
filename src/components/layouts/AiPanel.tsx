@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useId, useRef, useState, type FormEvent } from 'react';
 import Link from 'next/link';
 import { useDialogFocus } from '@/hooks/useDialogFocus';
-import ChatIcon from '@/components/ui/ChatIcon';
 import Button from '@/components/ui/Button';
 import { sendAiMessage, type ChatMessage, type MatchedRoom } from '@/services/ai';
 import { formatVND } from '@/lib/utils';
@@ -232,17 +231,13 @@ export default function AiPanel({
       aria-labelledby="ai-heading"
       tabIndex={-1}
       style={{ width: mobile ? undefined : width }}
-      className="ai-panel flex flex-col bg-page text-ink shadow-[-8px_0_32px_-24px_rgba(34,34,34,0.3)] h-full overflow-hidden"
+      className="ai-panel flex h-full flex-col overflow-hidden bg-white text-ink"
     >
       {/* Header */}
-      <header className="flex items-center justify-between border-b border-line bg-white px-5 py-4 shrink-0">
+      <header className="ai-panel-header flex shrink-0 items-center justify-between gap-3 border-b border-line bg-white px-4 py-3">
         <div className="flex items-center gap-2.5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
-            <ChatIcon size={20} />
-          </div>
           <div>
             <h2 id="ai-heading" className="text-base font-bold leading-5">Roomix AI</h2>
-            <p className="text-xs text-muted">Trợ lý tư vấn &amp; tìm phòng thông minh</p>
           </div>
         </div>
         <div className="flex items-center gap-1.5">
@@ -251,7 +246,7 @@ export default function AiPanel({
             onClick={handleClearHistory}
             title="Bắt đầu đoạn chat mới"
             aria-label="Bắt đầu đoạn chat mới"
-            className="flex h-8 items-center gap-1 rounded-lg px-2.5 text-xs font-medium text-muted hover:bg-page hover:text-ink transition focus-visible:outline-2 focus-visible:outline-primary"
+            className="flex h-8 items-center gap-1 rounded-sm px-2.5 text-xs font-medium text-muted hover:bg-page hover:text-ink transition focus-visible:outline-2 focus-visible:outline-primary"
           >
             <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -262,7 +257,7 @@ export default function AiPanel({
             type="button"
             onClick={onClose}
             aria-label="Đóng Roomix AI"
-            className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-page transition text-muted hover:text-ink focus-visible:outline-2 focus-visible:outline-primary"
+            className="flex h-8 w-8 items-center justify-center rounded-sm hover:bg-page transition text-muted hover:text-ink focus-visible:outline-2 focus-visible:outline-primary"
           >
             ✕
           </button>
@@ -270,17 +265,17 @@ export default function AiPanel({
       </header>
 
       {/* Message List */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="ai-messages min-h-0 flex-1 space-y-5 overflow-y-auto p-4">
         {messages.map((msg) => (
           <div
             key={msg.id}
             className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}
           >
             <div
-              className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-6 shadow-sm ${
+              className={`ai-message max-w-full px-3.5 py-3 text-sm leading-6 ${
                 msg.role === 'user'
-                  ? 'bg-primary text-white rounded-br-none'
-                  : 'bg-white text-ink border border-line rounded-bl-none'
+                  ? 'ai-message-user bg-primary-soft text-ink'
+                  : 'ai-message-assistant bg-white text-ink'
               }`}
             >
               <div className="whitespace-pre-wrap break-words">{renderCleanContent(msg.content)}</div>
@@ -288,7 +283,7 @@ export default function AiPanel({
               {/* Matched Rooms List */}
               {msg.matchedRooms && msg.matchedRooms.length > 0 && (
                 <div className="mt-3 space-y-2 border-t border-line/50 pt-3">
-                  <p className="text-xs font-bold uppercase tracking-wider text-muted">
+                  <p className="text-xs font-semibold text-muted">
                     Phòng gợi ý phù hợp:
                   </p>
                   <div className="grid gap-2">
@@ -297,7 +292,7 @@ export default function AiPanel({
                         key={room.id}
                         href={`/rooms/${room.id}`}
                         onClick={onClose}
-                        className="group block rounded-xl border border-line bg-page/50 p-2.5 transition hover:border-primary hover:bg-white"
+                        className="group block rounded-sm border border-line bg-page/50 p-3 transition hover:border-primary hover:bg-white"
                       >
                         <div className="flex items-start justify-between gap-2">
                           <span className="font-semibold text-ink group-hover:text-primary line-clamp-1">
@@ -321,14 +316,14 @@ export default function AiPanel({
 
             {/* Suggested Follow-ups */}
             {msg.followUps && msg.followUps.length > 0 && (
-              <div className="mt-2.5 flex flex-wrap gap-1.5 max-w-[90%]">
+              <div className="ai-followups mt-3 grid w-full gap-2">
                 {msg.followUps.map((prompt, idx) => (
                   <button
                     key={idx}
                     type="button"
                     disabled={busy}
                     onClick={() => void handleSend(prompt)}
-                    className="rounded-full border border-line bg-white px-3 py-1 text-xs text-secondary transition hover:border-primary hover:text-primary hover:bg-primary-soft/30 text-left disabled:opacity-50"
+                    className="rounded-sm border border-line bg-white px-3 py-2.5 text-xs text-secondary transition hover:border-primary hover:text-primary hover:bg-primary-soft/30 text-left disabled:opacity-50"
                   >
                     {prompt}
                   </button>
@@ -348,7 +343,7 @@ export default function AiPanel({
       </div>
 
       {/* Input Form */}
-      <footer className="border-t border-line bg-white p-3 shrink-0">
+      <footer className="ai-composer shrink-0 border-t border-line bg-white p-4">
         <form onSubmit={onSubmit} className="flex items-center gap-2">
           <input
             type="text"
@@ -356,9 +351,9 @@ export default function AiPanel({
             onChange={(e) => setInput(e.target.value)}
             disabled={busy}
             placeholder="Hỏi về phòng, giá, tiền cọc, hợp đồng..."
-            className="flex-1 rounded-xl border border-line bg-page px-3.5 py-2.5 text-sm text-ink placeholder:text-muted focus-visible:outline-2 focus-visible:outline-primary focus-visible:bg-white"
+            className="min-w-0 flex-1 rounded-sm border border-line bg-page px-3 py-3 text-sm text-ink placeholder:text-muted focus-visible:outline-2 focus-visible:outline-primary focus-visible:bg-white"
           />
-          <Button type="submit" size="sm" disabled={busy || !input.trim()}>
+          <Button className="shrink-0 rounded-sm" type="submit" size="sm" disabled={busy || !input.trim()}>
             Gửi
           </Button>
         </form>
