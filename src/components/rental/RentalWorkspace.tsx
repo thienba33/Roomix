@@ -12,6 +12,7 @@ import Badge from '@/components/ui/Badge';
 import { ListingPhoto } from '@/components/rooms/ListingVisuals';
 import ContactCard from './ContactCard';
 import StatusFilter from './StatusFilter';
+import HostRentalList from '@/components/landlord/HostRentalList';
 import { formatVND } from '@/lib/utils';
 import {
   acceptRental, cancelRental, cancelTenancy, confirmDeposit,
@@ -43,11 +44,11 @@ const actionTitles: Record<Action['kind'], string> = {
 };
 const dateTime = (s: string) => new Date(s).toLocaleString('vi-VN', { timeZone: 'Asia/Bangkok' });
 
-export default function RentalWorkspace({ mode }: { mode: 'tenant' | 'tenant-contracts' | 'requests' | 'contracts' }) {
+export default function RentalWorkspace({ mode, initialFilter = '', initialRecord = '' }: { mode: 'tenant' | 'tenant-contracts' | 'requests' | 'contracts'; initialFilter?: string; initialRecord?: string }) {
   const { user, ready: authReady, openAuth } = useAuth();
   const rental = useRental();
   const catalog = useRoomDetails([...rental.requests.map((item) => item.roomId), ...rental.tenancies.map((item) => item.roomId)]);
-  const [filter, setFilter] = useState('');
+  const [filter, setFilter] = useState(initialFilter);
   const [action, setAction] = useState<Action | null>(null);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
@@ -174,17 +175,18 @@ export default function RentalWorkspace({ mode }: { mode: 'tenant' | 'tenant-con
 
   return <div className={tenantView ? 'tenant-rental space-y-6 pb-8' : `host-rental ${contracts ? 'host-contracts' : 'host-requests'} space-y-6 pb-8`}>
     <header className={tenantView ? 'sr-only' : 'border-b border-line pb-6'}><h1 className="text-[28px] font-extrabold tracking-tight text-ink sm:text-[32px]">{title}</h1></header>
-    {tenantView ? <StatusFilter label={contracts ? 'Lọc hợp đồng' : 'Lọc yêu cầu'} value={filter} onChange={setFilter} options={[
+    <StatusFilter label={contracts ? 'Lọc hợp đồng' : 'Lọc yêu cầu'} value={filter} onChange={setFilter} options={[
       { value: '', label: 'Tất cả', count: contracts ? rental.tenancies.length : rental.requests.length },
       ...(contracts ? ['PENDING', 'ACTIVE', 'CANCELLED', 'ENDED'] : ['PENDING', 'ACCEPTED', 'REJECTED', 'CANCELLED']).map((value) => ({
         value, label: (contracts ? contractLabels : requestLabels)[value],
         count: (contracts ? rental.tenancies : rental.requests).filter((item) => item.status === value).length,
       })),
-    ]} /> : <div className={tenantView ? 'tenant-list-toolbar' : 'flex flex-wrap items-center justify-between gap-3'}><p role="status" className="text-sm text-muted">{visibleCount} {contracts ? 'hợp đồng' : 'yêu cầu'}{filter ? ' phù hợp' : ''}</p><label className="flex items-center gap-2 text-sm font-semibold">Trạng thái<select aria-label="Lọc theo trạng thái" className="min-h-10 rounded-xl border border-line bg-white px-3 py-2 font-normal focus-visible:outline-2 focus-visible:outline-primary" value={filter} onChange={(e) => setFilter(e.target.value)}><option value="">Tất cả</option>{(contracts ? ['PENDING', 'ACTIVE', 'CANCELLED', 'ENDED'] : ['PENDING', 'ACCEPTED', 'REJECTED', 'CANCELLED']).map((s) => <option key={s} value={s}>{contracts ? contractLabels[s] : requestLabels[s]}</option>)}</select></label></div>}
+    ]} />
 
     {notice && <p role="status" className="rounded-xl bg-green-50 p-3 text-sm text-green-800">{notice}</p>}
     {visibleCount === 0 && <div className="rounded-2xl border border-line bg-white px-6 py-12 text-center"><h2 className="text-lg font-bold">{filter ? 'Không có mục ở trạng thái này' : contracts ? 'Chưa có hợp đồng' : 'Chưa có yêu cầu quan tâm'}</h2><p className="mt-2 text-sm text-muted">{filter ? 'Chọn trạng thái khác để xem danh sách.' : tenantView ? 'Khám phá phòng phù hợp để bắt đầu.' : 'Khi khách gửi yêu cầu, thông tin sẽ xuất hiện tại đây.'}</p>{filter ? <Button variant="outline" className="mt-5" onClick={() => setFilter('')}>Xóa bộ lọc</Button> : tenantView ? <Link href="/" className="mt-5 inline-block text-sm font-semibold text-primary">Tìm phòng</Link> : null}</div>}
 
+    {!tenantView ? <HostRentalList contracts={contracts} requests={requests} tenancies={tenancies} room={room} initialRecord={initialRecord} onAction={open} /> : <>
     {!contracts && requests.slice().reverse().map((r) => <article key={r.id} className={tenantView ? 'tenant-request' : 'rounded-2xl border border-line bg-white p-4 sm:p-5'}>
       <div className={tenantView ? 'tenant-request-heading grid gap-4 sm:grid-cols-[112px_minmax(0,1fr)]' : 'grid gap-4 sm:grid-cols-[112px_minmax(0,1fr)]'}><ListingPhoto src={room(r.roomId)?.primaryImageUrl} alt={`Ảnh ${room(r.roomId)?.title || 'phòng thuê'}`} className="h-28 rounded-xl sm:h-24" /><div className="min-w-0"><div className="flex flex-wrap items-start justify-between gap-2"><div><Link className="text-base font-bold text-ink hover:text-primary" href={`/rooms/${r.roomId}`}>{room(r.roomId)?.title || `Phòng ${r.roomId}`}</Link><p className="mt-1 text-xs text-muted">Gửi {dateTime(r.createdAt)} · Mã yêu cầu {r.id.slice(0, 8)}</p></div><Status value={r.status} /></div>{room(r.roomId) && <p className="mt-2 text-sm text-muted">{room(r.roomId)?.houseName} · {room(r.roomId)?.floorName} · Phòng {room(r.roomId)?.roomNumber}</p>}</div></div>
       <div className={tenantView ? 'tenant-request-body' : 'mt-4 border-t border-line pt-4'}>{!tenantView && <p className="mb-3 text-xs text-muted">Mã khách thuê: <span className="font-semibold text-secondary">{r.tenantId.slice(0, 8)}…{r.tenantId.slice(-4)}</span></p>}<p className="text-xs font-semibold text-muted">Lời nhắn</p><p className="mt-1 whitespace-pre-wrap break-words text-sm leading-6">{r.note || 'Không có lời nhắn.'}</p>
@@ -220,6 +222,8 @@ export default function RentalWorkspace({ mode }: { mode: 'tenant' | 'tenant-con
         )}
       </div>
     </article>)}
+
+    </>}
 
     {/* Action Modal */}
     <Modal contentClassName={tenantView ? undefined : 'host-dialog'} open={action !== null} onClose={() => setAction(null)} title={action ? actionTitles[action.kind] : undefined} widthClass="max-w-2xl">

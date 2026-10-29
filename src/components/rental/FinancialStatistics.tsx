@@ -61,7 +61,7 @@ function Dashboard({ landlordId, rooms, tenancies, invoices, error }: {
   const title = periodTitle(months, period);
   const houseLabel = houses.find(([id]) => id === selectedHouse)?.[1] ?? 'Tất cả các nhà';
 
-  return <div className="space-y-6 pb-6">
+  return <div className="host-finance space-y-6 pb-6">
     <header className="flex flex-wrap items-start justify-between gap-4"><div><h1 className="text-[28px] font-extrabold tracking-tight text-ink sm:text-[32px]">Thống kê tài chính</h1></div><Link href="/landlord/invoices" className="inline-flex h-11 items-center rounded-xl border border-line px-4 text-sm font-semibold text-primary hover:bg-primary-soft focus-visible:outline-2 focus-visible:outline-primary">Xem hóa đơn</Link></header>
     <section aria-label="Bộ lọc thống kê" className="grid gap-3 rounded-2xl border border-line bg-page p-4 sm:grid-cols-3 sm:p-5">
       <label className="space-y-1.5 text-xs font-semibold text-muted">Khoảng thời gian<select className={controlClass} value={period} onChange={(event) => setPeriod(event.target.value as FinancePeriod)}>{(Object.keys(periodLabels) as FinancePeriod[]).map((key) => <option key={key} value={key}>{periodLabels[key]}</option>)}</select></label>
@@ -117,6 +117,5 @@ function RevenueChart({ summary, title }: { summary: FinanceSummary; title: stri
   </Card>;
 }
 function HouseBreakdown({ summary }: { summary: FinanceSummary }) {
-  const max = Math.max(1, ...summary.houses.map((house) => house.billed));
-  return <Card className="min-w-0 p-5 sm:p-6"><h2 className="text-base font-bold">Phải thu theo nhà</h2><p className="mt-1 text-xs text-muted">Dựa trên kỳ hóa đơn đã chọn</p>{summary.houses.length ? <div className="mt-6 space-y-5">{summary.houses.map((house) => <div key={house.id}><div className="flex justify-between gap-3 text-sm"><span className="truncate font-semibold">{house.name}</span><span className="shrink-0 tabular-nums">{formatVND(house.billed)}</span></div><div className="mt-2 h-2 overflow-hidden rounded-full bg-page"><div className="h-full rounded-full bg-primary" style={{ width: `${house.billed / max * 100}%` }} /></div><p className="mt-1.5 text-xs text-muted">{house.invoiceCount} hóa đơn · đã thu {formatVND(house.collected)} · còn {formatVND(house.outstanding)}</p></div>)}</div> : <p className="mt-6 text-sm text-muted">Không có hóa đơn thuộc kỳ đã chọn.</p>}</Card>;
+  return <Card className="min-w-0 p-5 sm:p-6"><h2 className="text-base font-bold">Đối chiếu theo nhà</h2>{summary.houses.length ? <div className="mt-5 overflow-x-auto"><table className="host-finance-table"><caption className="sr-only">Khoản phải thu và tiền đã thu theo nhà</caption><thead><tr><th>Nhà</th><th>Phải thu</th><th>Đã thu</th><th>Còn lại</th></tr></thead><tbody>{summary.houses.map((house) => <tr key={house.id}><th scope="row">{house.name}<span className="mt-1 block text-xs font-normal text-muted">{house.invoiceCount} hóa đơn</span></th><td>{formatVND(house.billed)}</td><td>{formatVND(house.collected)}</td><td>{formatVND(house.outstanding)}</td></tr>)}</tbody></table></div> : <p className="mt-6 text-sm text-muted">Không có hóa đơn thuộc kỳ đã chọn.</p>}</Card>;
 }
