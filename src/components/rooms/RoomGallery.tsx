@@ -40,7 +40,7 @@ export default function RoomGallery({ images, title }: { images: string[]; title
   };
 
   return (
-    <section className="relative mt-6 overflow-hidden rounded-2xl bg-page" aria-label={`Ảnh phòng ${title}`}>
+    <section className="room-gallery relative overflow-hidden rounded-sm bg-page" aria-label={`Ảnh phòng ${title}`}>
       <div
         ref={viewport}
         tabIndex={total > 1 ? 0 : undefined}
@@ -87,13 +87,13 @@ export default function RoomGallery({ images, title }: { images: string[]; title
         )) : <p className="flex w-full items-center justify-center text-sm text-muted">Chưa có ảnh phòng</p>}
       </div>
       {total > 1 && <>
-        <button type="button" onClick={() => go(index - 1)} disabled={index === 0} aria-label="Ảnh trước" className="absolute left-3 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-line bg-white text-ink shadow-sm disabled:pointer-events-none disabled:opacity-35">
+        <button type="button" onClick={() => go(index - 1)} disabled={index === 0} aria-label="Ảnh trước" className="absolute left-3 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-sm border border-line bg-white text-ink shadow-sm disabled:pointer-events-none disabled:opacity-35">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m14 6-6 6 6 6" /></svg>
         </button>
-        <button type="button" onClick={() => go(index + 1)} disabled={index === total - 1} aria-label="Ảnh tiếp theo" className="absolute right-3 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-line bg-white text-ink shadow-sm disabled:pointer-events-none disabled:opacity-35">
+        <button type="button" onClick={() => go(index + 1)} disabled={index === total - 1} aria-label="Ảnh tiếp theo" className="absolute right-3 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-sm border border-line bg-white text-ink shadow-sm disabled:pointer-events-none disabled:opacity-35">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m10 6 6 6-6 6" /></svg>
         </button>
-        <span role="status" aria-live="polite" aria-label={`Ảnh ${index + 1} trên ${total}`} className="pointer-events-none absolute bottom-3 right-3 rounded-lg bg-black/65 px-3 py-1.5 text-xs font-semibold tabular-nums text-white">{index + 1} / {total}</span>
+        <span role="status" aria-live="polite" aria-label={`Ảnh ${index + 1} trên ${total}`} className="pointer-events-none absolute bottom-3 right-3 rounded-sm bg-black/65 px-3 py-1.5 text-xs font-semibold tabular-nums text-white">{index + 1} / {total}</span>
       </>}
     </section>
   );

@@ -1,6 +1,5 @@
 'use client';
 import { useEffect, useState } from 'react';
-import Image from 'next/image';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Modal from '@/components/ui/Modal';
@@ -70,18 +69,11 @@ export default function HomeContent() {
     catch (e) { setFilterError(e instanceof Error ? e.message : 'Bộ lọc không hợp lệ.'); }
   };
   return <div className="mx-auto w-full max-w-[1440px] px-4 py-6 sm:px-6 lg:px-8 discovery-page">
-    <section style={{ position: 'relative' }} className="isolate overflow-hidden rounded-3xl bg-[#edf2f8] px-5 py-6 sm:px-8 md:px-10 md:py-7" aria-labelledby="discovery-title">
-      <div
-        aria-hidden="true"
-        style={{ maskImage: 'linear-gradient(to right, transparent, rgba(0,0,0,0.3) 30%, black 85%)', WebkitMaskImage: 'linear-gradient(to right, transparent, rgba(0,0,0,0.3) 30%, black 85%)' }}
-        className="pointer-events-none absolute -right-12 -top-12 hidden h-[400px] w-[400px] select-none md:block lg:h-[440px] lg:w-[440px]"
-      >
-        <Image src="/images/logo-mark.png" alt="" fill sizes="440px" className="object-contain opacity-25" priority />
-      </div>
-      <div className="relative z-10">
-        <h1 id="discovery-title" className="text-[32px] font-extrabold leading-[1.18] tracking-[-1.2px] text-[#202b3c] sm:text-[38px] lg:text-[44px] lg:tracking-[-1.7px]">Tìm một nơi<br />để gọi là nhà.</h1>
-        <p className="mt-3 max-w-[48ch] text-sm leading-6 text-[#536175]">Tìm phòng theo khu vực, ngân sách và tiện ích bạn cần.</p>
-        <div role="search" aria-label="Tìm kiếm phòng" className="mt-5 max-w-[840px]">
+    <section className="discovery-intro" aria-labelledby="discovery-title">
+      <div className="discovery-intro-content">
+        <h1 id="discovery-title" className="discovery-title">Tìm phòng phù hợp với bạn.</h1>
+        <p className="mt-2 max-w-[48ch] text-sm leading-6 text-secondary">Tìm phòng theo khu vực, ngân sách và tiện ích bạn cần.</p>
+        <div role="search" aria-label="Tìm kiếm phòng" className="mt-5 max-w-[700px]">
           <div className="discovery-search-field">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" /><path d="m16 16 5 5" /></svg>
             <Input value={query.location ?? ''} onChange={(e) => update({ location: e.target.value })} placeholder="Tìm theo đường, phường, quận hoặc thành phố…" aria-label="Tìm theo địa chỉ" className="h-[56px]" />
@@ -89,11 +81,11 @@ export default function HomeContent() {
         </div>
       </div>
     </section>
-    <h2 className="mt-9 text-xl font-bold tracking-tight">Phòng dành cho bạn</h2>
+    <h2 className="mt-8 text-xl font-bold tracking-tight">Phòng dành cho bạn</h2>
     <div className="mt-4 flex flex-wrap items-center gap-3">
       <p role="status" className="mr-auto text-sm text-muted">{ready && !loading ? `${result?.totalElements ?? 0} phòng phù hợp` : 'Đang tải phòng…'}</p>
       <label className="flex items-center gap-2 text-sm">Sắp xếp
-        <select className="rounded-full border border-line bg-white px-3 py-2" value={query.sort} onChange={(e) => update({ sort: e.target.value as RoomSearch['sort'] })}>
+        <select className="rounded-lg border border-line bg-white px-3 py-2" value={query.sort} onChange={(e) => update({ sort: e.target.value as RoomSearch['sort'] })}>
           <option value="newest">Mới nhất</option><option value="price_asc">Giá tăng dần</option><option value="price_desc">Giá giảm dần</option>
         </select>
       </label>
