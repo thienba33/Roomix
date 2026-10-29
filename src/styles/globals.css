@@ -53,7 +53,7 @@ body {
 .ai-panel { position: fixed; inset: 0; z-index: 70; height: 100dvh; animation: ai-enter 180ms ease-out; }
 .ai-composer { padding-bottom: max(12px, env(safe-area-inset-bottom, 0px)); }
 @media (min-width: 1280px) {
-  .ai-panel { inset: 76px 12px 12px auto; width: 400px; height: calc(100dvh - 88px); border: 1px solid var(--color-line); border-radius: 24px; z-index: 40; }
+  .ai-panel { inset: 76px 12px 12px auto; width: 400px; height: calc(100dvh - 88px); border: 1px solid var(--color-line); border-radius: 6px; z-index: 40; }
 }
 @container tenant (max-width: 959px) {
   .room-detail-columns { grid-template-columns: minmax(0, 1fr); gap: 24px; }
@@ -74,12 +74,12 @@ body {
 }
 
 /* Roomix discovery: daylight photography, spacious type and quiet indigo controls. */
-.auth-dialog { padding: 0; border-radius: 24px; }
+.auth-dialog { padding: 0; border-radius: 6px; }
 .auth-heading { font-size: 28px; font-weight: 800; letter-spacing: -1px; line-height: 1.3; }
 .auth-description { margin-top: 10px; color: #647084; font-size: 13px; line-height: 1.8; }
-.auth-form input { height: 46px; border-radius: 10px; background: #fafbfe; }
+.auth-form input { height: 46px; border-radius: 6px; background: #fafbfe; }
 .auth-roles { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.auth-role { padding: 12px; border: 1px solid #dde2ec; border-radius: 12px; text-align: left; color: #647084; font-size: 13px; }
+.auth-role { padding: 12px; border: 1px solid #dde2ec; border-radius: 6px; text-align: left; color: #647084; font-size: 13px; }
 .auth-role-selected { background: #eef2ff; border-color: #4f46e5; color: #4338ca; box-shadow: inset 0 0 0 1px #4f46e5; }
 .auth-role:disabled { opacity: .6; }
 .discovery-search-field { display: flex; align-items: center; gap: 8px; border: 1px solid #dbe1eb; border-radius: 14px; padding: 0 16px; color: #4f46e5; background: white; }
@@ -89,3 +89,281 @@ body {
 .discovery-search-field input:focus { box-shadow: none; outline: none; }
 .listing-card h2 { letter-spacing: -.3px; }
 .room-detail-page > h1 { letter-spacing: -1px; }
+
+/* Tenant spaces: a quiet frame for room photography and everyday tasks. */
+.discovery-intro { background: #eef2fa; border-left: 4px solid #4f46e5; padding: 28px 32px; }
+.discovery-title { color: #222b3c; font-size: clamp(26px, 3vw, 36px); font-weight: 800; line-height: 1.2; letter-spacing: -.04em; }
+.discovery-search-field { border-radius: 8px; }
+.listing-card { padding-bottom: 16px; border-bottom: 1px solid #e7e7e7; }
+.listing-card h2 { min-height: 0; }
+.tenant-management :is(article, section, form).rounded-2xl,
+.tenant-management button.rounded-2xl,
+.room-detail-page .rounded-2xl { border-radius: 10px; }
+.tenant-management :is(select, textarea).rounded-xl { border-radius: 8px; }
+@media (max-width: 639px) {
+  .discovery-intro { padding: 22px 18px; }
+  .tenant-header > div { gap: 8px; }
+}
+
+/* Tenant records use compact status navigation and distinct content regions. */
+.tenant-rental > header, .tenant-invoices > header { border: 0; padding-bottom: 0; }
+.rental-status-filter { display: flex; gap: 20px; overflow-x: auto; border-bottom: 1px solid #dfe3eb; }
+.rental-status-filter button { display: inline-flex; flex-shrink: 0; align-items: center; gap: 7px; padding: 12px 0; border-bottom: 2px solid transparent; font-size: 13px; font-weight: 600; color: #6a6a6a; }
+.rental-status-filter button:hover { color: #4338ca; }
+.rental-status-filter button[aria-pressed="true"] { color: #4338ca; border-bottom-color: #4f46e5; }
+.rental-status-filter button span { padding: 1px 6px; background: #f1f2f6; border-radius: 4px; font-size: 11px; font-variant-numeric: tabular-nums; }
+.rental-status-filter button[aria-pressed="true"] span { background: #eef2ff; }
+.tenant-request { display: grid; gap: 24px; padding: 24px 0; border-bottom: 1px solid #dfe3eb; }
+.tenant-request-heading { align-items: start; }
+.tenant-request-heading > :first-child { border-radius: 6px; }
+.tenant-request-heading > div > div { flex-direction: column; gap: 12px; }
+.tenant-request-body { min-width: 0; padding: 16px 20px; background: #f7f8fb; border-radius: 6px; }
+.tenant-request-body > p { max-width: 70ch; }
+.tenant-request-body > div:last-child { justify-content: flex-end; }
+.tenant-contract { border: 1px solid #dfe3eb; border-radius: 6px; overflow: hidden; }
+.tenant-contract > :first-child { padding: 20px 24px; background: #f7f8fb; }
+.tenant-contract > p { margin: 16px 24px; }
+.tenant-contract-facts { margin: 0; border: 0; padding: 24px; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
+.tenant-contract-facts dt { font-size: 12px; }
+.tenant-contract-facts dd { line-height: 1.6; }
+.tenant-contract-facts > :nth-child(2) dd { font-size: 24px; color: #4338ca; letter-spacing: -.7px; }
+.tenant-contract-facts > :nth-child(3) dd { font-size: 20px; letter-spacing: -.5px; }
+.tenant-contract > details { margin: 0 24px; padding: 16px 0; }
+.tenant-contract > div:last-child { margin: 0; padding: 0 24px 20px; justify-content: flex-end; }
+.tenant-contract > div:last-child:empty { display: none; }
+.tenant-invoice-layout { display: grid; gap: 24px; align-items: start; }
+.tenant-invoice-list { display: grid; gap: 0; align-content: start; border: 1px solid #dfe3eb; border-radius: 6px; overflow: hidden; }
+.tenant-invoices .tenant-invoice-item { border: 0; border-bottom: 1px solid #e7e7e7; border-radius: 0; padding: 20px; }
+.tenant-invoices .tenant-invoice-item[aria-pressed="true"] { background: #eef2ff; box-shadow: inset 3px 0 #4f46e5; }
+.tenant-invoices .tenant-invoice-item > div:first-child { flex-direction: column; gap: 8px; }
+.tenant-invoices .tenant-invoice-item > div:last-child { flex-direction: column; gap: 4px; }
+.tenant-invoices .tenant-invoice-item strong { font-size: 16px; }
+.tenant-invoice-details { min-width: 0; padding: 24px; border: 1px solid #dfe3eb; border-top: 3px solid #4f46e5; background: white; scroll-margin-top: 88px; }
+.tenant-invoice-details > dl:first-of-type { background: #f7f8fb; padding: 16px; border: 0; border-radius: 4px; gap: 16px; }
+.tenant-invoice-details > h4 { font-size: 15px; }
+.tenant-invoice-details > dl:nth-of-type(2) > div { padding-bottom: 12px; border-bottom: 1px solid #eee; }
+.tenant-invoice-details > div:nth-of-type(2) { font-size: 18px; }
+.tenant-invoice-details > div:last-child { border-top: 1px solid #e7e7e7; padding-top: 20px; }
+.tenant-invoice-jump { color: #4338ca; font-size: 13px; font-weight: 600; padding: 14px 20px; }
+@container tenant (min-width: 900px) {
+  .tenant-request { grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); }
+  .tenant-invoice-layout { grid-template-columns: minmax(260px, .65fr) minmax(0, 1.35fr); }
+  .tenant-invoice-jump { display: none; }
+}
+@media (max-width: 639px) {
+  .rental-status-filter { gap: 16px; }
+  .tenant-request { gap: 16px; padding-top: 8px; }
+  .tenant-request-heading { grid-template-columns: 88px minmax(0, 1fr); gap: 12px; }
+  .tenant-request-heading > :first-child { height: 88px; }
+  .tenant-request-body { padding: 16px; }
+  .tenant-contract > :first-child, .tenant-contract-facts, .tenant-invoice-details { padding: 16px; }
+  .tenant-contract > p { margin: 16px; }
+  .tenant-contract > details { margin: 0 16px; }
+  .tenant-contract > div:last-child { padding: 0 16px 16px; }
+  .tenant-contract-facts { gap: 20px 12px; }
+  .tenant-contract-facts > :nth-child(2) dd { font-size: 20px; }
+}
+
+.listing-card button[aria-pressed] { border-radius: 4px; box-shadow: none; }
+
+/* Saved rooms favor side-by-side comparison over tall image cards. */
+.favorites-grid { display: grid; column-gap: 32px; }
+.favorites-grid .listing-card { display: grid; grid-template-columns: minmax(0, 180px) minmax(0, 1fr); gap: 20px; padding: 24px 0; }
+.favorites-grid .listing-card > div > a { aspect-ratio: 4 / 3; }
+.favorites-grid .listing-card > a { margin-top: 0; align-self: center; }
+.favorites-grid .listing-card h2 { font-size: 15px; line-height: 1.5; }
+.favorites-grid .listing-card strong { font-size: 20px; }
+@container tenant (min-width: 1150px) {
+  .favorites-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 639px) {
+  .favorites-grid .listing-card { grid-template-columns: 112px minmax(0, 1fr); gap: 12px; padding: 20px 0; }
+  .favorites-grid .listing-card > div > a { aspect-ratio: 1; }
+  .favorites-grid .listing-card > a { align-self: start; }
+  .favorites-grid .listing-card > div > div { top: 6px; right: 6px; }
+  .favorites-grid .listing-card button { height: 32px; width: 32px; }
+  .favorites-grid .listing-card strong { font-size: 18px; }
+}
+
+/* The room image and rental action share the first row, with facts below the image. */
+.room-detail-heading { margin: 20px 0 24px; max-width: 90ch; }
+.room-detail-heading h1 { font-size: clamp(24px, 2.5vw, 32px); line-height: 1.3; font-weight: 800; letter-spacing: -.8px; }
+.room-detail-heading p { margin-top: 10px; font-size: 14px; line-height: 1.6; color: #6a6a6a; }
+.room-detail-layout { display: grid; gap: 28px; align-items: start; }
+.room-detail-main { min-width: 0; }
+.room-detail-sidebar { min-width: 0; }
+.room-detail-section { padding: 28px 0; border-bottom: 1px solid #dfe3eb; }
+.room-detail-section h2 { font-size: 18px; font-weight: 700; }
+.room-detail-facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; margin-top: 20px; }
+.room-detail-facts dt { color: #6a6a6a; font-size: 13px; }
+.room-detail-facts dd { margin-top: 5px; font-size: 15px; font-weight: 600; }
+.room-detail-copy { margin-top: 16px; max-width: 75ch; color: #484848; line-height: 1.8; overflow-wrap: anywhere; }
+.room-detail-report { padding: 20px 0; font-size: 13px; }
+.room-detail-report summary { width: fit-content; cursor: pointer; color: #6a6a6a; font-weight: 600; }
+.room-rental-actions { border: 1px solid #dfe3eb; border-top: 3px solid #4f46e5; padding: 24px; background: #f7f8fb; border-radius: 4px; }
+.room-rental-price { font-size: 28px; font-weight: 800; letter-spacing: -.8px; line-height: 1.3; }
+.room-rental-price span { display: block; margin-top: 4px; font-size: 13px; font-weight: 400; letter-spacing: 0; color: #6a6a6a; }
+.room-rental-actions textarea { background: white; font-weight: 400; }
+.room-rental-actions button { border-radius: 4px; }
+@container tenant (min-width: 960px) {
+  .room-detail-layout { grid-template-columns: minmax(0, 1fr) minmax(320px, 360px); gap: 36px; }
+  .room-detail-sidebar { position: sticky; top: 88px; }
+  .room-detail-facts { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@container tenant (max-width: 959px) {
+  .room-detail-main { display: contents; }
+  .room-detail-main > .room-gallery { order: 0; }
+  .room-detail-sidebar { order: 1; }
+  .room-detail-section { order: 2; }
+  .room-detail-report { order: 3; }
+  .room-detail-layout { gap: 20px; }
+  .room-detail-section { padding: 12px 0 24px; }
+}
+@media (max-width: 639px) {
+  .room-rental-actions { padding: 20px; }
+  .room-detail-facts { gap: 20px 16px; }
+}
+
+/* Header popups share a compact frame and aligned action rows. */
+.notification-popup > section { padding: 20px 20px 0; }
+.notification-popup .notification-heading { gap: 8px; flex-wrap: nowrap; }
+.notification-popup h1 { font-size: 18px; }
+.notification-popup .notification-heading button { border-radius: 4px; }
+.notification-popup .notification-list { margin: 0 -20px; }
+.notification-popup .notification-list > button { margin: 0; padding: 16px 20px; border: 0; border-top: 1px solid #e7e7e7; border-radius: 0; }
+.notification-popup .notification-list > button:hover { background: #f5f6fa; }
+.notification-popup .notification-list > button > span:nth-child(2) { line-height: 1.6; }
+.notification-popup .notification-list time { font-size: 11px; }
+.tenant-profile-menu > :last-child { color: #b42318; }
+.tenant-profile-menu > :last-child:hover { background: #fef3f2; }
+
+/* Personal details and account security form two independent work areas. */
+.tenant-profile-layout { display: grid; gap: 32px; align-items: start; }
+.tenant-profile-info { min-width: 0; }
+.tenant-profile-info > div:first-child { flex-direction: row; align-items: center; gap: 16px; padding-bottom: 24px; }
+.tenant-profile-info > div:first-child > div[role="img"] { width: 72px; height: 72px; border-radius: 4px; }
+.tenant-profile-info > div:first-child span { margin-top: 8px; padding: 0; border-radius: 0; background: transparent; color: #6a6a6a; font-weight: 400; }
+.tenant-profile-info > div:last-child { border-top: 1px solid #e7e7e7; padding-top: 20px; }
+.tenant-profile-password { padding: 24px; background: #f7f8fb; border-top: 2px solid #dfe3eb; }
+.tenant-profile input { border-radius: 6px; background: white; }
+.tenant-profile input:disabled { background: #f5f6f8; }
+.tenant-profile button, .tenant-profile p[role] { border-radius: 4px; }
+@container tenant (min-width: 1000px) {
+  .tenant-profile-layout { grid-template-columns: minmax(0, 1fr) minmax(320px, 380px); gap: 48px; }
+}
+@media (max-width: 639px) {
+  .tenant-profile-password { padding: 20px 16px; }
+}
+
+/* Chat keeps a clear reading column and a quiet, fixed composer. */
+.ai-panel-header > div:first-child { min-width: 0; }
+.ai-panel-header h2 { font-size: 14px; }
+.ai-panel-header p { margin-top: 3px; font-size: 11px; }
+.ai-panel-header > div:last-child { flex-shrink: 0; }
+.ai-message { border-radius: 4px; overflow-wrap: anywhere; }
+.ai-message-user { max-width: 90%; }
+.ai-message-assistant { padding-left: 0; padding-right: 0; }
+.ai-followups button { line-height: 1.6; }
+.ai-composer form > button { border-radius: 4px; align-self: stretch; }
+
+.auth-dialog button { border-radius: 4px; }
+
+/* Landlord workspace: broad working surfaces, compact navigation and clear actions. */
+.host-workspace { container-type: inline-size; container-name: host; }
+.host-workspace :is(.rounded-lg, .rounded-xl, .rounded-2xl, .rounded-3xl),
+.host-dialog { border-radius: 6px; }
+.host-workspace :is(button, input, select, textarea),
+.host-dialog :is(button, input, select, textarea) { border-radius: 4px; }
+.host-dialog :is(.rounded-xl, .rounded-2xl) { border-radius: 6px; }
+.host-workspace h1 { font-size: 26px; line-height: 1.3; letter-spacing: -.6px; }
+.host-workspace header { padding-bottom: 16px; }
+.host-workspace header p { max-width: 70ch; }
+.host-workspace .shadow-sm { box-shadow: none; }
+.host-metrics { gap: 0; border: 1px solid #dfe3eb; border-radius: 6px; overflow: hidden; }
+.host-metrics > * { border: 0; border-right: 1px solid #dfe3eb; border-radius: 0; padding: 20px; }
+.host-metrics > :last-child { border-right: 0; }
+.host-metrics > a:hover { background: #f7f8fb; }
+.host-property-layout { display: grid; gap: 24px; align-items: start; }
+.host-property-layout > nav { display: grid; gap: 8px; }
+.host-property-layout > nav button[aria-current="true"] { box-shadow: inset 3px 0 #4f46e5; }
+.host-floor-list { display: grid; }
+.host-floor-list article { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 16px; border: 0; border-bottom: 1px solid #e7e7e7; border-radius: 0; padding: 16px 0; }
+.host-floor-list article > :not(div) { grid-column: 1; }
+.host-floor-list article > div { grid-column: 2; grid-row: 1 / span 3; align-self: center; margin-top: 0; }
+.host-directory-toggle, .host-create-invoice { border: 1px solid #dfe3eb; border-radius: 6px; }
+.host-directory-toggle { padding: 16px 20px; }
+.host-directory-toggle > summary, .host-create-invoice > summary { cursor: pointer; font-size: 14px; font-weight: 600; color: #4338ca; }
+.host-create-invoice > summary { padding: 16px 20px; }
+.host-create-invoice > section { border: 0; border-top: 1px solid #dfe3eb; border-radius: 0; }
+.host-tenant-directory h2 { font-size: 16px; }
+.host-profile > div { grid-template-columns: minmax(0, 1fr); }
+@container host (min-width: 850px) {
+  .host-property-layout { grid-template-columns: 224px minmax(0, 1fr); }
+  .host-property-layout > nav { position: sticky; top: 24px; }
+  .host-profile > div { grid-template-columns: minmax(0, 1fr) 340px; }
+}
+@container host (max-width: 849px) {
+  .host-property-layout > nav { grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); }
+  .host-listing-form > .grid { grid-template-columns: minmax(0, 1fr); }
+  .host-invoices section > .grid { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 639px) {
+  .host-workspace h1 { font-size: 22px; }
+  .host-metrics > * { padding: 16px; border-bottom: 1px solid #dfe3eb; }
+  .host-floor-list article { grid-template-columns: minmax(0, 1fr); }
+  .host-floor-list article > div { grid-column: 1; grid-row: auto; margin-top: 12px; }
+}
+
+@container host (min-width: 950px) {
+  .host-requests > article { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); gap: 24px; }
+  .host-requests > article > div:last-child { margin-top: 0; padding-top: 0; border-top: 0; border-left: 1px solid #e7e7e7; padding-left: 24px; }
+  .host-contracts > article > dl { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+/* Admin surfaces emphasize review queues, identities and decisions. */
+.admin-workspace { container-type: inline-size; container-name: admin; }
+.admin-workspace :is(.rounded-lg, .rounded-xl, .rounded-2xl, .rounded-3xl),
+.admin-dialog, .admin-login video { border-radius: 6px; }
+.admin-workspace :is(button, input, select, textarea),
+.admin-dialog :is(button, input, select, textarea),
+.admin-login :is(button, input, select) { border-radius: 4px; }
+.admin-dialog :is(.rounded-xl, .rounded-2xl) { border-radius: 6px; }
+.admin-workspace h1 { font-size: 26px; line-height: 1.3; letter-spacing: -.6px; }
+.admin-workspace header { padding-bottom: 16px; }
+.admin-metrics { gap: 0; border: 1px solid #dfe3eb; border-radius: 6px; overflow: hidden; }
+.admin-metrics > a { border: 0; border-right: 1px solid #dfe3eb; border-radius: 0; }
+.admin-metrics > a:last-child { border-right: 0; }
+.admin-metrics > a:hover { background: #f7f8fb; }
+.admin-user-filters { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; padding: 16px; background: #f7f8fb; }
+.admin-user-filters input, .admin-user-filters select { min-height: 44px; background: white; }
+.admin-user-list article { padding: 20px 8px; }
+.admin-user-list article:hover { background: #fafbfe; }
+.admin-review { display: grid; align-items: start; gap: 28px; padding-top: 12px; }
+.admin-review-content { min-width: 0; }
+.admin-review-content > p { max-width: 75ch; }
+.admin-review-decision { min-width: 0; padding: 24px; background: #f7f8fb; border-top: 2px solid #dfe3eb; }
+.admin-reports > .space-y-4 { display: grid; gap: 0; }
+.admin-reports article { border: 0; border-bottom: 1px solid #dfe3eb; border-radius: 0; padding: 24px 0; margin: 0; }
+.admin-reports article > div:last-child { justify-content: flex-end; }
+.admin-face-layout { display: grid; align-items: start; gap: 24px; }
+.admin-face-layout > div { min-width: 0; }
+.admin-face-controls { display: grid; gap: 24px; padding: 24px; background: #f7f8fb; }
+.admin-face-controls > p { font-size: 14px; line-height: 1.7; }
+.admin-workspace .notification-list { display: grid; gap: 0; }
+.admin-workspace .notification-list > button { margin: 0; border: 0; border-bottom: 1px solid #e7e7e7; border-radius: 0; }
+@container admin (min-width: 850px) {
+  .admin-user-filters { grid-template-columns: minmax(0, 1fr) 260px; }
+  .admin-review { grid-template-columns: minmax(0, 1fr) 340px; }
+  .admin-face-layout { grid-template-columns: minmax(0, 1fr) minmax(280px, 360px); }
+}
+@media (max-width: 639px) {
+  .admin-workspace h1 { font-size: 22px; }
+  .admin-metrics > a { border-right: 0; border-bottom: 1px solid #dfe3eb; padding: 20px; }
+  .admin-metrics > a:last-child { border-bottom: 0; }
+  .admin-review-decision, .admin-face-controls { padding: 20px 16px; }
+}
+
+.admin-login-screen .admin-login-methods button { border-radius: 0; }
+.admin-login .auth-form > form { margin-top: 24px; }
+.admin-login .auth-form input { background: white; }
+.admin-login section > p { line-height: 1.7; }
