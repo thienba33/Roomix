@@ -119,7 +119,7 @@ export default function ListingForm({ current, floors }: { current?: CatalogRoom
     finally { setSubmitting(false); }
   };
 
-  if (created) return <div className="max-w-2xl space-y-5 rounded-2xl border border-line bg-white p-6"><h1 className="text-2xl font-bold">{submitted ? 'Đã gửi tin chờ duyệt' : 'Đã lưu phòng và tin nháp'}</h1><p className="text-sm leading-6 text-muted">Mã phòng: <span className="break-all font-semibold text-ink">{created.roomId}</span></p><p className="text-sm leading-6 text-muted">Danh sách tin nháp của chủ trọ đang chờ API đọc từ backend. Hãy lưu mã phòng này để đối chiếu khi cần.</p>{!submitted && <><p className="text-sm text-muted">Tin cần có ảnh và giá thuê lớn hơn 0 trước khi gửi duyệt.</p>{submitError && <p role="alert" className="text-sm text-red-700">{submitError}</p>}<Button disabled={submitting || !created.imageUrls.length || created.basePrice <= 0} onClick={() => void submitCreated()}>{submitting ? 'Đang gửi…' : 'Gửi duyệt'}</Button></>}<Link href="/landlord/rooms" className="block text-sm font-semibold text-primary">Về nhà và tầng</Link></div>;
+  if (created) return <div className="max-w-2xl space-y-5 rounded-2xl border border-line bg-white p-6"><h1 className="text-2xl font-bold">{submitted ? 'Đã gửi tin chờ duyệt' : 'Đã lưu phòng và tin nháp'}</h1><p className="text-sm leading-6 text-muted">Mã phòng: <span className="break-all font-semibold text-ink">{created.roomId}</span></p><p className="text-sm leading-6 text-muted">Lưu mã phòng này để đối chiếu khi cần.</p>{!submitted && <><p className="text-sm text-muted">Tin cần có ảnh và giá thuê lớn hơn 0 trước khi gửi duyệt.</p>{submitError && <p role="alert" className="text-sm text-red-700">{submitError}</p>}<Button disabled={submitting || !created.imageUrls.length || created.basePrice <= 0} onClick={() => void submitCreated()}>{submitting ? 'Đang gửi…' : 'Gửi duyệt'}</Button></>}<Link href="/landlord/rooms" className="block text-sm font-semibold text-primary">Về nhà và tầng</Link></div>;
 
   return (
     <div className="host-listing-form space-y-6 pb-6">
@@ -144,7 +144,7 @@ export default function ListingForm({ current, floors }: { current?: CatalogRoom
             </div>
           </FormSection>
 
-          <FormSection title="Giá thuê & thời gian" description="Giúp người thuê chủ động ngân sách và kế hoạch chuyển đến.">
+          <FormSection title="Giá thuê & thời gian" description="Giá theo tháng, tiền cọc và ngày có thể thuê.">
             <div className="grid gap-4 sm:grid-cols-2">
               <FormField name="basePrice" label="Giá thuê (đ/tháng)" placeholder="Ví dụ: 3500000" type="number" required min="0" step="any" value={value.basePrice} error={fields.basePrice} onChange={(event) => change('basePrice', event.target.value)} />
               <FormField name="depositAmount" label="Tiền đặt cọc (đ)" type="number" required min="0" step="any" value={value.depositAmount} error={fields.depositAmount} onChange={(event) => change('depositAmount', event.target.value)} />
@@ -153,7 +153,7 @@ export default function ListingForm({ current, floors }: { current?: CatalogRoom
             <p className="mt-4 text-xs leading-5 text-muted">Có thể lưu nháp với giá 0. Giá thuê phải lớn hơn 0 trước khi gửi duyệt.</p>
           </FormSection>
 
-          <FormSection title="Nội dung & tiện ích" description="Mô tả đúng căn phòng và những tiện ích người thuê sẽ sử dụng.">
+          <FormSection title="Nội dung & tiện ích" description="Thông tin hiển thị trên tin đăng.">
             <div className="space-y-5">
               <FormField name="title" label="Tiêu đề tin đăng" placeholder="Ví dụ: Phòng 25 m² có ban công tại Cầu Giấy" required maxLength={200} value={value.title} error={fields.title} onChange={(event) => change('title', event.target.value)} />
               <div><label htmlFor="listing-description" className="mb-1.5 block text-[13px] font-semibold">Mô tả phòng</label><textarea id="listing-description" name="description" required rows={5} placeholder="Không gian, nội thất, khu vực xung quanh và những điều người thuê cần biết…" aria-invalid={!!fields.description} aria-describedby={fields.description ? 'listing-description-error' : undefined} className={cn('w-full resize-y rounded-xl border bg-white px-4 py-3 text-sm leading-6 placeholder:text-muted', fields.description ? 'border-red-500' : 'border-line')} value={value.description} onChange={(event) => change('description', event.target.value)} /><FieldError name="description" error={fields.description} /></div>
@@ -181,7 +181,7 @@ export default function ListingForm({ current, floors }: { current?: CatalogRoom
             <p className="mt-4 text-xs leading-5 text-muted">{savedImages.length} ảnh đã lưu · {newImages.length} ảnh mới. Ảnh mới được thêm sau ảnh đã lưu; cần ít nhất một ảnh để gửi duyệt.</p>
           </FormSection>
 
-          <div className="space-y-4 rounded-2xl border border-line bg-white p-5">
+          <div className="host-listing-savebar space-y-4 rounded-2xl border border-line bg-white p-5">
             {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
             <div className="flex flex-wrap items-center justify-between gap-4"><p className="text-xs leading-5 text-muted">Lưu nháp không đồng nghĩa với đăng công khai.</p><div className="flex gap-3"><Button type="button" variant="outline" disabled={saving} onClick={() => router.push('/landlord/listings')}>Hủy</Button><Button type="submit" disabled={saving || readingImages}>{saving ? 'Đang lưu…' : 'Lưu nháp'}</Button></div></div>
           </div>

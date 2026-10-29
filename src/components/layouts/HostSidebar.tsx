@@ -32,9 +32,9 @@ const GROUPS: { title: string; items: { label: string; href: string; icon: () =>
   {
     title: 'Quản lý',
     items: [
-      { label: 'Hôm nay', href: '/landlord', icon: IconDashboard },
-      { label: 'Nhà & Phòng', href: '/landlord/rooms', icon: IconBuilding },
-      { label: 'Bài đăng', href: '/landlord/listings', icon: IconFile },
+      { label: 'Tổng quan', href: '/landlord', icon: IconDashboard },
+      { label: 'Nhà và tầng', href: '/landlord/rooms', icon: IconBuilding },
+      { label: 'Phòng và tin đăng', href: '/landlord/listings', icon: IconFile },
       { label: 'Yêu cầu', href: '/landlord/requests', icon: IconInbox, badge: 'requests' },
       { label: 'Hợp đồng', href: '/landlord/tenants', icon: IconUsers },
       { label: 'Hóa đơn', href: '/landlord/invoices', icon: IconReceipt },
