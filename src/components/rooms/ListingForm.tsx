@@ -78,7 +78,7 @@ export default function ListingForm({ current, floors }: { current?: CatalogRoom
       const saved = await saveListing(input, newImages, detail?.roomId);
       if (detail) {
         toast.push('Đã cập nhật tin nháp');
-        router.push('/landlord/rooms');
+        router.push('/landlord/listings');
       } else setCreated(saved);
     } catch (cause) {
       savingRef.current = false;
