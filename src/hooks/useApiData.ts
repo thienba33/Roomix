@@ -1,6 +1,6 @@
 'use client';
 import { useCallback, useEffect, useState } from 'react';
-import { AUTH_EVENT, readSession } from '@/services/backend/session';
+import { AUTH_EVENT, sessionVersion } from '@/services/backend/session';
 
 const pending = new Map<string, Promise<unknown>>();
 const invalidated = new WeakMap<Event, Set<string>>();
@@ -21,23 +21,23 @@ export function useApiData<T>(key: string, load: () => Promise<T>, initial: T, e
     let active = true;
     const sync = (event?: Event, background = false) => {
       const current = ++generation;
-      const token = readSession()?.accessToken ?? '';
+      const version = sessionVersion();
       if (event) {
         const keys = invalidated.get(event) ?? new Set<string>();
-        const resource = `${key}:${token}`;
+        const resource = `${key}:${version}`;
         if (!keys.has(resource)) { pending.delete(resource); keys.add(resource); }
         invalidated.set(event, keys);
       }
       if (!background) setState({ data: initial, ready: false, error: '' });
-      dedupe(`${key}:${token}`, load).then((data) => {
-        if (active && current === generation && (readSession()?.accessToken ?? '') === token) setState({ data, ready: true, error: '' });
+      dedupe(`${key}:${version}`, load).then((data) => {
+        if (active && current === generation && sessionVersion() === version) setState({ data, ready: true, error: '' });
       }).catch((cause) => {
         if (active && current === generation) setState({ data: initial, ready: true, error: cause instanceof Error ? cause.message : 'Không thể tải dữ liệu.' });
       });
     };
     const timer = window.setTimeout(sync, 0);
     const poll = refreshMs > 0 ? window.setInterval(() => sync(undefined, true), refreshMs) : undefined;
-    const events = [AUTH_EVENT, event, 'storage'];
+    const events = [...new Set([AUTH_EVENT, event])];
     events.forEach((name) => window.addEventListener(name, sync));
     return () => { active = false; generation++; window.clearTimeout(timer); window.clearInterval(poll); events.forEach((name) => window.removeEventListener(name, sync)); };
   }, [key, load, initial, event, revision, refreshMs]);
