@@ -113,13 +113,25 @@ body {
 .rental-status-filter button[aria-pressed="true"] { color: #4338ca; border-bottom-color: #4f46e5; }
 .rental-status-filter button span { padding: 1px 6px; background: #f1f2f6; border-radius: 4px; font-size: 11px; font-variant-numeric: tabular-nums; }
 .rental-status-filter button[aria-pressed="true"] span { background: #eef2ff; }
-.tenant-request { display: grid; gap: 24px; padding: 24px 0; border-bottom: 1px solid #dfe3eb; }
-.tenant-request-heading { align-items: start; }
-.tenant-request-heading > :first-child { border-radius: 6px; }
-.tenant-request-heading > div > div { flex-direction: column; gap: 12px; }
-.tenant-request-body { min-width: 0; padding: 16px 20px; background: #f7f8fb; border-radius: 6px; }
-.tenant-request-body > p { max-width: 70ch; }
-.tenant-request-body > div:last-child { justify-content: flex-end; }
+.tenant-request { overflow: hidden; border: 1px solid #e7e7e7; border-radius: 6px; background: #fff; }
+.tenant-request-heading { display: grid; grid-template-columns: 96px minmax(0, 1fr) auto; gap: 20px; align-items: center; padding: 20px 24px; }
+.tenant-request-photo { height: 80px; border-radius: 4px; }
+.tenant-request-status { align-self: start; }
+.tenant-request-status > span { border-radius: 4px; }
+.tenant-request-body { min-width: 0; border-top: 1px solid #e7e7e7; }
+.tenant-request-message { min-width: 0; padding: 24px; }
+.tenant-request-message > p { max-width: 65ch; }
+.tenant-request-rejection { margin-top: 16px; padding-left: 12px; border-left: 2px solid #dc2626; color: #991b1b; font-size: 13px; line-height: 1.6; }
+.tenant-request-footer { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 24px; border-top: 1px solid #e7e7e7; }
+.tenant-request-contract-link { padding: 9px 14px; border-radius: 4px; background: #4f46e5; color: #fff; font-size: 13px; font-weight: 600; }
+.tenant-request-contract-link:hover { background: #4338ca; }
+.tenant-contact { min-width: 0; padding: 24px; border-top: 1px solid #e7e7e7; }
+.tenant-contact-title { margin-bottom: 16px; color: #6a6a6a; font-size: 12px; font-weight: 600; }
+.tenant-contact-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 20px; }
+.tenant-contact-channel { display: block; min-width: 0; padding: 12px 14px; border: 1px solid #e7e7e7; border-radius: 4px; font-size: 12px; }
+.tenant-contact-channel:hover { border-color: #4f46e5; background: #eef2ff; }
+.tenant-contact-channel-empty { background: #f7f7f7; }
+.tenant-contact-channel-empty:hover { border-color: #e7e7e7; background: #f7f7f7; }
 .tenant-contract { border: 1px solid #dfe3eb; border-radius: 6px; overflow: hidden; }
 .tenant-contract > :first-child { padding: 20px 24px; background: #f7f8fb; }
 .tenant-contract > p { margin: 16px 24px; }
@@ -146,16 +158,20 @@ body {
 .tenant-invoice-details > div:last-child { border-top: 1px solid #e7e7e7; padding-top: 20px; }
 .tenant-invoice-jump { color: #4338ca; font-size: 13px; font-weight: 600; padding: 14px 20px; }
 @container tenant (min-width: 900px) {
-  .tenant-request { grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); }
+  .tenant-request-body-accepted { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); }
+  .tenant-request-body-accepted .tenant-contact { border-top: 0; border-left: 1px solid #e7e7e7; }
   .tenant-invoice-layout { grid-template-columns: minmax(260px, .65fr) minmax(0, 1.35fr); }
   .tenant-invoice-jump { display: none; }
 }
 @media (max-width: 639px) {
   .rental-status-filter { gap: 16px; }
-  .tenant-request { gap: 16px; padding-top: 8px; }
-  .tenant-request-heading { grid-template-columns: 88px minmax(0, 1fr); gap: 12px; }
-  .tenant-request-heading > :first-child { height: 88px; }
-  .tenant-request-body { padding: 16px; }
+  .tenant-request-heading { grid-template-columns: 72px minmax(0, 1fr); gap: 12px; padding: 16px; }
+  .tenant-request-photo { height: 72px; }
+  .tenant-request-status { grid-column: 2; }
+  .tenant-request-message, .tenant-contact { padding: 20px 16px; }
+  .tenant-request-footer { padding: 12px 16px; }
+  .tenant-contact-actions { gap: 8px; }
+  .tenant-contact-channel { padding: 12px; }
   .tenant-contract > :first-child, .tenant-contract-facts, .tenant-invoice-details { padding: 16px; }
   .tenant-contract > p { margin: 16px; }
   .tenant-contract > details { margin: 0 16px; }

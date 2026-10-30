@@ -59,11 +59,6 @@ export default function LandlordProfilePage({ params }: { params: Promise<{ id: 
   const avatarStyle = landlord.avatarUrl
     ? { backgroundImage: `url(${JSON.stringify(landlord.avatarUrl)})` }
     : undefined;
-  const zaloHref = landlord.zalo
-    ? /^https?:\/\//i.test(landlord.zalo)
-      ? landlord.zalo
-      : `https://zalo.me/${landlord.zalo.replace(/\D/g, '') || encodeURIComponent(landlord.zalo)}`
-    : '';
 
   return (
     <TenantShell>
@@ -82,41 +77,20 @@ export default function LandlordProfilePage({ params }: { params: Promise<{ id: 
               <div className="flex flex-wrap items-center gap-2">
                 <h1 className="break-words text-2xl font-extrabold text-ink">{landlord.fullName}</h1>
                 <span className="rounded-full border border-green-200 bg-green-50 px-2.5 py-0.5 text-xs font-semibold text-green-700">
-                  Chủ trọ đã xác thực
+                  Chủ trọ
                 </span>
               </div>
               <p className="mt-2 text-sm leading-6 text-muted">
                 Thành viên Roomix từ {new Date(landlord.joinedAt).toLocaleDateString('vi-VN')}.
-                Thông tin liên hệ được cung cấp trực tiếp từ hồ sơ đã đăng ký.
+                Thông tin giới thiệu từ hồ sơ chủ trọ.
               </p>
             </div>
           </div>
 
-          <div className="mt-6 grid gap-3 border-t border-line pt-6 sm:grid-cols-2">
-            <a
-              href={`tel:${landlord.phoneNumber.replace(/[^\d+]/g, '')}`}
-              className="rounded-xl bg-page p-4 transition hover:bg-primary-soft"
-            >
-              <span className="block text-xs font-semibold uppercase tracking-wide text-muted">Điện thoại</span>
-              <strong className="mt-1 block break-words text-primary">{landlord.phoneNumber}</strong>
-            </a>
-            {zaloHref ? (
-              <a
-                href={zaloHref}
-                target="_blank"
-                rel="noreferrer"
-                className="rounded-xl bg-page p-4 transition hover:bg-primary-soft"
-              >
-                <span className="block text-xs font-semibold uppercase tracking-wide text-muted">Zalo</span>
-                <strong className="mt-1 block break-words text-primary">{landlord.zalo}</strong>
-              </a>
-            ) : (
-              <div className="rounded-xl bg-page p-4">
-                <span className="block text-xs font-semibold uppercase tracking-wide text-muted">Zalo</span>
-                <span className="mt-1 block text-sm text-muted">Chủ trọ chưa cập nhật</span>
-              </div>
-            )}
-          </div>
+          <p className="mt-6 border-t border-line pt-6 text-sm leading-6 text-muted">
+            Điện thoại và Zalo được cung cấp trong danh thiếp của yêu cầu thuê đã được chủ trọ chấp nhận.
+            <Link href="/requests" className="ml-1 font-semibold text-primary">Xem yêu cầu của tôi</Link>
+          </p>
         </header>
 
         <section className="space-y-4 rounded-2xl border border-line bg-white p-6">

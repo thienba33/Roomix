@@ -9,15 +9,14 @@ import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Modal from '@/components/ui/Modal';
 import Badge from '@/components/ui/Badge';
-import { ListingPhoto } from '@/components/rooms/ListingVisuals';
-import ContactCard from './ContactCard';
+import TenantRequestCard from './TenantRequestCard';
 import StatusFilter from './StatusFilter';
 import HostRentalList from '@/components/landlord/HostRentalList';
 import { formatVND } from '@/lib/utils';
 import {
-  acceptRental, cancelRental, cancelTenancy, confirmDeposit,
+  getRentalRequest, getTenancy, acceptRental, cancelRental, cancelTenancy, confirmDeposit,
   completeSettlement, getSettlement, previewSettlement, rejectRental,
-  todayVN, type ContractTerms, type TenancySettlement
+  todayVN, type ContractTerms, type TenancySettlement, type RentalRequest, type Tenancy
 } from '@/services/backend/rental';
 
 const requestLabels: Record<string, string> = { PENDING: 'Chờ chủ trọ phản hồi', ACCEPTED: 'Đã chấp nhận', REJECTED: 'Đã từ chối', CANCELLED: 'Đã hủy' };
@@ -55,30 +54,40 @@ export default function RentalWorkspace({ mode, initialFilter = '', initialRecor
   const [settlementData, setSettlementData] = useState<TenancySettlement | null>(null);
   const [calculatingPreview, setCalculatingPreview] = useState(false);
   const submitting = useRef(false);
+  const opening = useRef(0);
+  const [actionLoading, setActionLoading] = useState(false);
+  const [freshRequest, setFreshRequest] = useState<RentalRequest | null>(null);
+  const [freshTenancy, setFreshTenancy] = useState<Tenancy | null>(null);
   const tenantView = mode === 'tenant' || mode === 'tenant-contracts';
   const contracts = mode === 'contracts' || mode === 'tenant-contracts';
   const title = tenantView ? (contracts ? 'Hợp đồng của tôi' : 'Yêu cầu của tôi') : (contracts ? 'Hợp đồng thuê' : 'Yêu cầu thuê phòng');
   const room = (id: string) => catalog.items.find((r) => r.roomId === id);
 
   const open = async (kind: Action['kind'], id: string) => {
-    submitting.current = false;
-    setError('');
-    setNotice('');
-    setSettlementData(null);
-    setAction({ kind, id });
-
-    if (kind === 'view-settlement') {
-      try {
-        const data = await getSettlement(id);
-        setSettlementData(data);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Chưa có thông tin quyết toán cho hợp đồng này.');
+    const generation = ++opening.current;
+    submitting.current = false; setError(''); setNotice(''); setSettlementData(null);
+    setFreshRequest(null); setFreshTenancy(null); setActionLoading(true); setAction({ kind, id });
+    try {
+      if (['accept', 'reject', 'cancel-request'].includes(kind)) {
+        const record = await getRentalRequest(id);
+        if (record.status !== 'PENDING') throw new Error('Trạng thái yêu cầu đã thay đổi. Đóng cửa sổ và tải lại danh sách.');
+        if (opening.current === generation) setFreshRequest(record);
+      } else {
+        const record = await getTenancy(id);
+        const expected = kind === 'view-settlement' ? 'ENDED' : kind === 'end-tenancy' ? 'ACTIVE' : 'PENDING';
+        if (record.status !== expected) throw new Error('Trạng thái hợp đồng đã thay đổi. Đóng cửa sổ và tải lại danh sách.');
+        if (opening.current === generation) setFreshTenancy(record);
+        if (kind === 'view-settlement') {
+          const data = await getSettlement(id);
+          if (opening.current === generation) setSettlementData(data);
+        }
       }
-    }
+    } catch (cause) {
+      if (opening.current === generation) setError(cause instanceof Error ? cause.message : 'Không thể tải dữ liệu mới nhất.');
+    } finally { if (opening.current === generation) setActionLoading(false); }
   };
-
-  const selected = rental.requests.find((r) => r.id === action?.id);
-  const selectedTenancy = rental.tenancies.find((t) => t.id === action?.id);
+  const selected = freshRequest?.id === action?.id ? freshRequest : undefined;
+  const selectedTenancy = freshTenancy?.id === action?.id ? freshTenancy : undefined;
   const detail = selected && room(selected.roomId);
   const start = detail && detail.availableFrom > todayVN() ? detail.availableFrom : todayVN();
   const end = new Date(Date.parse(start) + 365 * 86400000).toISOString().slice(0, 10);
@@ -187,15 +196,7 @@ export default function RentalWorkspace({ mode, initialFilter = '', initialRecor
     {visibleCount === 0 && <div className="rounded-2xl border border-line bg-white px-6 py-12 text-center"><h2 className="text-lg font-bold">{filter ? 'Không có mục ở trạng thái này' : contracts ? 'Chưa có hợp đồng' : 'Chưa có yêu cầu quan tâm'}</h2><p className="mt-2 text-sm text-muted">{filter ? 'Chọn trạng thái khác để xem danh sách.' : tenantView ? 'Khám phá phòng phù hợp để bắt đầu.' : 'Khi khách gửi yêu cầu, thông tin sẽ xuất hiện tại đây.'}</p>{filter ? <Button variant="outline" className="mt-5" onClick={() => setFilter('')}>Xóa bộ lọc</Button> : tenantView ? <Link href="/" className="mt-5 inline-block text-sm font-semibold text-primary">Tìm phòng</Link> : null}</div>}
 
     {!tenantView ? <HostRentalList contracts={contracts} requests={requests} tenancies={tenancies} room={room} initialRecord={initialRecord} onAction={open} /> : <>
-    {!contracts && requests.slice().reverse().map((r) => <article key={r.id} className={tenantView ? 'tenant-request' : 'rounded-2xl border border-line bg-white p-4 sm:p-5'}>
-      <div className={tenantView ? 'tenant-request-heading grid gap-4 sm:grid-cols-[112px_minmax(0,1fr)]' : 'grid gap-4 sm:grid-cols-[112px_minmax(0,1fr)]'}><ListingPhoto src={room(r.roomId)?.primaryImageUrl} alt={`Ảnh ${room(r.roomId)?.title || 'phòng thuê'}`} className="h-28 rounded-xl sm:h-24" /><div className="min-w-0"><div className="flex flex-wrap items-start justify-between gap-2"><div><Link className="text-base font-bold text-ink hover:text-primary" href={`/rooms/${r.roomId}`}>{room(r.roomId)?.title || `Phòng ${r.roomId}`}</Link><p className="mt-1 text-xs text-muted">Gửi {dateTime(r.createdAt)} · Mã yêu cầu {r.id.slice(0, 8)}</p></div><Status value={r.status} /></div>{room(r.roomId) && <p className="mt-2 text-sm text-muted">{room(r.roomId)?.houseName} · {room(r.roomId)?.floorName} · Phòng {room(r.roomId)?.roomNumber}</p>}</div></div>
-      <div className={tenantView ? 'tenant-request-body' : 'mt-4 border-t border-line pt-4'}>{!tenantView && <p className="mb-3 text-xs text-muted">Mã khách thuê: <span className="font-semibold text-secondary">{r.tenantId.slice(0, 8)}…{r.tenantId.slice(-4)}</span></p>}<p className="text-xs font-semibold text-muted">Lời nhắn</p><p className="mt-1 whitespace-pre-wrap break-words text-sm leading-6">{r.note || 'Không có lời nhắn.'}</p>
-      {r.rejectReason && <p className="mt-3 rounded-xl bg-red-50 px-3 py-2 text-sm text-red-800">Lý do từ chối: {r.rejectReason}</p>}
-      {r.status === 'ACCEPTED' && <p className="mt-3 text-sm text-secondary">Yêu cầu đã được chấp nhận. Hợp đồng đang chờ xác nhận cọc. <Link href={tenantView ? '/contracts' : '/landlord/tenants'} className="font-semibold text-primary hover:underline">Xem hợp đồng</Link></p>}
-      {r.status === 'ACCEPTED' && tenantView && <ContactCard key={r.id} request={r} />}
-      {r.status === 'ACCEPTED' && !tenantView && r.contactRequestedAt && <p role="status" className="mt-3 rounded-xl bg-amber-50 px-3 py-2 text-sm text-amber-900">Khách đã yêu cầu bổ sung số điện thoại để xem danh thiếp. Hồ sơ chủ trọ hiện chưa có thông tin liên hệ đầy đủ.</p>}
-      {r.status === 'PENDING' && <div className="mt-4 flex flex-wrap gap-2">{tenantView ? <Button size="sm" variant="outline" onClick={() => open('cancel-request', r.id)}>Hủy yêu cầu</Button> : <><Button size="sm" onClick={() => open('accept', r.id)}>Chấp nhận</Button><Button size="sm" variant="outline" onClick={() => open('reject', r.id)}>Từ chối</Button></>}</div>}</div>
-    </article>)}
+    {!contracts && requests.slice().reverse().map((r) => <TenantRequestCard key={r.id} request={r} room={room(r.roomId)} status={<Status value={r.status} />} onCancel={() => { void open('cancel-request', r.id); }} />)}
 
     {contracts && tenancies.slice().reverse().map((t) => <article key={t.id} className={tenantView ? 'tenant-contract' : 'rounded-2xl border border-line bg-white p-5 sm:p-6'}>
       <div className="flex flex-wrap items-start justify-between gap-3"><div><h2 className="text-lg font-bold">{room(t.roomId)?.title || `Phòng ${t.roomId}`}</h2><p className="mt-1 break-all text-xs text-muted">Hợp đồng {t.contractCode}</p></div><Status value={t.status} contract /></div>
@@ -227,7 +228,7 @@ export default function RentalWorkspace({ mode, initialFilter = '', initialRecor
 
     {/* Action Modal */}
     <Modal contentClassName={tenantView ? undefined : 'host-dialog'} open={action !== null} onClose={() => setAction(null)} title={action ? actionTitles[action.kind] : undefined} widthClass="max-w-2xl">
-      {action?.kind === 'view-settlement' ? (
+      {actionLoading ? <p role="status" className="py-5 text-sm text-muted">Đang tải dữ liệu mới nhất…</p> : !selected && !selectedTenancy ? <p role="alert" className="text-sm text-red-700">{error || 'Không thể tải dữ liệu. Đóng cửa sổ và thử lại.'}</p> : action?.kind === 'view-settlement' ? (
         <div className="space-y-4">
           {error ? (
             <p role="alert" className="text-sm text-red-700">{error}</p>
