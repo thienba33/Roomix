@@ -8,7 +8,7 @@ import { useAuth } from '@/components/auth/AuthProvider';
 import { useRental } from '@/hooks/useRental';
 import MobileNavigation from './MobileNavigation';
 import { profileInitials } from '@/lib/tenant-store';
-import { useNotifications } from '@/hooks/useNotifications';
+import { useUnreadNotifications } from '@/hooks/useNotifications';
 
 function I({ d, children }: { d?: string; children?: ReactNode }) {
   return (
@@ -38,6 +38,7 @@ const GROUPS: { title: string; items: { label: string; href: string; icon: () =>
       { label: 'Yêu cầu', href: '/landlord/requests', icon: IconInbox, badge: 'requests' },
       { label: 'Hợp đồng', href: '/landlord/tenants', icon: IconUsers },
       { label: 'Hóa đơn', href: '/landlord/invoices', icon: IconReceipt },
+      { label: 'Định giá phòng', href: '/landlord/pricing', icon: IconChart },
       { label: 'Thống kê', href: '/landlord/statistics', icon: IconChart },
     ],
   },
@@ -45,6 +46,7 @@ const GROUPS: { title: string; items: { label: string; href: string; icon: () =>
     title: 'Cá nhân',
     items: [
       { label: 'Thông báo', href: '/landlord/notifications', icon: IconBell, badge: 'notifications' },
+      { label: 'Báo cáo của tôi', href: '/landlord/reports', icon: IconFile },
       { label: 'Hồ sơ', href: '/landlord/profile', icon: IconUser },
     ],
   },
@@ -57,7 +59,7 @@ export default function HostSidebar() {
   const { logout, user } = useAuth();
   const { requests } = useRental();
   const pendingCount = requests.filter((r) => r.status === 'PENDING').length;
-  const { unread: unreadCount } = useNotifications();
+  const { unread: unreadCount } = useUnreadNotifications();
   const badgeFor = (kind?: 'requests' | 'notifications') => (kind === 'requests' ? pendingCount : kind === 'notifications' ? unreadCount : 0);
   const isActive = (href: string) => (href === '/landlord' ? pathname === '/landlord' : pathname.startsWith(href));
 

@@ -36,6 +36,7 @@ const GROUPS: { title: string; items: { label: string; href: string; icon: () =>
     title: 'Vận hành',
     items: [
       { label: 'Đăng ký khuôn mặt', href: '/admin/face', icon: IconShield },
+      { label: 'Nhật ký hoạt động', href: '/admin/audit-logs', icon: IconList },
       { label: 'Thông báo', href: '/admin/notifications', icon: IconList },
     ],
   },
