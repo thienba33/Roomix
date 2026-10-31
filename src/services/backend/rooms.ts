@@ -58,6 +58,10 @@ export async function getRoomDetail(id: string): Promise<RoomDetail> {
   const detail = await api<RoomDetail>(`/api/rooms/${encodeURIComponent(id)}`);
   return { ...detail, primaryImageUrl: detail.imageUrls?.[0] ?? '', imageUrls: detail.imageUrls ?? [] };
 }
+export async function getLandlordRoomDetail(id: string): Promise<RoomDetail> {
+  const detail = await api<RoomDetail>(`/api/landlords/rooms/${encodeURIComponent(id)}`);
+  return { ...detail, primaryImageUrl: detail.imageUrls?.[0] ?? '', imageUrls: detail.imageUrls ?? [] };
+}
 export const listFavorites = () => api<FavoriteResponse[]>('/api/favorites');
 export async function addFavorite(roomId: string) { const value = await post<FavoriteResponse>(`/api/favorites/${roomId}`); emit(FAVORITES_EVENT); return value; }
 export async function removeFavorite(roomId: string) { await api(`/api/favorites/${roomId}`, { method: 'DELETE' }); emit(FAVORITES_EVENT); }

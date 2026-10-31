@@ -2,40 +2,48 @@
 
 import { useState, type FormEvent } from 'react';
 import Button from '@/components/ui/Button';
+import { useAuth } from '@/components/auth/AuthProvider';
+import { createReport } from '@/services/backend/reports';
 
 export default function ReportRoomModal({
   roomTitle,
   roomCode,
+  roomId,
   onClose,
 }: {
   roomTitle: string;
   roomCode: string;
+  roomId: string;
   onClose?: () => void;
 }) {
+  const { user, openAuth } = useAuth();
   const [reasonCategory, setReasonCategory] = useState('INACCURATE_INFO');
   const [details, setDetails] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (!user) {
+      openAuth('login', 'tenant');
+      return;
+    }
     setBusy(true);
-    // Reports can be stored in browser storage / admin log
-    setTimeout(() => {
-      const storedReports = JSON.parse(localStorage.getItem('roomix:reports') || '[]');
-      storedReports.push({
-        id: `rep-${Date.now()}`,
-        roomId: roomCode,
-        roomTitle,
-        category: reasonCategory,
-        details,
-        status: 'PENDING',
-        createdAt: new Date().toISOString(),
+    setError('');
+    try {
+      await createReport({
+        targetType: 'ROOM',
+        targetId: roomId,
+        reason: reasonCategory,
+        description: details.trim(),
       });
-      localStorage.setItem('roomix:reports', JSON.stringify(storedReports));
       setSubmitted(true);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'Không thể gửi báo cáo vi phạm.');
+    } finally {
       setBusy(false);
-    }, 400);
+    }
   };
 
   if (submitted) {
@@ -98,9 +106,10 @@ export default function ReportRoomModal({
           </Button>
         )}
         <Button type="submit" variant="danger" disabled={busy}>
-          {busy ? 'Đang gửi…' : 'Gửi báo cáo vi phạm'}
+          {busy ? 'Đang gửi…' : user ? 'Gửi báo cáo vi phạm' : 'Đăng nhập để báo cáo'}
         </Button>
       </div>
+      {error && <p role="alert" className="text-sm text-red-700">{error}</p>}
     </form>
   );
 }

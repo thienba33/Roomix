@@ -40,7 +40,7 @@ export default function RoomDetailContent({ id }: { id: string }) {
         </section>
         <details className="room-detail-report">
           <summary>Báo cáo bài đăng</summary>
-          <ReportRoomModal roomTitle={room.title} roomCode={room.roomNumber} />
+          <ReportRoomModal roomTitle={room.title} roomCode={room.roomNumber} roomId={room.roomId} />
         </details>
       </div>
       <aside className="room-detail-sidebar" aria-label="Giá thuê và gửi yêu cầu">
