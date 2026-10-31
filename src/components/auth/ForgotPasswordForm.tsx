@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import { forgotPassword, resetPassword } from '@/services/backend/auth';
@@ -14,6 +14,16 @@ export default function ForgotPasswordForm({ onLogin }: { onLogin: () => void })
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+
+  useEffect(() => {
+    const resetToken = new URLSearchParams(window.location.search).get('token');
+    const timer = window.setTimeout(() => {
+      if (!resetToken) return;
+      setToken(resetToken);
+      setStep('reset');
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, []);
 
   const handleRequestToken = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();

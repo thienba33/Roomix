@@ -39,6 +39,7 @@ const nextConfig = {
       { source: '/admin/nguoi-dung', destination: '/admin/users', permanent: false },
       { source: '/admin/bao-cao', destination: '/admin/reports', permanent: false },
       { source: '/admin/thong-bao', destination: '/admin/notifications', permanent: false },
+      { source: '/admin/nhat-ky', destination: '/admin/audit-logs', permanent: false },
     ];
   },
 };

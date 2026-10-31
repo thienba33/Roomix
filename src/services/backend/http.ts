@@ -11,6 +11,16 @@ function isAuthEndpoint(path: string) {
   return path.startsWith('/api/auth/');
 }
 
+function isPublicGet(path: string, init: RequestInit) {
+  const method = (init.method ?? 'GET').toUpperCase();
+  return method === 'GET' && (
+    path.startsWith('/api/rooms/')
+    || path.startsWith('/api/users/landlords/')
+    || path.startsWith('/api/invoices/vnpay/return')
+    || path.startsWith('/api/invoices/vnpay/ipn')
+  );
+}
+
 async function refreshAccessToken(): Promise<AuthResponse | null> {
   if (!refreshInFlight) {
     refreshInFlight = (async () => {
@@ -46,7 +56,8 @@ async function ensureSession(): Promise<AuthResponse | null> {
 }
 
 async function request<T>(path: string, init: RequestInit, canRefresh: boolean): Promise<T> {
-  const session = isAuthEndpoint(path) ? readSession() : await ensureSession();
+  const publicGet = isPublicGet(path, init);
+  const session = publicGet ? null : isAuthEndpoint(path) ? readSession() : await ensureSession();
   const headers = new Headers(init.headers);
   if (session?.accessToken) headers.set('Authorization', `Bearer ${session.accessToken}`);
   if (init.body && !(init.body instanceof FormData)) headers.set('Content-Type', 'application/json');
@@ -61,14 +72,14 @@ async function request<T>(path: string, init: RequestInit, canRefresh: boolean):
     if (cause instanceof Error && cause.name === 'AbortError') throw cause;
     throw new ApiError('Không kết nối được backend. Kiểm tra dịch vụ và thử lại.', 0);
   }
-  if (response.status === 401 && canRefresh && !isAuthEndpoint(path) && session) {
+  if (response.status === 401 && canRefresh && !publicGet && !isAuthEndpoint(path) && session) {
     const refreshed = await refreshAccessToken();
     if (refreshed) return request<T>(path, init, false);
     clearSession();
   }
   const payload = await response.json().catch(() => null);
   if (!response.ok) {
-    if (response.status === 401 && session && readSession()?.accessToken === session.accessToken) clearSession();
+    if (response.status === 401 && !publicGet && session && readSession()?.accessToken === session.accessToken) clearSession();
     const detail = payload?.message || payload?.detail;
     const fields = payload?.errors ? Object.values(payload.errors).join(' ') : '';
     throw new ApiError([typeof detail === 'string' ? detail : response.status === 403 ? 'Bạn không có quyền thực hiện thao tác này.' : 'Yêu cầu thất bại.', fields].filter(Boolean).join(' '), response.status, payload?.errors);
