@@ -16,10 +16,11 @@ import { useAuth } from '@/components/auth/AuthProvider';
 import { useAi } from './AiProvider';
 import MobileNavigation from './MobileNavigation';
 import NotificationPopover from './NotificationPopover';
-import { useNotifications } from '@/hooks/useNotifications';
+import { useUnreadNotifications } from '@/hooks/useNotifications';
 
 const NAV = [
   { label: 'Tìm phòng', href: '/', icon: 'm21 21-5-5M17 10a7 7 0 1 1-14 0 7 7 0 0 1 14 0Z' },
+  { label: 'Báo cáo của tôi', href: '/reports', icon: 'M4 3v18M4 4h15l-3 5 3 5H4' },
   { label: 'Phòng yêu thích', href: '/favorites', icon: 'M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z' },
   { label: 'Yêu cầu', href: '/requests', icon: 'M4 4h16v16H4zM8 8h8M8 12h8M8 16h4' },
   { label: 'Hợp đồng', href: '/contracts', icon: 'M14 2H6v20h12V6l-4-4ZM14 2v5h5M9 12h6M9 16h6' },
@@ -38,7 +39,7 @@ export default function TenantHeader() {
   const closeNotifications = useCallback(() => setNotificationsOpen(false), [setNotificationsOpen]);
   const [menuOpen, setMenuOpen] = useState(false);
   const [notifOn, setNotifOn] = useState(true);
-  const { unread } = useNotifications();
+  const { unread } = useUnreadNotifications();
   const menuRef = useRef<HTMLDivElement>(null);
   useOnClickOutside(menuRef, () => setMenuOpen(false));
 

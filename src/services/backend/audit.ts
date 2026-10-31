@@ -1,28 +1,55 @@
-import { allPages } from './http';
+import { allPages, type ApiPage } from './http';
+import { readSession } from './session';
+
+export type AuditSource = 'CORE' | 'RENTAL';
 
 export interface AuditLog {
   id: string;
-  source: 'CORE' | 'RENTAL';
-  userId?: string;
+  source: AuditSource;
+  userId: string | null;
   action: string;
   entityName: string;
   entityId: string;
-  ipAddress?: string;
-  userAgent?: string;
-  oldValues: Record<string, unknown>;
-  newValues: Record<string, unknown>;
+  ipAddress?: string | null;
+  userAgent?: string | null;
+  oldValues?: Record<string, unknown> | null;
+  newValues?: Record<string, unknown> | null;
   createdAt: string;
 }
 
-export const AUDIT_LOG_EVENT = 'roomix:audit-logs';
+type ServiceAuditLog = Omit<AuditLog, 'source'>;
 
-export function listAuditLogs(action = '') {
-  const filter = action.trim() ? `?action=${encodeURIComponent(action.trim())}` : '';
-  return Promise.all([
-    allPages<Omit<AuditLog, 'source'>>(`/api/admin/audit-logs${filter}`),
-    allPages<Omit<AuditLog, 'source'>>(`/api/rentals/admin/audit-logs${filter}`),
-  ]).then(([coreLogs, rentalLogs]) => [
-    ...coreLogs.map((log) => ({ ...log, source: 'CORE' as const })),
-    ...rentalLogs.map((log) => ({ ...log, source: 'RENTAL' as const })),
-  ].sort((left, right) => Date.parse(right.createdAt) - Date.parse(left.createdAt)));
+const PAGE_SIZE = 20;
+export const AUDIT_LOG_EVENT = 'roomix:audit';
+export const EMPTY_AUDIT: ApiPage<AuditLog> = {
+  content: [],
+  totalPages: 0,
+  totalElements: 0,
+  last: true,
+};
+
+export async function listAuditLogs(page = 0, action = ''): Promise<ApiPage<AuditLog>> {
+  if (readSession()?.user.role !== 'ADMIN') return EMPTY_AUDIT;
+
+  const filter = action.trim()
+    ? `?action=${encodeURIComponent(action.trim())}`
+    : '';
+  const [coreLogs, rentalLogs] = await Promise.all([
+    allPages<ServiceAuditLog>(`/api/admin/audit-logs${filter}`),
+    allPages<ServiceAuditLog>(`/api/rentals/admin/audit-logs${filter}`),
+  ]);
+  const logs: AuditLog[] = [
+    ...coreLogs.map((entry) => ({ ...entry, source: 'CORE' as const })),
+    ...rentalLogs.map((entry) => ({ ...entry, source: 'RENTAL' as const })),
+  ].sort((left, right) => Date.parse(right.createdAt) - Date.parse(left.createdAt));
+
+  const safePage = Math.max(0, page);
+  const start = safePage * PAGE_SIZE;
+  const totalPages = Math.ceil(logs.length / PAGE_SIZE);
+  return {
+    content: logs.slice(start, start + PAGE_SIZE),
+    totalPages,
+    totalElements: logs.length,
+    last: totalPages === 0 || safePage + 1 >= totalPages,
+  };
 }

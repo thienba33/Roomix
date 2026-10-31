@@ -7,33 +7,78 @@ export interface SessionUser {
 export interface AuthResponse {
   accessToken?: string; tokenType?: string; expiresIn: number; expiresAt?: number; user: SessionUser;
 }
-const KEY = 'roomix_api_session_v1';
 export const AUTH_EVENT = 'roomix:auth';
-function parseSession(): AuthResponse | null {
-  if (typeof window === 'undefined') return null;
-  try {
-    const value = JSON.parse(localStorage.getItem(KEY) || 'null');
-    if (!value?.accessToken || value.accessToken.startsWith('mock-') || !value.user?.id || !['TENANT', 'LANDLORD', 'ADMIN'].includes(value.user.role) || value.user.status !== 'ACTIVE' || !Number.isFinite(value.expiresAt)) return null;
-    return value;
-  } catch { return null; }
+const SYNC_KEY = 'roomix_auth_signal_v1';
+let session: AuthResponse | null = null;
+let version = 0;
+let initialized = false;
+let restored = false;
+
+function initialize() {
+  if (initialized || typeof window === 'undefined') return;
+  initialized = true;
+  // Remove credentials saved by older versions. Only a non-secret signal is shared.
+  try { localStorage.removeItem('roomix_api_session_v1'); } catch { /* Storage is optional. */ }
+  window.addEventListener('storage', (event) => {
+    if (event.key !== SYNC_KEY && event.key !== null) return;
+    let loggedOut = true;
+    try { loggedOut = JSON.parse(event.newValue || 'null')?.type !== 'login'; } catch { /* Fail closed. */ }
+    version++;
+    session = null;
+    restored = loggedOut;
+    window.dispatchEvent(new Event(AUTH_EVENT));
+  });
 }
-export function readStoredSession(): AuthResponse | null { return parseSession(); }
-// Expiration is renewed by http.ts through the HttpOnly refresh cookie.
-// Keep the stored access token readable so the request layer can refresh it
-// instead of treating normal access-token expiry as a logout.
-export function readSession(): AuthResponse | null { return parseSession(); }
+function announce(type: 'login' | 'logout') {
+  try { localStorage.setItem(SYNC_KEY, JSON.stringify({ type, nonce: crypto.randomUUID() })); } catch { /* Storage is optional. */ }
+}
+function validate(value: AuthResponse) {
+  if (!value.accessToken || value.accessToken.startsWith('mock-') || !value.user?.id
+    || !['TENANT', 'LANDLORD', 'ADMIN'].includes(value.user.role) || value.user.status !== 'ACTIVE'
+    || !Number.isFinite(value.expiresIn) || value.expiresIn <= 0) throw new Error('Phiên đăng nhập không hợp lệ.');
+  return { ...value, expiresAt: Date.now() + value.expiresIn * 1000 };
+}
+export function readSession(): AuthResponse | null { initialize(); return session; }
+export const readStoredSession = readSession;
+export function sessionVersion() { initialize(); return version; }
+export function needsSessionRestore() { initialize(); return !restored; }
+export function finishSessionRestore(expected: number) { if (version === expected) restored = true; }
 export function saveSession(value: AuthResponse) {
-  if (!value.accessToken || value.user.status !== 'ACTIVE') throw new Error('Tài khoản chưa được kích hoạt.');
-  localStorage.setItem(KEY, JSON.stringify({ ...value, expiresAt: Date.now() + value.expiresIn * 1000 }));
+  initialize();
+  const next = validate(value);
+  version++;
+  restored = true;
+  session = next;
+  announce('login');
   window.dispatchEvent(new Event(AUTH_EVENT));
 }
+export function saveRefreshedSession(value: AuthResponse, expected: number) {
+  if (version !== expected || (session && session.user.id !== value.user.id)) return false;
+  const wasGuest = !session;
+  session = validate(value);
+  restored = true;
+  if (wasGuest) window.dispatchEvent(new Event(AUTH_EVENT));
+  return true;
+}
 export function updateSessionUser(user: SessionUser) {
-  const session = readStoredSession();
-  if (!session) return;
-  localStorage.setItem(KEY, JSON.stringify({ ...session, user }));
+  if (!session || session.user.id !== user.id) return;
+  session = { ...session, user };
   window.dispatchEvent(new Event(AUTH_EVENT));
 }
 export function clearSession() {
-  localStorage.removeItem(KEY);
+  initialize();
+  version++;
+  restored = true;
+  session = null;
+  announce('logout');
   window.dispatchEvent(new Event(AUTH_EVENT));
+}
+
+// Refresh cookies rotate once. Serialize cookie changes across tabs as well.
+let authQueue: Promise<unknown> = Promise.resolve();
+export async function withAuthLock<T>(work: () => Promise<T>): Promise<T> {
+  if (typeof navigator !== 'undefined' && navigator.locks) return navigator.locks.request('roomix-auth-cookie', work);
+  const result = authQueue.then(work, work);
+  authQueue = result.catch(() => undefined);
+  return result;
 }

@@ -1,15 +1,13 @@
-import { clearSession, readSession, readStoredSession, saveSession, type AuthResponse } from './session';
+import { clearSession, readSession, sessionVersion, needsSessionRestore, finishSessionRestore, saveRefreshedSession, withAuthLock, type AuthResponse } from './session';
 
-// Requests use Next's same-origin rewrite, avoiding browser CORS restrictions.
 export const API_URL = '/backend';
 export class ApiError extends Error {
   constructor(message: string, public status: number, public errors?: Record<string, string>) { super(message); }
 }
-let refreshInFlight: Promise<AuthResponse | null> | null = null;
-
-function isAuthEndpoint(path: string) {
-  return path.startsWith('/api/auth/');
-}
+let refreshInFlight: { version: number; task: Promise<AuthResponse | null> } | null = null;
+const changedSession = () => new ApiError('Phiên đăng nhập đã thay đổi. Vui lòng tải lại dữ liệu.', 401);
+const isAuthEndpoint = (path: string) => path.startsWith('/api/auth/') && path !== '/api/auth/change-password';
+const changesCookie = (path: string) => ['/api/auth/login', '/api/auth/register', '/api/auth/logout', '/api/auth/face/complete'].includes(path);
 
 function isPublicGet(path: string, init: RequestInit) {
   const method = (init.method ?? 'GET').toUpperCase();
@@ -22,64 +20,65 @@ function isPublicGet(path: string, init: RequestInit) {
 }
 
 async function refreshAccessToken(): Promise<AuthResponse | null> {
-  if (!refreshInFlight) {
-    refreshInFlight = (async () => {
-      try {
-        const response = await fetch(`${API_URL}/api/auth/refresh`, {
-          method: 'POST', credentials: 'include', cache: 'no-store',
-          signal: AbortSignal.timeout(30000),
-        });
-        const payload = await response.json().catch(() => null);
-        if (!response.ok || !payload?.data?.accessToken) {
-          if (response.status === 401) clearSession();
-          return null;
-        }
-        const session = payload.data as AuthResponse;
-        saveSession(session);
-        return session;
-      } catch {
+  const version = sessionVersion();
+  if (refreshInFlight?.version === version) return refreshInFlight.task;
+  const task = withAuthLock(async () => {
+    if (sessionVersion() !== version) return null;
+    try {
+      const response = await fetch(`${API_URL}/api/auth/refresh`, {
+        method: 'POST', credentials: 'include', cache: 'no-store', signal: AbortSignal.timeout(30000),
+      });
+      const payload = await response.json().catch(() => null);
+      if (sessionVersion() !== version) return null;
+      if (!response.ok || !payload?.data?.accessToken) {
+        if (response.status === 401 && readSession()) clearSession();
         return null;
-      } finally {
-        refreshInFlight = null;
       }
-    })();
-  }
-  return refreshInFlight;
+      return saveRefreshedSession(payload.data, version) ? readSession() : null;
+    } catch { return null; }
+    finally { finishSessionRestore(version); }
+  });
+  refreshInFlight = { version, task };
+  try { return await task; }
+  finally { if (refreshInFlight?.task === task) refreshInFlight = null; }
 }
-
-async function ensureSession(): Promise<AuthResponse | null> {
-  const stored = readStoredSession();
+export async function restoreSession() {
+  if (needsSessionRestore()) return refreshAccessToken();
+  return readSession();
+}
+async function ensureSession() {
+  const stored = await restoreSession();
   if (!stored) return null;
-  const expiresAt = stored.expiresAt;
-  if (expiresAt === undefined || !Number.isFinite(expiresAt) || expiresAt - Date.now() > 60_000) return stored;
-  return refreshAccessToken();
+  return (stored.expiresAt ?? 0) - Date.now() > 60_000 ? stored : refreshAccessToken();
 }
 
-async function request<T>(path: string, init: RequestInit, canRefresh: boolean): Promise<T> {
+async function request<T>(path: string, init: RequestInit, canRefresh: boolean, version: number): Promise<T> {
   const publicGet = isPublicGet(path, init);
+  const sessionSensitive = !publicGet && path !== '/api/auth/logout';
   const session = publicGet ? null : isAuthEndpoint(path) ? readSession() : await ensureSession();
+  if (sessionSensitive && sessionVersion() !== version) throw changedSession();
   const headers = new Headers(init.headers);
   if (session?.accessToken) headers.set('Authorization', `Bearer ${session.accessToken}`);
   if (init.body && !(init.body instanceof FormData)) headers.set('Content-Type', 'application/json');
   let response: Response;
   try {
     response = await fetch(`${API_URL}${path}`, {
-      ...init, headers, credentials: 'include', cache: 'no-store',
-      signal: init.signal ?? AbortSignal.timeout(30000),
+      ...init, headers, credentials: 'include', cache: 'no-store', signal: init.signal ?? AbortSignal.timeout(30000),
     });
-  }
-  catch (cause) {
+  } catch (cause) {
     if (cause instanceof Error && cause.name === 'AbortError') throw cause;
     throw new ApiError('Không kết nối được backend. Kiểm tra dịch vụ và thử lại.', 0);
   }
+  if (sessionSensitive && sessionVersion() !== version) throw changedSession();
   if (response.status === 401 && canRefresh && !publicGet && !isAuthEndpoint(path) && session) {
-    const refreshed = await refreshAccessToken();
-    if (refreshed) return request<T>(path, init, false);
-    clearSession();
+    const refreshed = readSession()?.accessToken !== session.accessToken ? readSession() : await refreshAccessToken();
+    if (sessionVersion() !== version) throw changedSession();
+    if (refreshed) return request<T>(path, init, false, version);
   }
   const payload = await response.json().catch(() => null);
+  if (sessionSensitive && sessionVersion() !== version) throw changedSession();
   if (!response.ok) {
-    if (response.status === 401 && !publicGet && session && readSession()?.accessToken === session.accessToken) clearSession();
+    if (response.status === 401 && !publicGet && session && sessionVersion() === version && readSession()?.accessToken === session.accessToken) clearSession();
     const detail = payload?.message || payload?.detail;
     const fields = payload?.errors ? Object.values(payload.errors).join(' ') : '';
     throw new ApiError([typeof detail === 'string' ? detail : response.status === 403 ? 'Bạn không có quyền thực hiện thao tác này.' : 'Yêu cầu thất bại.', fields].filter(Boolean).join(' '), response.status, payload?.errors);
@@ -87,16 +86,18 @@ async function request<T>(path: string, init: RequestInit, canRefresh: boolean):
   return (payload && Object.hasOwn(payload, 'data') ? payload.data : payload) as T;
 }
 export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
-  return request<T>(path, init, true);
+  const version = sessionVersion();
+  const work = () => request<T>(path, init, true, version);
+  return changesCookie(path) ? withAuthLock(work) : work();
 }
 export const post = <T>(path: string, body?: unknown) => api<T>(path, { method: 'POST', ...(body === undefined ? {} : { body: JSON.stringify(body) }) });
 export interface ApiPage<T> { content: T[]; totalPages: number; totalElements: number; last: boolean; }
 export async function allPages<T>(path: string): Promise<T[]> {
   const output: T[] = [];
-  const token = readSession()?.accessToken;
+  const version = sessionVersion();
   for (let page = 0; ; page++) {
     const result = await api<ApiPage<T>>(`${path}${path.includes('?') ? '&' : '?'}page=${page}&size=100`);
-    if (readSession()?.accessToken !== token) throw new ApiError('Phiên đăng nhập đã thay đổi. Vui lòng tải lại dữ liệu.', 401);
+    if (sessionVersion() !== version) throw changedSession();
     output.push(...result.content);
     if (result.last || page + 1 >= result.totalPages) return output;
   }

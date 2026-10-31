@@ -41,6 +41,25 @@ export interface LandlordRoomResponse {
   roomNumber: string; area: number; basePrice: number;
   roomStatus: RoomStatus; postStatus: PostStatus; rented: boolean; imageUrls: string[];
 }
+export interface LandlordListingResponse {
+  landlordId: string; basePrice: number; postStatus: PostStatus; roomStatus: RoomStatus;
+  rejectReason?: string; detail: RoomDetail;
+}
+function ownedRoom(value: LandlordListingResponse): CatalogRoom {
+  const imageUrls = value.detail.imageUrls ?? [];
+  return {
+    legacyId: 0, postStatus: value.postStatus, roomStatus: value.roomStatus,
+    landlordId: value.landlordId, rejectReason: value.rejectReason,
+    detail: { ...value.detail, rentalPrice: value.basePrice, imageUrls, primaryImageUrl: imageUrls[0] ?? '' },
+  };
+}
+export async function listLandlordRooms(): Promise<CatalogRoom[]> {
+  if (readSession()?.user.role !== 'LANDLORD') return [];
+  return (await allPages<LandlordListingResponse>('/api/landlords/rooms')).map(ownedRoom);
+}
+export async function getLandlordRoom(id: string): Promise<CatalogRoom> {
+  return ownedRoom(await api<LandlordListingResponse>(`/api/landlords/rooms/${encodeURIComponent(id)}`));
+}
 export function validateSearch(query: RoomSearch) {
   if (query.minPrice !== undefined && query.maxPrice !== undefined && query.minPrice > query.maxPrice) throw new Error('Giá tối thiểu phải nhỏ hơn hoặc bằng giá tối đa.');
   if ([query.minPrice, query.maxPrice, query.minArea].some((value) => value !== undefined && (!Number.isFinite(value) || value < 0))) throw new Error('Giá và diện tích không hợp lệ.');

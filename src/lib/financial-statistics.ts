@@ -1,5 +1,5 @@
 import type { RoomDetail } from '@/services/backend/rooms';
-import type { InvoiceRecord } from '@/services/backend/invoices';
+import type { FinancialInvoice } from '@/services/backend/invoices';
 import type { Tenancy } from '@/services/backend/rental';
 
 export type FinancePeriod = 'month' | 'quarter' | 'year';
@@ -53,7 +53,7 @@ export function monthsForPeriod(anchor: string, period: FinancePeriod): string[]
 export function summarizeFinances({
   invoices, tenancies, rooms, landlordId, months, houseId = '', today,
 }: {
-  invoices: InvoiceRecord[];
+  invoices: FinancialInvoice[];
   tenancies: Tenancy[];
   rooms: RoomDetail[];
   landlordId: string;

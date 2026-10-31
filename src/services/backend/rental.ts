@@ -16,6 +16,8 @@ export interface Tenancy extends ContractTerms {
   cancellationReason?: string; depositConfirmedAt?: string; createdAt: string; updatedAt: string;
 }
 export interface RentalState { requests: RentalRequest[]; tenancies: Tenancy[]; }
+export const getRentalRequest = (id: string) => api<RentalRequest>(`/api/rentals/${encodeURIComponent(id)}`);
+export const getTenancy = (id: string) => api<Tenancy>(`/api/tenancies/${encodeURIComponent(id)}`);
 export const RENTAL_EVENT = 'roomix:rental';
 export const LANDLORD_DASHBOARD_EVENT = 'roomix:landlord-dashboard';
 export interface LandlordDashboard {
@@ -30,6 +32,13 @@ export interface LandlordDashboard {
   }[];
 }
 export const getLandlordDashboard = () => api<LandlordDashboard>('/api/rentals/dashboard');
+export interface RentalContactCard {
+  id: string; rentalRequestId: string; landlordId: string; landlordName: string;
+  landlordPhone: string; landlordZalo?: string | null; landlordAvatarUrl?: string | null;
+  note?: string | null; issuedAt: string;
+}
+export const getRentalContactCard = (requestId: string) =>
+  api<RentalContactCard>(`/api/rentals/${encodeURIComponent(requestId)}/contact-card`);
 export function todayVN(now = Date.now()) { return new Date(now + 7 * 3600000).toISOString().slice(0, 10); }
 export async function visibleRental(): Promise<RentalState> {
   const role = readSession()?.user.role;
@@ -37,7 +46,12 @@ export async function visibleRental(): Promise<RentalState> {
   const [requests, tenancies] = await Promise.all([allPages<RentalRequest>('/api/rentals'), allPages<Tenancy>('/api/tenancies')]);
   return { requests, tenancies };
 }
-async function mutate<T>(path: string, body?: unknown) { const result = await post<T>(path, body); emit(RENTAL_EVENT); emit(LANDLORD_DASHBOARD_EVENT); return result; }
+async function mutate<T>(path: string, body?: unknown) {
+  const result = await post<T>(path, body);
+  emit(RENTAL_EVENT);
+  emit(LANDLORD_DASHBOARD_EVENT);
+  return result;
+}
 export const sendRental = (roomId: string, note: string) => mutate<RentalRequest>('/api/rentals', { roomId, note });
 export const cancelRental = (id: string) => mutate<RentalRequest>(`/api/rentals/${id}/cancel`);
 export const rejectRental = (id: string, reason: string) => mutate<RentalRequest>(`/api/rentals/${id}/reject`, { reason });

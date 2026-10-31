@@ -6,7 +6,7 @@ import { useAuth } from '@/components/auth/AuthProvider';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 import { useRoomDetails } from '@/hooks/useRoomDetails';
-import { useInvoices } from '@/hooks/useInvoices';
+import { useFinancialInvoices } from '@/hooks/useInvoices';
 import { useRental } from '@/hooks/useRental';
 import { monthsForPeriod, summarizeFinances, UNKNOWN_HOUSE, type FinancePeriod, type FinanceSummary } from '@/lib/financial-statistics';
 import { formatVND } from '@/lib/utils';
@@ -36,8 +36,11 @@ function houseOptions(rooms: RoomDetail[], tenancyRoomIds: string[]) {
 export default function FinancialStatistics() {
   const { user, ready: authReady } = useAuth();
   const rental = useRental();
-  const catalog = useRoomDetails([...rental.requests.map((item) => item.roomId), ...rental.tenancies.map((item) => item.roomId)], 'landlord');
-  const invoices = useInvoices();
+  const catalog = useRoomDetails(
+    [...rental.requests.map((item) => item.roomId), ...rental.tenancies.map((item) => item.roomId)],
+    'landlord',
+  );
+  const invoices = useFinancialInvoices();
   if (!authReady || !catalog.ready || !rental.ready || !invoices.ready) return <div role="status" className="space-y-5"><h1 className="text-[28px] font-extrabold">Thống kê tài chính</h1><p className="text-muted">Đang tổng hợp hóa đơn…</p><div aria-hidden="true" className="h-52 animate-pulse rounded-2xl bg-page" /></div>;
   if (user?.role !== 'LANDLORD') return <p role="alert">Bạn cần đăng nhập bằng tài khoản chủ trọ để xem thống kê tài chính.</p>;
   return <Dashboard key={user.id} landlordId={user.id} rooms={catalog.items} tenancies={rental.tenancies} invoices={invoices.items} error={catalog.error || rental.error || invoices.error} />;
@@ -47,7 +50,7 @@ function Dashboard({ landlordId, rooms, tenancies, invoices, error }: {
   landlordId: string;
   rooms: RoomDetail[];
   tenancies: ReturnType<typeof useRental>['tenancies'];
-  invoices: ReturnType<typeof useInvoices>['items'];
+  invoices: ReturnType<typeof useFinancialInvoices>['items'];
   error: string;
 }) {
   const [anchor, setAnchor] = useState(() => todayVN().slice(0, 7));

@@ -6,6 +6,8 @@ import Modal from '@/components/ui/Modal';
 import LoginForm from './LoginForm';
 import AuthScene from './AuthScene';
 import RegisterForm from './RegisterForm';
+import { restoreSession } from '@/services/backend/http';
+import { sessionVersion } from '@/services/backend/session';
 import { AUTH_EVENT, getProfile, logoutSession, readSession, saveSession, updateSessionUser, clearSession, type AuthResponse, type SessionUser } from '@/services/backend/auth';
 
 type Role = 'tenant' | 'landlord';
@@ -45,30 +47,27 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let active = true;
     let generation = 0;
-    let previousToken = '';
     const sync = async () => {
       const current = ++generation;
-      const session = readSession();
-      if (!session) { setUser(null); setReady(true); if (previousToken) { previousToken = ''; clearSession(); } return; }
-      const changed = previousToken !== session.accessToken;
-      previousToken = session.accessToken ?? '';
-      if (changed) { setUser(null); setReady(false); }
+      if (!readSession()) { setUser(null); setReady(false); }
+      const session = await restoreSession();
+      if (!active || current !== generation) return;
+      if (!session) { setUser(null); setReady(true); return; }
+      const version = sessionVersion();
       try {
         const profile = await getProfile();
-        if (profile.status !== 'ACTIVE' && readSession()?.accessToken === session.accessToken) { clearSession(); return; }
-        if (active && current === generation && readSession()?.accessToken === session.accessToken) { setUser(profile); setReady(true); }
+        if (profile.status !== 'ACTIVE' && sessionVersion() === version) { clearSession(); return; }
+        if (active && current === generation && sessionVersion() === version) { setUser(profile); setReady(true); }
       } catch {
         if (active && current === generation) { setUser(null); setReady(true); }
       }
     };
     sync();
     const timer = window.setInterval(sync, 30000);
-    window.addEventListener('storage', sync);
     window.addEventListener(AUTH_EVENT, sync);
     return () => {
       active = false; generation++;
       window.clearInterval(timer);
-      window.removeEventListener('storage', sync);
       window.removeEventListener(AUTH_EVENT, sync);
     };
   }, []);

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { Plus_Jakarta_Sans } from 'next/font/google';
+import { headers } from 'next/headers';
 import '@/styles/globals.css';
 import AuthProvider from '@/components/auth/AuthProvider';
 import AiProvider from '@/components/layouts/AiProvider';
@@ -16,7 +17,9 @@ export const metadata: Metadata = {
   icons: { icon: '/images/logo-mark.png' },
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  // Nonces are unique per HTML request; keep rendering dynamic for Next's scripts.
+  await headers();
   return (
     <html lang="vi" data-scroll-behavior="smooth" className={`${jakarta.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col bg-white font-sans text-ink"><AiProvider><AuthProvider>{children}</AuthProvider></AiProvider></body>

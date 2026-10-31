@@ -9,6 +9,14 @@ const devHosts = Object.values(networkInterfaces()).flatMap((addresses) =>
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   allowedDevOrigins: [...new Set(devHosts)],
+  async headers() {
+    return [{ source: '/:path*', headers: [
+      { key: 'X-Content-Type-Options', value: 'nosniff' },
+      { key: 'X-Frame-Options', value: 'DENY' },
+      { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+      { key: 'Permissions-Policy', value: 'camera=(self), microphone=(), geolocation=()' },
+    ] }];
+  },
   async rewrites() {
     const backend = (process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:18080').replace(/\/$/, '');
     return [{ source: '/backend/:path*', destination: `${backend}/:path*` }];

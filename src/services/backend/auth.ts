@@ -21,15 +21,12 @@ export interface ChangePasswordRequest {
 export interface LandlordContact {
   id: string;
   fullName: string;
-  phoneNumber: string;
-  zalo?: string | null;
   avatarUrl?: string | null;
   joinedAt: string;
 }
 export const PROFILE_EVENT = 'roomix:profile';
 export const login = (username: string, password: string) => post<AuthResponse>('/api/auth/login', { username, password });
 export const register = (request: RegisterRequest) => post<AuthResponse>('/api/auth/register', request);
-export const refreshSession = () => post<AuthResponse>('/api/auth/refresh');
 export const logoutSession = () => post<void>('/api/auth/logout');
 export const getProfile = () => api<SessionUser>('/api/users/me');
 export async function updateProfile(request: UpdateProfileRequest) {
@@ -41,7 +38,7 @@ export async function updateProfile(request: UpdateProfileRequest) {
   return profile;
 }
 export const getLandlordContact = (landlordId: string) =>
-  api<LandlordContact>(`/api/users/landlords/${landlordId}`);
+  api<LandlordContact>(`/api/users/landlords/${encodeURIComponent(landlordId)}`);
 export const changePassword = (request: ChangePasswordRequest) =>
   post<void>('/api/auth/change-password', request);
 export const forgotPassword = (email: string) => post<void>('/api/auth/forgot-password', { email });
