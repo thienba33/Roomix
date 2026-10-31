@@ -37,6 +37,7 @@ const GROUPS: { title: string; items: { label: string; href: string; icon: () =>
     items: [
       { label: 'Đăng ký khuôn mặt', href: '/admin/face', icon: IconShield },
       { label: 'Thông báo', href: '/admin/notifications', icon: IconList },
+      { label: 'Nhật ký hệ thống', href: '/admin/audit-logs', icon: IconList },
     ],
   },
 ];
