@@ -31,8 +31,18 @@ export interface AdminPost {
   approvedAt?: string;
   createdAt: string;
 }
+export interface AdminDashboard {
+  totalUsers: number; totalTenants: number; totalLandlords: number; activeUsers: number;
+  lockedUsers: number; pendingLandlords: number; totalRooms: number; availableRooms: number;
+  rentedRooms: number; approvedPosts: number; pendingPostCount: number; openReportCount: number;
+  unreadNotificationCount: number; pendingPosts: AdminPost[]; pendingLandlordProfiles: AdminUser[];
+  openReports: import('./reports').ViolationReport[];
+}
 export const USERS_EVENT = 'roomix:users';
 export const POSTS_EVENT = 'roomix:admin-posts';
+export const ADMIN_DASHBOARD_EVENT = 'roomix:admin-dashboard';
+
+export const getAdminDashboard = () => api<AdminDashboard>('/api/admin/dashboard');
 
 export async function listUsers() {
   if (readSession()?.user.role !== 'ADMIN') return [];
@@ -54,7 +64,7 @@ export const getAdminUserProperties = (userId: string) =>
 
 export async function updateUser(id: string, action: 'lock' | 'unlock' | 'approve-landlord' | 'reject-landlord', reason?: string) {
   const value = await post<AdminUser>(`/api/admin/users/${id}/${action}`, action === 'reject-landlord' ? { reason } : undefined);
-  emit(USERS_EVENT); return value;
+  emit(USERS_EVENT); emit(ADMIN_DASHBOARD_EVENT); return value;
 }
 
 export async function listPendingPosts(status: PostStatus = 'PENDING'): Promise<AdminPost[]> {
@@ -65,11 +75,13 @@ export async function listPendingPosts(status: PostStatus = 'PENDING'): Promise<
 export async function approvePost(postId: string) {
   const res = await post<AdminPost>(`/api/admin/posts/${postId}/approve`);
   emit(POSTS_EVENT);
+  emit(ADMIN_DASHBOARD_EVENT);
   return res;
 }
 
 export async function rejectPost(postId: string, reason: string) {
   const res = await post<AdminPost>(`/api/admin/posts/${postId}/reject`, { reason });
   emit(POSTS_EVENT);
+  emit(ADMIN_DASHBOARD_EVENT);
   return res;
 }

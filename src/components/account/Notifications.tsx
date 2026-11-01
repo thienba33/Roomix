@@ -1,5 +1,6 @@
 'use client';
 import { useState, type ReactNode } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { useNotifications } from '@/hooks/useNotifications';
 import { markAllRead, markRead } from '@/services/backend/notifications';
@@ -11,12 +12,18 @@ export default function Notifications({ headerAction, fullPage = false }: { head
   const [onlyUnread, setOnlyUnread] = useState(false);
   const [failure, setFailure] = useState('');
   const [busy, setBusy] = useState(false);
+  const router = useRouter();
   const act = async (id?: string) => {
     if (busy) return;
     setBusy(true); setFailure('');
     try { if (id) await markRead(id); else await markAllRead(); }
     catch (cause) { setFailure(cause instanceof Error ? cause.message : 'Không thể cập nhật thông báo.'); }
     finally { setBusy(false); }
+  };
+  const openNotification = async (item: (typeof items)[number]) => {
+    if (busy) return;
+    if (!item.read) await act(item.id);
+    if (item.targetUrl) router.push(item.targetUrl);
   };
   if (!authReady || !ready) return <div className="flex items-center justify-between gap-3 p-5"><p role="status" className="text-sm text-muted">Đang tải thông báo…</p>{headerAction}</div>;
   if (!user) return <div className="space-y-3 py-6"><p>Đăng nhập để xem thông báo của bạn.</p><Button onClick={() => openAuth()}>Đăng nhập</Button></div>;
@@ -32,7 +39,7 @@ export default function Notifications({ headerAction, fullPage = false }: { head
     <div className={fullPage ? 'notifications-page-list' : 'notification-list space-y-3'}>{visible.map((item) => <button
       key={item.id}
       disabled={busy}
-      onClick={() => { if (!item.read) void act(item.id); }}
+      onClick={() => { void openNotification(item); }}
       className={fullPage ? `notification-row ${item.read ? 'is-read' : 'is-unread'}` : `block w-full rounded-xl border p-4 text-left focus-visible:outline-2 focus-visible:outline-primary ${item.read ? 'border-line bg-white' : 'border-primary/20 bg-primary-soft/40'}`}
     >
       {fullPage ? <>

@@ -18,6 +18,7 @@ export async function createReport(input: { targetType: ReportTarget; targetId: 
   if (!input.reason.trim() || input.reason.trim().length > 200 || (input.description?.length ?? 0) > 3000) throw new Error('Lý do tối đa 200 ký tự, mô tả tối đa 3.000 ký tự.');
   const result = await post<ViolationReport>('/api/reports', { ...input, reason: input.reason.trim(), description: input.description?.trim() || undefined });
   emit(REPORTS_EVENT);
+  emit('roomix:admin-dashboard');
   return result;
 }
 export function listMyReports(page = 0) {
@@ -33,5 +34,6 @@ export async function reviewReport(id: string, status: Exclude<ReportStatus, 'PE
   if (resolution.length > 3000) throw new Error('Kết quả xử lý tối đa 3.000 ký tự.');
   const result = await post<ViolationReport>(`/api/admin/reports/${encodeURIComponent(id)}/review`, { status, resolution: resolution.trim() });
   emit(REPORTS_EVENT);
+  emit('roomix:admin-dashboard');
   return result;
 }

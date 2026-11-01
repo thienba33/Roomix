@@ -129,6 +129,11 @@ export default function LoginForm({ initialRole, onSuccess, onRegister, onLogin,
             </button>
           </div>
           <ValidationMessage id="login-password-error" message={touched.password ? errors.password : ''} reserveMessage="Mật khẩu tối đa 72 ký tự." />
+          <div className="mt-1 text-right">
+            <Link href="/forgot-password" className="text-xs font-semibold text-primary hover:underline">
+              Quên mật khẩu?
+            </Link>
+          </div>
         </div>
 
         {submitError && <p role="alert" className="rounded-lg bg-red-50 p-3 text-sm text-red-700">{submitError}</p>}
