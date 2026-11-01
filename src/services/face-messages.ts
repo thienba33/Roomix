@@ -49,6 +49,14 @@ export function faceErrorMessage(error: unknown): string {
 
 export function faceProgressMessage(action?: string, reason?: string): string {
   const instruction = faceActions[action ?? ''] ?? 'Đang chờ kết quả…';
+  const recovery: Record<string, string> = {
+    NO_FACE: 'Đưa khuôn mặt trở lại khung hình.',
+    LOW_FACE_QUALITY: 'Tiến gần hơn và chọn nơi đủ sáng.',
+    INVALID_LANDMARKS: 'Nhìn rõ vào camera, tránh che mắt và mũi.',
+    FACE_OUTSIDE_IMAGE: 'Đưa toàn bộ khuôn mặt vào khung hình.',
+    HEAD_TOO_TILTED: 'Giữ đầu thẳng, tránh nghiêng sang vai.',
+  };
+  if (reason && recovery[reason]) return `${recovery[reason]} ${instruction}`;
   return reason === 'FACE_TOO_BLURRY'
     ? `Ảnh đang mờ. Giữ đầu yên để camera lấy nét. ${instruction}`
     : instruction;

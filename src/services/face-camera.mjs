@@ -79,7 +79,7 @@ export class FaceCameraClient {
     this.canvas.height = Math.round(height * scale);
     // Không lật ảnh: head_pose.py tính hướng dựa trên ảnh gốc.
     this.canvas.getContext("2d").drawImage(this.video, 0, 0, this.canvas.width, this.canvas.height);
-    const photo = await new Promise(resolve => this.canvas.toBlob(resolve, "image/jpeg", 0.8));
+    const photo = await new Promise(resolve => this.canvas.toBlob(resolve, "image/jpeg", 0.9));
     if (!photo || photo.size > 1024 * 1024) throw new FaceApiError("INVALID_IMAGE_SIZE");
     return photo;
   }
@@ -129,7 +129,7 @@ export class FaceCameraClient {
     try {
       this.onUpdate({ phase: "OPENING_CAMERA" });
       // Xin camera trước, tránh tiêu thụ phiên Face nếu người dùng từ chối quyền.
-      const stream = await this.mediaDevices.getUserMedia({ video: { width: 640, height: 480 }, audio: false });
+      const stream = await this.mediaDevices.getUserMedia({ video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: "user" }, audio: false });
       if (signal.aborted) {
         stream.getTracks().forEach(track => track.stop());
         throw new DOMException("Stopped", "AbortError");
@@ -137,6 +137,8 @@ export class FaceCameraClient {
       this.stream = stream;
       this.video.srcObject = stream;
       await this.video.play();
+      // Let auto exposure/focus settle before consuming the Face challenge.
+      await this.wait(500, signal);
       const headers = { "Content-Type": "application/json" };
       if (purpose === "ENROLL") headers.Authorization = `Bearer ${token.trim().replace(/^Bearer\s+/i, "")}`;
       const challenge = await this.request("/api/face/challenges", {
