@@ -1,0 +1,30 @@
+
+.screen { min-height: 100dvh; display: grid; grid-template-columns: 1fr 1fr; background: #f8fafc; color: #172033; }
+.brand { position: relative; overflow: hidden; min-height: 100dvh; display: flex; flex-direction: column; justify-content: center; padding: clamp(36px, 5vw, 88px); isolation: isolate; }
+.room { object-fit: cover; z-index: -3; }
+.tint { position: absolute; inset: 0; z-index: -2; background: linear-gradient(135deg, rgba(165,232,243,.9), rgba(192,189,246,.88) 55%, rgba(150,120,228,.91)); }
+.brand::after { content: ''; position: absolute; width: 560px; height: 560px; border: 1px solid #ffffff40; border-radius: 50%; bottom: -310px; right: -180px; z-index: -1; box-shadow: 0 0 0 75px #ffffff0c, 0 0 0 150px #ffffff09; }
+.logo { position: absolute; top: 48px; left: clamp(36px, 5vw, 88px); }
+.logo img { height: 42px; width: auto; }
+.eyebrow { font-size: 10px; font-weight: 700; letter-spacing: .16em; color: #403b78; }
+.brandCopy h2 { font-size: clamp(30px, 3.2vw, 52px); line-height: 1.2; letter-spacing: -.045em; font-weight: 650; margin: 22px 0; color: #202143; }
+.brandCopy p { font-size: 15px; line-height: 1.9; color: #414367; }
+.brandNote { display: flex; align-items: center; gap: 10px; margin-top: 36px; font-size: 12px; color: #37375d; }
+.brandNote span { width: 7px; height: 7px; border-radius: 50%; background: #5850cf; box-shadow: 0 0 0 5px #ffffff40; }
+.brandFooter { position: absolute; bottom: 34px; font-size: 9px; letter-spacing: .12em; color: #45426b; }
+.formSide { position: relative; display: flex; align-items: center; justify-content: center; padding: 100px 36px 64px; }
+.back { position: absolute; right: 36px; top: 32px; border: 1px solid #e2e8f0; border-radius: 9px; padding: 9px 14px; font-size: 12px; color: #64748b; background: #ffffff90; }
+.back:hover { color: #5143db; border-color: #c7c1f4; }
+.formWrap { width: 100%; max-width: 460px; }
+.card { border-radius: 16px; border: 1px solid #e2e8f0; background: white; padding: 32px; box-shadow: 0 20px 25px -5px #0000000d, 0 8px 10px -6px #00000003; }
+.kicker { font-size: 9px; letter-spacing: .14em; font-weight: 700; color: #7168b1; margin-bottom: 10px; }
+.card h1 { font-size: 25px; font-weight: 700; letter-spacing: -.035em; }
+.intro { margin-top: 9px; color: #798292; font-size: 12px; line-height: 1.7; }
+.methods { display: flex; padding: 4px; background: #f1f3f6; border-radius: 12px; margin-top: 25px; gap: 4px; }
+.methods button { flex: 1; border-radius: 9px; padding: 10px 8px; color: #77808e; font-size: 13px; font-weight: 600; transition: background .2s, box-shadow .2s; }
+.methods button[aria-pressed="true"] { background: white; color: #5143c7; box-shadow: 0 2px 5px #17203312; }
+.methods button:disabled { opacity: .5; }
+.methods button:focus-visible, .back:focus-visible { outline: 2px solid #8175eb; outline-offset: 3px; }
+.help { text-align: center; color: #87909d; font-size: 11px; margin-top: 20px; }
+@media (max-width: 900px) { .brand { padding: 36px; } .brandCopy h2 { font-size: 34px; } .formSide { padding-left: 22px; padding-right: 22px; } .card { padding: 24px; } }
+@media (max-width: 700px) { .screen { grid-template-columns: 1fr; } .brand { min-height: 230px; padding: 80px 28px 30px; } .logo { top: 25px; left: 28px; } .logo img { height: 30px; } .brandCopy h2 { font-size: 28px; margin: 10px 0; } .brandCopy p, .brandNote, .brandFooter, .eyebrow { display: none; } .formSide { padding: 72px 20px 36px; align-items: flex-start; } .back { top: 20px; right: 22px; } }

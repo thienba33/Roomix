@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import styles from './AdminFaceLogin.module.css';
 import Button from '@/components/ui/Button';
 import { useAdminAuth } from './AdminAuthProvider';
 import { createAdminAuthClient, type FaceLoginSession } from '@/services/admin-auth';
@@ -100,13 +101,19 @@ export default function AdminFaceLogin({ onBusyChange }: { onBusyChange: (busy: 
 
   return <section className="mt-5 space-y-4">
     <p className="text-sm text-muted">Chỉ để một người trước camera và làm theo hướng dẫn quay đầu.</p>
-    <video ref={video} autoPlay muted playsInline aria-label="Camera đăng nhập khuôn mặt" className="aspect-[4/3] w-full rounded-2xl bg-black object-contain" />
+    <div className={styles.camera} data-active={busy}>
+      <video ref={video} autoPlay muted playsInline aria-label="Camera đăng nhập khuôn mặt" />
+      <div className={styles.overlay} aria-hidden="true"><div className={styles.faceFrame}><span /></div></div>
+      <span className={styles.cameraLabel} aria-hidden="true"><i />{busy ? 'ĐANG XÁC THỰC' : 'CAMERA SẴN SÀNG KHI BẮT ĐẦU'}</span>
+    </div>
     <canvas ref={canvas} hidden />
     <p role={failed ? 'alert' : 'status'} aria-live="polite" className={failed ? 'text-sm text-red-600' : 'text-sm text-ink'}>{message}</p>
-    <div className="flex flex-wrap gap-2">
-      <Button onClick={() => run(false)} disabled={busy}>{busy ? 'Đang xử lý…' : 'Bắt đầu đăng nhập'}</Button>
-      <Button variant="outline" onClick={stop} disabled={!busy}>Dừng</Button>
-      <Button variant="outline" onClick={() => run(true)} disabled={busy || !canRead}>Đọc lại kết quả</Button>
+    <div className={styles.actions}>
+      <Button onClick={() => run(false)} loading={busy} disabled={busy}>{busy ? 'Đang xử lý…' : 'Bắt đầu đăng nhập'}</Button>
+      <Button variant="outline" className={styles.stop} onClick={stop} disabled={!busy}>Dừng</Button>
+      <Button variant="outline" className={styles.read} title="Đọc lại kết quả xác thực" aria-label="Đọc lại kết quả xác thực" onClick={() => run(true)} disabled={busy || !canRead}>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M3 10a9 9 0 1 1 2 8M3 4v6h6" /></svg>
+      </Button>
     </div>
     <p className="text-xs text-muted">Camera không thu âm và tự tắt khi kết thúc hoặc rời trang. Chưa đăng ký mặt? Hãy đăng nhập bằng mật khẩu trước.</p>
   </section>;

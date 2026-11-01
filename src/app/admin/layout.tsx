@@ -9,7 +9,7 @@ import type { ReactNode } from 'react';
 import AdminAuthProvider from '@/components/auth/AdminAuthProvider';
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
-  return <AdminAuthProvider><AdminAccess>{children}</AdminAccess></AdminAuthProvider>;
+  return <AdminAuthProvider><div data-admin-ui><AdminAccess>{children}</AdminAccess></div></AdminAuthProvider>;
 }
 
 function AdminAccess({ children }: { children: ReactNode }) {
