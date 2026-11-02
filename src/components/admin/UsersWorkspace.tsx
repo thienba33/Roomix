@@ -54,7 +54,7 @@ export default function UsersWorkspace({ initialRole = '', initialStatus = '', i
         <div><p className="font-semibold">{target?.user.fullName}</p><p className="mt-1 break-all text-sm text-muted">{target?.user.email}</p></div>
         {target?.action === 'reject-landlord' && <Input label="Lý do từ chối" required maxLength={500} value={reason} onChange={(event) => setReason(event.target.value)} />}
         {failure && <p role="alert" className="text-sm text-red-700">{failure}</p>}
-        <div className="flex justify-end gap-2"><Button type="button" variant="outline" disabled={busy} onClick={() => setTarget(null)}>Hủy</Button><Button type="submit" disabled={busy}>{busy ? 'Đang xử lý…' : target ? labels[target.action] : 'Xác nhận'}</Button></div>
+        <div className="flex justify-end gap-2"><Button type="button" variant="outline" disabled={busy} onClick={() => setTarget(null)}>Hủy</Button><Button type="submit" loading={busy} disabled={busy}>{busy ? 'Đang xử lý…' : target ? labels[target.action] : 'Xác nhận'}</Button></div>
       </form>
     </Modal>
   </section>;

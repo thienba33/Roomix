@@ -137,7 +137,7 @@ export default function LoginForm({ initialRole, onSuccess, onRegister, onLogin,
         </div>
 
         {submitError && <p role="alert" className="rounded-lg bg-red-50 p-3 text-sm text-red-700">{submitError}</p>}
-        <Button type="submit" disabled={busy} size="lg" className="h-[44px] w-full">{busy ? 'Đang đăng nhập…' : 'Đăng nhập'}</Button>
+        <Button type="submit" loading={appearance === 'admin' && busy} disabled={busy} size="lg" className="h-[44px] w-full">{busy ? 'Đang đăng nhập…' : 'Đăng nhập'}</Button>
       </form>
 
 

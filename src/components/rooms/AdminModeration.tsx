@@ -61,5 +61,5 @@ export default function AdminModeration({ postId }: { postId?: string }) {
     try { await moderatePost(selected.id, action, String(data.get('reason') ?? '')); setAction(null); router.push('/admin/moderation'); }
     catch (cause) { setFailure(cause instanceof Error ? cause.message : 'Không thể kiểm duyệt.'); }
     finally { lock.current = false; setBusy(false); }
-  }}><p className="text-sm">{selected?.title}</p>{action === 'reject' && <label className="block text-sm">Lý do<textarea name="reason" required maxLength={1000} className="mt-2 w-full rounded-xl border border-line p-3" /></label>}{failure && <p role="alert" className="text-sm text-red-700">{failure}</p>}<Button type="submit" disabled={busy}>{busy ? 'Đang xử lý…' : action === 'approve' ? 'Duyệt tin' : 'Từ chối tin'}</Button></form></Modal></section>;
+  }}><p className="text-sm">{selected?.title}</p>{action === 'reject' && <label className="block text-sm">Lý do<textarea name="reason" required maxLength={1000} className="mt-2 w-full rounded-xl border border-line p-3" /></label>}{failure && <p role="alert" className="text-sm text-red-700">{failure}</p>}<Button type="submit" loading={busy} disabled={busy}>{busy ? 'Đang xử lý…' : action === 'approve' ? 'Duyệt tin' : 'Từ chối tin'}</Button></form></Modal></section>;
 }
