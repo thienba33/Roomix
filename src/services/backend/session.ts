@@ -77,7 +77,24 @@ export function clearSession() {
 // Refresh cookies rotate once. Serialize cookie changes across tabs as well.
 let authQueue: Promise<unknown> = Promise.resolve();
 export async function withAuthLock<T>(work: () => Promise<T>): Promise<T> {
-  if (typeof navigator !== 'undefined' && navigator.locks) return navigator.locks.request('roomix-auth-cookie', work);
+  if (typeof navigator !== 'undefined' && navigator.locks) {
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), 3000);
+    try {
+      return await navigator.locks.request(
+        'roomix-auth-cookie',
+        { signal: controller.signal },
+        async () => {
+          window.clearTimeout(timeout);
+          return work();
+        },
+      );
+    } catch (error) {
+      if (!(error instanceof DOMException && error.name === 'AbortError')) throw error;
+    } finally {
+      window.clearTimeout(timeout);
+    }
+  }
   const result = authQueue.then(work, work);
   authQueue = result.catch(() => undefined);
   return result;

@@ -21,7 +21,12 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   // Nonces are unique per HTML request; keep rendering dynamic for Next's scripts.
   await headers();
   return (
-    <html lang="vi" data-scroll-behavior="smooth" className={`${jakarta.variable} h-full antialiased`}>
+    <html
+      lang="vi"
+      data-scroll-behavior="smooth"
+      className={`${jakarta.variable} h-full antialiased`}
+      suppressHydrationWarning
+    >
       <body className="flex min-h-full flex-col bg-white font-sans text-ink"><AiProvider><AuthProvider>{children}</AuthProvider></AiProvider></body>
     </html>
   );
