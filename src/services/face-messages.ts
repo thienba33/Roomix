@@ -1,7 +1,7 @@
 export const faceActions: Record<string, string> = {
   CENTER: 'Nhìn chính diện và giữ yên.',
-  TURN_LEFT: 'Đưa mũi về phía trái của khung hình và giữ một nhịp.',
-  TURN_RIGHT: 'Đưa mũi về phía phải của khung hình và giữ một nhịp.',
+  TURN_LEFT: 'Quay mặt sang trái theo mũi tên trên màn hình và giữ một nhịp.',
+  TURN_RIGHT: 'Quay mặt sang phải theo mũi tên trên màn hình và giữ một nhịp.',
 };
 
 const messages: Record<string, string> = {

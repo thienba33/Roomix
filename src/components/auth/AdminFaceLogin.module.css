@@ -1,6 +1,9 @@
 
 .camera { position: relative; overflow: hidden; border-radius: 6px; background: radial-gradient(ellipse at center, #25263f, #111321); border: 1px solid #36364f; }
-.camera video { display: block; aspect-ratio: 4/3; width: 100%; object-fit: contain; }
+.camera video { display: block; aspect-ratio: 4/3; width: 100%; object-fit: contain; transform: scaleX(-1); }
+.direction { z-index: 3; position: absolute; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; align-items: center; gap: 6px; max-width: 40%; padding: 10px; border-radius: 12px; background: #111321e6; color: #c2fbec; pointer-events: none; font-size: 12px; font-weight: 600; text-align: center; }
+.direction[data-direction="left"] { left: 8px; }
+.direction[data-direction="right"] { right: 8px; }
 .overlay { position: absolute; inset: 15% 25% 20%; pointer-events: none; display: flex; }
 .faceFrame { position: relative; flex: 1; border: 1px solid #b5b0ff80; border-radius: 42% 42% 45% 45%; box-shadow: 0 0 24px #a69bff0d, inset 0 0 24px #a69bff0d; }
 .camera[data-active="true"] .faceFrame { border-color: #b7f0e5; box-shadow: 0 0 20px #b7f0e530; }

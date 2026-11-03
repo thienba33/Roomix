@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useAdminAuth } from '@/components/auth/AdminAuthProvider';
 import styles from './face.module.css';
 import cameraStyles from '@/components/auth/AdminFaceLogin.module.css';
+import FaceDirection from '@/components/auth/FaceDirection';
 import Button from '@/components/ui/Button';
 import { createAdminAuthClient } from '@/services/admin-auth';
 import { FaceCameraClient, type FaceResult } from '@/services/face-camera.mjs';
@@ -20,6 +21,7 @@ export default function AdminFacePage() {
   const controller = useRef<AbortController | null>(null);
   const inProgress = useRef(false);
   const [busy, setBusy] = useState(false);
+  const [action, setAction] = useState<string | null>(null);
   const [canRead, setCanRead] = useState(false);
   const [message, setMessage] = useState('Chuẩn bị nơi đủ sáng và chỉ để một người trước camera.');
   const [failed, setFailed] = useState(false);
@@ -55,6 +57,7 @@ export default function AdminFacePage() {
     if (inProgress.current || !video.current || !canvas.current || !session) return;
     inProgress.current = true;
     setBusy(true);
+    setAction(null);
     setSucceeded(false);
     setCanRead(false);
     setFailed(false);
@@ -67,7 +70,10 @@ export default function AdminFacePage() {
       onUpdate(update) {
         if (operation.signal.aborted) return;
         if (update.phase === 'OPENING_CAMERA') setMessage('Đang xin quyền camera…');
-        if (update.phase === 'CAPTURING') setMessage(faceProgressMessage(update.action, update.reason));
+        if (update.phase === 'CAPTURING') {
+          setAction(update.action ?? null);
+          setMessage(faceProgressMessage(update.action, update.reason));
+        }
         if (update.phase === 'RETRYING') setMessage('Dịch vụ đang bận. Đang thử lại cùng yêu cầu…');
       },
     });
@@ -84,6 +90,7 @@ export default function AdminFacePage() {
       camera.stop();
       inProgress.current = false;
       setBusy(false);
+      setAction(null);
       setCanRead(Boolean(camera.challengeId));
     }
   };
@@ -118,6 +125,7 @@ export default function AdminFacePage() {
         <div className={cameraStyles.camera} data-active={busy}>
           <video ref={video} autoPlay muted playsInline aria-label="Camera đăng ký khuôn mặt" />
           <div className={cameraStyles.overlay} aria-hidden="true"><div className={cameraStyles.faceFrame}><span /></div></div>
+          <FaceDirection action={action} />
           <span className={cameraStyles.cameraLabel} aria-hidden="true"><i />{busy ? 'ĐANG THỰC HIỆN ĐĂNG KÝ' : 'CAMERA CHỈ MỞ KHI BẠN BẮT ĐẦU'}</span>
         </div>
         <canvas ref={canvas} hidden />

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import styles from './AdminFaceLogin.module.css';
+import FaceDirection from './FaceDirection';
 import Button from '@/components/ui/Button';
 import { useAdminAuth } from './AdminAuthProvider';
 import { createAdminAuthClient, type FaceLoginSession } from '@/services/admin-auth';
@@ -22,6 +23,7 @@ export default function AdminFaceLogin({ onBusyChange }: { onBusyChange: (busy: 
   const operation = useRef<AbortController | null>(null);
   const inProgress = useRef(false);
   const [busy, setBusy] = useState(false);
+  const [action, setAction] = useState<string | null>(null);
   const [canRead, setCanRead] = useState(false);
   const [message, setMessage] = useState('Dùng khuôn mặt đã đăng ký cho tài khoản Admin.');
   const [failed, setFailed] = useState(false);
@@ -59,6 +61,7 @@ export default function AdminFaceLogin({ onBusyChange }: { onBusyChange: (busy: 
     if (inProgress.current || !video.current || !canvas.current) return;
     inProgress.current = true;
     setBusy(true);
+    setAction(null);
     onBusyChange(true);
     setFailed(false);
     const controller = new AbortController();
@@ -78,7 +81,10 @@ export default function AdminFaceLogin({ onBusyChange }: { onBusyChange: (busy: 
         onUpdate(update) {
           if (controller.signal.aborted) return;
           if (update.phase === 'OPENING_CAMERA') setMessage('Đang xin quyền camera…');
-          if (update.phase === 'CAPTURING') setMessage(faceProgressMessage(update.action, update.reason));
+          if (update.phase === 'CAPTURING') {
+            setAction(update.action ?? null);
+            setMessage(faceProgressMessage(update.action, update.reason));
+          }
           if (update.phase === 'RETRYING') setMessage('Dịch vụ đang bận. Đang thử lại cùng yêu cầu…');
         },
       });
@@ -94,6 +100,7 @@ export default function AdminFaceLogin({ onBusyChange }: { onBusyChange: (busy: 
       camera.current?.stop();
       inProgress.current = false;
       setBusy(false);
+      setAction(null);
       onBusyChange(false);
       setCanRead(Boolean(camera.current?.challengeId && ticket.current));
     }
@@ -104,6 +111,7 @@ export default function AdminFaceLogin({ onBusyChange }: { onBusyChange: (busy: 
     <div className={styles.camera} data-active={busy}>
       <video ref={video} autoPlay muted playsInline aria-label="Camera đăng nhập khuôn mặt" />
       <div className={styles.overlay} aria-hidden="true"><div className={styles.faceFrame}><span /></div></div>
+      <FaceDirection action={action} />
       <span className={styles.cameraLabel} aria-hidden="true"><i />{busy ? 'ĐANG XÁC THỰC' : 'CAMERA SẴN SÀNG KHI BẮT ĐẦU'}</span>
     </div>
     <canvas ref={canvas} hidden />

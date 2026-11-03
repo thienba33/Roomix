@@ -77,7 +77,7 @@ export class FaceCameraClient {
     const scale = Math.min(960 / width, 720 / height, 1);
     this.canvas.width = Math.round(width * scale);
     this.canvas.height = Math.round(height * scale);
-    // Không lật ảnh: head_pose.py tính hướng dựa trên ảnh gốc.
+    // Upload raw pixels; head_pose.py converts them to the person's left/right.
     this.canvas.getContext("2d").drawImage(this.video, 0, 0, this.canvas.width, this.canvas.height);
     const photo = await new Promise(resolve => this.canvas.toBlob(resolve, "image/jpeg", 0.9));
     if (!photo || photo.size > 1024 * 1024) throw new FaceApiError("INVALID_IMAGE_SIZE");
