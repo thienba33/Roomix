@@ -1,5 +1,5 @@
 
-.camera { position: relative; overflow: hidden; border-radius: 12px; background: radial-gradient(ellipse at center, #25263f, #111321); border: 1px solid #36364f; }
+.camera { position: relative; overflow: hidden; border-radius: 6px; background: radial-gradient(ellipse at center, #25263f, #111321); border: 1px solid #36364f; }
 .camera video { display: block; aspect-ratio: 4/3; width: 100%; object-fit: contain; }
 .overlay { position: absolute; inset: 15% 25% 20%; pointer-events: none; display: flex; }
 .faceFrame { position: relative; flex: 1; border: 1px solid #b5b0ff80; border-radius: 42% 42% 45% 45%; box-shadow: 0 0 24px #a69bff0d, inset 0 0 24px #a69bff0d; }
@@ -11,5 +11,6 @@
 .actions > button:first-child { flex: 1; }
 .stop { color: #b84b5b; border-color: #f0d8dc; }
 .read { padding: 10px; min-width: 40px; }
+@media (max-width: 400px) { .actions > button:first-child { flex-basis: 100%; } .stop { flex: 1; } }
 @keyframes scan { to { top: 85%; } }
 @media (prefers-reduced-motion: reduce) { .camera[data-active="true"] .faceFrame span { animation: none; top: 50%; } }
