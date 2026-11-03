@@ -38,7 +38,6 @@ const GROUPS: { title: string; items: { label: string; href: string; icon: () =>
       { label: 'Yêu cầu', href: '/landlord/requests', icon: IconInbox, badge: 'requests' },
       { label: 'Hợp đồng', href: '/landlord/tenants', icon: IconUsers },
       { label: 'Hóa đơn', href: '/landlord/invoices', icon: IconReceipt },
-      { label: 'Định giá phòng', href: '/landlord/pricing', icon: IconChart },
       { label: 'Thống kê', href: '/landlord/statistics', icon: IconChart },
     ],
   },
