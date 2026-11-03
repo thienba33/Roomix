@@ -90,14 +90,10 @@ export async function changePostStatus(roomId: string, action: 'submit' | 'hide'
 export async function moderatePost(postId: string, action: 'approve' | 'reject', reason = '') {
   const result = await post(`/api/admin/posts/${postId}/${action}`, action === 'reject' ? { reason } : undefined); emit(CATALOG_EVENT); return result;
 }
-export async function saveListing(input: ListingInput, images: string[], roomId?: string) {
+export async function saveListing(input: ListingInput, images: File[], roomId?: string) {
   const form = new FormData();
   form.append('data', new Blob([JSON.stringify(input)], { type: 'application/json' }));
-  for (const [index, image] of images.entries()) {
-    const response = await fetch(image);
-    const blob = await response.blob();
-    form.append('images', blob, `room-${index}.${blob.type.split('/')[1] || 'jpg'}`);
-  }
+  for (const image of images) form.append('images', image);
   const result = await api<LandlordRoomResponse>(`/api/landlords/rooms${roomId ? `/${roomId}` : ''}`, { method: roomId ? 'PUT' : 'POST', body: form });
   emit(CATALOG_EVENT); return result;
 }

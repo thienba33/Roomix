@@ -37,7 +37,7 @@ export default function ListingForm({ current, floors }: { current?: CatalogRoom
     hasPrivateBathroom: detail?.hasPrivateBathroom ?? false, hasAirConditioner: detail?.hasAirConditioner ?? false,
     hasWaterHeater: detail?.hasWaterHeater ?? false, hasBalcony: detail?.hasBalcony ?? false,
   }));
-  const [newImages, setNewImages] = useState<string[]>([]);
+  const [newImages, setNewImages] = useState<{ file: File; preview: string }[]>([]);
   const [readingImages, setReadingImages] = useState(false);
   const [saving, setSaving] = useState(false);
   const [fields, setFields] = useState<ListingFieldErrors>({});
@@ -53,7 +53,7 @@ export default function ListingForm({ current, floors }: { current?: CatalogRoom
   const houses = [...new Map(floors.map((floor) => [floor.houseId, floor])).values()];
   const availableFloors = floors.filter((floor) => floor.houseId === value.houseId);
   const savedImages = detail?.imageUrls ?? [];
-  const images = [...savedImages, ...newImages];
+  const images = [...savedImages, ...newImages.map((image) => image.preview)];
 
   const change = <K extends keyof FormValues>(key: K, next: FormValues[K]) => {
     setValue((previous) => ({ ...previous, [key]: next }));
@@ -75,7 +75,7 @@ export default function ListingForm({ current, floors }: { current?: CatalogRoom
     setSaving(true);
     setError('');
     try {
-      const saved = await saveListing(input, newImages, detail?.roomId);
+      const saved = await saveListing(input, newImages.map((image) => image.file), detail?.roomId);
       if (detail) {
         toast.push('Đã cập nhật tin nháp');
         router.push('/landlord/listings');
@@ -101,7 +101,7 @@ export default function ListingForm({ current, floors }: { current?: CatalogRoom
         reader.onerror = () => reject(new Error('Không thể đọc ảnh. Vui lòng chọn lại.'));
         reader.readAsDataURL(file);
       })));
-      setNewImages((previous) => [...previous, ...urls]);
+      setNewImages((previous) => [...previous, ...files.map((file, index) => ({ file, preview: urls[index] }))]);
     } catch (cause) {
       setImageError(cause instanceof Error ? cause.message : 'Không thể đọc ảnh. Vui lòng chọn lại.');
     } finally {
