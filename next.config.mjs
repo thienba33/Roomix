@@ -23,9 +23,18 @@ const nextConfig = {
   },
   async redirects() {
     return [
+      // Tenant routes redirect to /tenant dashboard
+      { source: '/favorites', destination: '/tenant/favorites', permanent: false },
+      { source: '/requests', destination: '/tenant/requests', permanent: false },
+      { source: '/contracts', destination: '/tenant/contracts', permanent: false },
+      { source: '/invoices', destination: '/tenant/invoices', permanent: false },
+      { source: '/reports', destination: '/tenant/reports', permanent: false },
+      { source: '/profile', destination: '/tenant/profile', permanent: false },
+      { source: '/notifications', destination: '/tenant/notifications', permanent: false },
+
       // Tenant (old Vietnamese slugs -> English)
-      { source: '/yeu-thich', destination: '/favorites', permanent: false },
-      { source: '/yeu-cau', destination: '/requests', permanent: false },
+      { source: '/yeu-thich', destination: '/tenant/favorites', permanent: false },
+      { source: '/yeu-cau', destination: '/tenant/requests', permanent: false },
       { source: '/trang-thai', destination: '/states', permanent: false },
       { source: '/phong/:id', destination: '/rooms/:id', permanent: false },
       // Landlord

@@ -93,6 +93,7 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
     if (pathname.startsWith('/admin')) router.push('/admin/login');
     else if (pathname.startsWith('/landlord')) router.push('/login?role=landlord');
+    else if (pathname.startsWith('/tenant')) router.push('/');
     else router.push('/');
   };
   const updateUser = (updatedUser: SessionUser) => {
@@ -105,6 +106,7 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
     setDialog(null);
     if (response.user.role === 'ADMIN') router.push('/admin');
     else if (response.user.role === 'LANDLORD') router.push('/landlord');
+    else if (response.user.role === 'TENANT') router.push('/tenant');
     else if (pathname === '/login' || pathname === '/register') router.replace('/');
   };
 
