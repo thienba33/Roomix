@@ -91,6 +91,21 @@ export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
   return changesCookie(path) ? withAuthLock(work) : work();
 }
 export const post = <T>(path: string, body?: unknown) => api<T>(path, { method: 'POST', ...(body === undefined ? {} : { body: JSON.stringify(body) }) });
+export function loginPublic(username: string, password: string) {
+  const version = sessionVersion();
+  return withAuthLock(async () => {
+    const result = await request<AuthResponse>('/api/auth/login', {
+      method: 'POST', body: JSON.stringify({ username, password }),
+    }, true, version);
+    if (result.user.role !== 'ADMIN') return result;
+    try {
+      await request<void>('/api/auth/logout', { method: 'POST' }, false, version);
+    } finally {
+      clearSession();
+    }
+    throw new ApiError('Tài khoản Admin vui lòng đăng nhập tại trang quản trị.', 403);
+  });
+}
 export interface ApiPage<T> { content: T[]; totalPages: number; totalElements: number; last: boolean; }
 export async function allPages<T>(path: string): Promise<T[]> {
   const output: T[] = [];

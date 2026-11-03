@@ -1,4 +1,4 @@
-import { api, post } from './http';
+import { api, loginPublic, post } from './http';
 import { type AuthResponse, type SessionUser } from './session';
 export { AUTH_EVENT, readSession, saveSession, updateSessionUser, clearSession, type AuthResponse, type SessionUser } from './session';
 export interface RegisterRequest {
@@ -25,7 +25,7 @@ export interface LandlordContact {
   joinedAt: string;
 }
 export const PROFILE_EVENT = 'roomix:profile';
-export const login = (username: string, password: string) => post<AuthResponse>('/api/auth/login', { username, password });
+export const login = loginPublic;
 export const register = (request: RegisterRequest) => post<AuthResponse>('/api/auth/register', request);
 export const logoutSession = () => post<void>('/api/auth/logout');
 export const getProfile = () => api<SessionUser>('/api/users/me');
