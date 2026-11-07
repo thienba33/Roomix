@@ -19,7 +19,7 @@ function websocketUrl() {
   const configured = process.env.NEXT_PUBLIC_WS_URL?.replace(/\/$/, '');
   if (configured) return configured.endsWith('/api/ws') ? configured : `${configured}/api/ws`;
   const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-  return `${protocol}//${window.location.hostname}:18080/api/ws`;
+  return `${protocol}//${window.location.host}/api/ws`;
 }
 
 function handleMessage(message: IMessage) {

@@ -48,8 +48,9 @@ export default function TenantDashboardPage() {
 
   const activeTenancies = rentalData.tenancies.filter((t) => t.status === 'ACTIVE');
   const pendingRequests = rentalData.requests.filter((r) => r.status === 'PENDING');
-  const pendingInvoices = invoices.filter((i) => i.status === 'PENDING' || i.overdue);
-  const totalPendingAmount = pendingInvoices.reduce((sum, i) => sum + (i.outstandingAmount || 0), 0);
+  const today = new Date().toISOString().slice(0, 10);
+  const pendingInvoices = invoices.filter((i) => i.status === 'PENDING' || (i.status !== 'PAID' && i.dueDate < today));
+  const totalPendingAmount = pendingInvoices.reduce((sum, i) => sum + Math.max(i.totalAmount - i.paidAmount, 0), 0);
 
   return (
     <div className="mx-auto w-full max-w-[1440px] px-4 py-6 sm:px-6 lg:px-8">

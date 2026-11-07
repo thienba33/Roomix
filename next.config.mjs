@@ -8,6 +8,7 @@ const devHosts = Object.values(networkInterfaces()).flatMap((addresses) =>
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  output: 'standalone',
   allowedDevOrigins: [...new Set(devHosts)],
   async headers() {
     return [{ source: '/:path*', headers: [
